@@ -1,0 +1,19 @@
+stages:
+    - test
+
+before_script:
+    - mix local.hex --force
+    - mix local.rebar
+
+variables:
+    APPLICATION_NAME: astarte_streams
+
+mix:test-ci:
+    image: elixir:1.8.1
+    stage: test
+    script:
+        - mix deps.get
+        - mix coveralls
+    cache:
+        paths:
+            - deps
