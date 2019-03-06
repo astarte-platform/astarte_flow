@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+alias Astarte.Streams.Message
+
 defmodule Astarte.Streams.Message do
   defstruct [
     :key,
@@ -56,7 +58,7 @@ defmodule Astarte.Streams.Message do
   * `:timestamp`: timestamp in microseconds.
   * `:data`: the message payload.
   """
-  @type t :: %Astarte.Streams.Message{
+  @type t :: %Message{
           key: String.t(),
           metadata: message_metadata(),
           type: message_type_atom(),
@@ -64,6 +66,13 @@ defmodule Astarte.Streams.Message do
           timestamp: non_neg_integer(),
           data: message_data()
         }
+
+  defimpl Jason.Encoder, for: Message do
+    def encode(message, opts) do
+      Message.to_map(message)
+      |> Jason.Encode.map(opts)
+    end
+  end
 
   @doc ~S"""
   Converts a Message struct to a serialization friendly map, so it can be used with a JSON serializer.
@@ -89,9 +98,9 @@ defmodule Astarte.Streams.Message do
         "subtype" => nil
       }
   """
-  @spec to_map(Astarte.Streams.Message.t()) :: %{required(String.t()) => term()}
-  def to_map(%Astarte.Streams.Message{} = message) do
-    %Astarte.Streams.Message{
+  @spec to_map(Message.t()) :: %{required(String.t()) => term()}
+  def to_map(%Message{} = message) do
+    %Message{
       key: key,
       metadata: metadata,
       type: type,
@@ -137,8 +146,7 @@ defmodule Astarte.Streams.Message do
         type: :integer
       }}
   """
-  @spec from_map(%{required(String.t()) => term()}) ::
-          Astarte.Streams.Message.t() | {:error, :invalid_message}
+  @spec from_map(%{required(String.t()) => term()}) :: Message.t() | {:error, :invalid_message}
   def from_map(%{"schema" => @message_schema_version} = map) do
     %{
       "key" => key,
@@ -151,7 +159,7 @@ defmodule Astarte.Streams.Message do
     } = map
 
     {:ok,
-     %Astarte.Streams.Message{
+     %Message{
        key: key,
        metadata: metadata,
        type: type,
@@ -164,4 +172,5 @@ defmodule Astarte.Streams.Message do
   def from_map(map) when is_map(map) do
     {:error, :invalid_message}
   end
+
 end
