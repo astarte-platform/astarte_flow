@@ -81,7 +81,8 @@ defmodule Astarte.Streams.Message do
       "metadata" => metadata,
       "type" => type,
       "subtype" => subtype,
-      "timestamp" => timestamp,
+      "timestamp" => div(timestamp, 1000),
+      "timestamp_us" => rem(timestamp, 1000),
       "data" => data
     }
   end
@@ -93,6 +94,7 @@ defmodule Astarte.Streams.Message do
       "type" => type,
       "subtype" => subtype,
       "timestamp" => timestamp,
+      "timestamp_us" => timestamp_us,
       "data" => data
     } = map
 
@@ -101,7 +103,7 @@ defmodule Astarte.Streams.Message do
       metadata: metadata,
       type: type,
       subtype: subtype,
-      timestamp: timestamp,
+      timestamp: timestamp * 1000 + timestamp_us,
       data: data
     }
   end
