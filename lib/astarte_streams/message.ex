@@ -153,17 +153,18 @@ defmodule Astarte.Streams.Message do
            "metadata" => metadata,
            "type" => type_string,
            "subtype" => subtype,
-           "timestamp" => timestamp,
-           "timestamp_us" => timestamp_us,
+           "timestamp" => millis,
+           "timestamp_us" => micros,
            "data" => data
          } <- map,
-         {:ok, type_atom} <- type_from_string(type_string) do
+         {:ok, type_atom} <- type_from_string(type_string),
+         {:ok, timestamp} <- ms_us_to_timestamp(millis, micros) do
       message = %Message{
         key: key,
         metadata: metadata,
         type: type_atom,
         subtype: subtype,
-        timestamp: timestamp * 1000 + timestamp_us,
+        timestamp: timestamp,
         data: data
       }
 
@@ -196,4 +197,13 @@ defmodule Astarte.Streams.Message do
     end
   end
 
+  @spec ms_us_to_timestamp(integer(), integer()) ::
+          {:ok, integer()} | {:error, :invalid_timestamp}
+  defp ms_us_to_timestamp(millis, micros) do
+    if is_integer(millis) and is_integer(micros) and micros >= 0 and micros < 1000 do
+      {:ok, millis * 1000 + micros}
+    else
+      {:error, :invalid_timestamp}
+    end
+  end
 end
