@@ -133,7 +133,7 @@ defmodule Astarte.Streams.Message do
       ...>   "metadata" => %{},
       ...>   "timestamp" => 1551884045074,
       ...>   "timestamp_us" => 181,
-      ...>   "type" => :integer,
+      ...>   "type" => "integer",
       ...>   "subtype" => nil
       ...> }
       ...> |> Astarte.Streams.Message.from_map()
@@ -148,29 +148,52 @@ defmodule Astarte.Streams.Message do
   """
   @spec from_map(%{required(String.t()) => term()}) :: Message.t() | {:error, :invalid_message}
   def from_map(%{"schema" => @message_schema_version} = map) do
-    %{
-      "key" => key,
-      "metadata" => metadata,
-      "type" => type,
-      "subtype" => subtype,
-      "timestamp" => timestamp,
-      "timestamp_us" => timestamp_us,
-      "data" => data
-    } = map
+    with %{
+           "key" => key,
+           "metadata" => metadata,
+           "type" => type_string,
+           "subtype" => subtype,
+           "timestamp" => timestamp,
+           "timestamp_us" => timestamp_us,
+           "data" => data
+         } <- map,
+         {:ok, type_atom} <- type_from_string(type_string) do
+      message = %Message{
+        key: key,
+        metadata: metadata,
+        type: type_atom,
+        subtype: subtype,
+        timestamp: timestamp * 1000 + timestamp_us,
+        data: data
+      }
 
-    {:ok,
-     %Message{
-       key: key,
-       metadata: metadata,
-       type: type,
-       subtype: subtype,
-       timestamp: timestamp * 1000 + timestamp_us,
-       data: data
-     }}
+      {:ok, message}
+    else
+      _ ->
+        {:error, :invalid_message}
+    end
   end
 
-  def from_map(map) when is_map(map) do
-    {:error, :invalid_message}
+  @spec type_from_string(String.t()) ::
+          {:ok, message_type_atom()} | {:error, :invalid_message_type}
+  defp type_from_string(message_type) do
+    case message_type do
+      "integer" -> {:ok, :integer}
+      "real" -> {:ok, :real}
+      "boolean" -> {:ok, :boolean}
+      "datetime" -> {:ok, :datetime}
+      "binary" -> {:ok, :binary}
+      "string" -> {:ok, :string}
+      "map" -> {:ok, :map}
+      "integer_array" -> {:ok, {:array, :integer}}
+      "real_array" -> {:ok, {:array, :real}}
+      "boolean_array" -> {:ok, {:array, :boolean}}
+      "datetime_array" -> {:ok, {:array, :datetime}}
+      "binary_array" -> {:ok, {:array, :binary}}
+      "string_array" -> {:ok, {:array, :string}}
+      "map_array" -> {:ok, {:array, :map}}
+      _ -> {:error, :invalid_message_type}
+    end
   end
 
 end

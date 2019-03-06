@@ -16,7 +16,22 @@
 # limitations under the License.
 #
 
+alias Astarte.Streams.Message
+
 defmodule Astarte.Streams.MessageTest do
   use ExUnit.Case
   doctest Astarte.Streams.Message
+
+  test "JSON serialization and deserialization" do
+    message = %Message{
+      data: 340_282_366_920_938_463_463_374_607_431_768_211_456,
+      key: "big_integers_stream0",
+      metadata: %{"base" => "2", "exponent" => "128"},
+      timestamp: :erlang.system_time(:microsecond),
+      type: :integer
+    }
+
+    assert Jason.encode!(message, pretty: true) |> Jason.decode!() |> Message.from_map() ==
+             {:ok, message}
+  end
 end
