@@ -65,6 +65,31 @@ defmodule Astarte.Streams.Message do
           data: message_data()
         }
 
+  @doc ~S"""
+  Converts a Message struct to a serialization friendly map, so it can be used with a JSON serializer.
+
+  ## Examples
+
+      iex> %Astarte.Streams.Message{
+      ...>   data: 42,
+      ...>   key: "meaning-of-life",
+      ...>   metadata: %{},
+      ...>   timestamp: 1551884045074181,
+      ...>   type: :integer
+      ...> }
+      ...> |> Astarte.Streams.Message.to_map()
+      %{
+        "schema" => "astarte_streams/message/v0.1",
+        "data" => 42,
+        "key" => "meaning-of-life",
+        "metadata" => %{},
+        "timestamp" => 1551884045074,
+        "timestamp_us" => 181,
+        "type" => :integer,
+        "subtype" => nil
+      }
+  """
+  @spec to_map(Astarte.Streams.Message.t()) :: %{required(String.t()) => term()}
   def to_map(%Astarte.Streams.Message{} = message) do
     %Astarte.Streams.Message{
       key: key,
@@ -87,6 +112,31 @@ defmodule Astarte.Streams.Message do
     }
   end
 
+  @doc ~S"""
+  Converts a message map to a Message struct, this function is useful for handling JSON decoded messages.
+
+  ## Examples
+
+      iex> %{
+      ...>   "schema" => "astarte_streams/message/v0.1",
+      ...>   "data" => 42,
+      ...>   "key" => "meaning-of-life",
+      ...>   "metadata" => %{},
+      ...>   "timestamp" => 1551884045074,
+      ...>   "timestamp_us" => 181,
+      ...>   "type" => :integer,
+      ...>   "subtype" => nil
+      ...> }
+      ...> |> Astarte.Streams.Message.from_map()
+      %Astarte.Streams.Message{
+        data: 42,
+        key: "meaning-of-life",
+        metadata: %{},
+        timestamp: 1551884045074181,
+        type: :integer
+      }
+  """
+  @spec from_map(%{required(String.t()) => term()}) :: Astarte.Streams.Message.t()
   def from_map(%{"schema" => @message_schema_version} = map) do
     %{
       "key" => key,
