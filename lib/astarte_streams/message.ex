@@ -128,15 +128,17 @@ defmodule Astarte.Streams.Message do
       ...>   "subtype" => nil
       ...> }
       ...> |> Astarte.Streams.Message.from_map()
-      %Astarte.Streams.Message{
+      {:ok,
+        %Astarte.Streams.Message{
         data: 42,
         key: "meaning-of-life",
         metadata: %{},
         timestamp: 1551884045074181,
         type: :integer
-      }
+      }}
   """
-  @spec from_map(%{required(String.t()) => term()}) :: Astarte.Streams.Message.t()
+  @spec from_map(%{required(String.t()) => term()}) ::
+          Astarte.Streams.Message.t() | {:error, :invalid_message}
   def from_map(%{"schema" => @message_schema_version} = map) do
     %{
       "key" => key,
@@ -148,13 +150,18 @@ defmodule Astarte.Streams.Message do
       "data" => data
     } = map
 
-    %Astarte.Streams.Message{
-      key: key,
-      metadata: metadata,
-      type: type,
-      subtype: subtype,
-      timestamp: timestamp * 1000 + timestamp_us,
-      data: data
-    }
+    {:ok,
+     %Astarte.Streams.Message{
+       key: key,
+       metadata: metadata,
+       type: type,
+       subtype: subtype,
+       timestamp: timestamp * 1000 + timestamp_us,
+       data: data
+     }}
+  end
+
+  def from_map(map) when is_map(map) do
+    {:error, :invalid_message}
   end
 end
