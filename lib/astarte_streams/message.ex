@@ -26,6 +26,8 @@ defmodule Astarte.Streams.Message do
     :data
   ]
 
+  @message_schema_version "astarte_streams/message/v0.1"
+
   @type message_basic_data ::
           number()
           | boolean()
@@ -62,4 +64,45 @@ defmodule Astarte.Streams.Message do
           timestamp: non_neg_integer(),
           data: message_data()
         }
+
+  def to_map(%Astarte.Streams.Message{} = message) do
+    %Astarte.Streams.Message{
+      key: key,
+      metadata: metadata,
+      type: type,
+      subtype: subtype,
+      timestamp: timestamp,
+      data: data
+    } = message
+
+    %{
+      "schema" => @message_schema_version,
+      "key" => key,
+      "metadata" => metadata,
+      "type" => type,
+      "subtype" => subtype,
+      "timestamp" => timestamp,
+      "data" => data
+    }
+  end
+
+  def from_map(%{"schema" => @message_schema_version} = map) do
+    %{
+      "key" => key,
+      "metadata" => metadata,
+      "type" => type,
+      "subtype" => subtype,
+      "timestamp" => timestamp,
+      "data" => data
+    } = map
+
+    %Astarte.Streams.Message{
+      key: key,
+      metadata: metadata,
+      type: type,
+      subtype: subtype,
+      timestamp: timestamp,
+      data: data
+    }
+  end
 end
