@@ -30,22 +30,21 @@ defmodule Astarte.Streams.Message do
 
   @message_schema_version "astarte_streams/message/v0.1"
 
-  @type message_basic_data ::
-          number()
+  @type basic_data ::
+          integer()
+          | float()
           | boolean()
           | DateTime.t()
           | binary()
           | String.t()
-  @type message_data ::
-          message_basic_data()
-          | %{optional(String.t()) => message_basic_data()}
-          | [message_basic_data()]
+  @type data_with_array :: basic_data() | [basic_data()]
+  @type data :: data_with_array() | %{optional(String.t()) => data_with_array()}
 
   @type message_metadata :: %{optional(String.t()) => String.t()}
 
-  @type message_basic_type_atom :: :integer | :real | :boolean | :datetime | :binary | :string
-  @type message_type_atom :: :map | {:array, message_basic_type_atom()}
-
+  @type basic_data_type :: :integer | :real | :boolean | :datetime | :binary | :string
+  @type data_type_with_array :: basic_data_type() | {:array, basic_data_type()}
+  @type data_type :: :map | data_type_with_array()
   @type message_timestamp :: integer()
 
   @typedoc """
@@ -61,10 +60,10 @@ defmodule Astarte.Streams.Message do
   @type t :: %Message{
           key: String.t(),
           metadata: message_metadata(),
-          type: message_type_atom(),
+          type: data_type(),
           subtype: String.t(),
           timestamp: non_neg_integer(),
-          data: message_data()
+          data: data()
         }
 
   defimpl Jason.Encoder, for: Message do
@@ -175,9 +174,31 @@ defmodule Astarte.Streams.Message do
     end
   end
 
-  @spec type_from_string(String.t()) ::
-          {:ok, message_type_atom()} | {:error, :invalid_message_type}
+  @spec type_from_string(String.t()) :: {:ok, data_type()} | {:error, :invalid_message_type}
   defp type_from_string(message_type) do
+    case message_type do
+      "map" -> {:ok, :map}
+      maybe_with_array -> type_with_array_from_string(maybe_with_array)
+    end
+  end
+
+  @spec type_with_array_from_string(String.t()) ::
+          {:ok, data_type_with_array()} | {:error, :invalid_message_type}
+  defp type_with_array_from_string(message_type) do
+    case message_type do
+      "integer_array" -> {:ok, {:array, :integer}}
+      "real_array" -> {:ok, {:array, :real}}
+      "boolean_array" -> {:ok, {:array, :boolean}}
+      "datetime_array" -> {:ok, {:array, :datetime}}
+      "binary_array" -> {:ok, {:array, :binary}}
+      "string_array" -> {:ok, {:array, :string}}
+      maybe_basic -> basic_type_from_string(maybe_basic)
+    end
+  end
+
+  @spec basic_type_from_string(String.t()) ::
+          {:ok, basic_data_type()} | {:error, :invalid_message_type}
+  defp basic_type_from_string(message_type) do
     case message_type do
       "integer" -> {:ok, :integer}
       "real" -> {:ok, :real}
@@ -185,14 +206,6 @@ defmodule Astarte.Streams.Message do
       "datetime" -> {:ok, :datetime}
       "binary" -> {:ok, :binary}
       "string" -> {:ok, :string}
-      "map" -> {:ok, :map}
-      "integer_array" -> {:ok, {:array, :integer}}
-      "real_array" -> {:ok, {:array, :real}}
-      "boolean_array" -> {:ok, {:array, :boolean}}
-      "datetime_array" -> {:ok, {:array, :datetime}}
-      "binary_array" -> {:ok, {:array, :binary}}
-      "string_array" -> {:ok, {:array, :string}}
-      "map_array" -> {:ok, {:array, :map}}
       _ -> {:error, :invalid_message_type}
     end
   end
