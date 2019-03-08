@@ -154,9 +154,10 @@ defmodule Astarte.Streams.Message do
            "subtype" => subtype,
            "timestamp" => millis,
            "timestamp_us" => micros,
-           "data" => data
+           "data" => wrapped_data
          } <- map,
          {:ok, type_atom} <- type_from_string(type_string),
+         {:ok, data} <- unwrap_data(wrapped_data, type_atom),
          {:ok, timestamp} <- ms_us_to_timestamp(millis, micros) do
       message = %Message{
         key: key,
@@ -217,6 +218,133 @@ defmodule Astarte.Streams.Message do
       {:ok, millis * 1000 + micros}
     else
       {:error, :invalid_timestamp}
+    end
+  end
+
+  @doc ~S"""
+  Converts a "wrapped" value to a value that can be used as a Message data.
+
+  ## Examples
+
+      iex> Astarte.Streams.Message.unwrap_data(42, :integer)
+      {:ok, 42}
+
+      iex> Astarte.Streams.Message.unwrap_data(0.5, :real)
+      {:ok, 0.5}
+
+      iex> Astarte.Streams.Message.unwrap_data(true, :boolean)
+      {:ok, true}
+
+      iex> Astarte.Streams.Message.unwrap_data("dGVzdA==", :binary)
+      {:ok, "test"}
+
+      iex> Astarte.Streams.Message.unwrap_data("Hello World", :string)
+      {:ok, "Hello World"}
+
+      iex> Astarte.Streams.Message.unwrap_data([1, 2, 3], {:array, :integer})
+      {:ok, [1, 2, 3]}
+
+      iex> Astarte.Streams.Message.unwrap_data([1, 2.5, 3], {:array, :integer})
+      {:error, :invalid_data}
+
+      iex> %{
+      ...>   "key1" => %{
+      ...>     "type" => "binary",
+      ...>     "subtype" => "application/octet-stream",
+      ...>     "data" => "AAECAQA="
+      ...>   }
+      ...> }
+      ...> |> Astarte.Streams.Message.unwrap_data(:map)
+      {:ok,
+        %{
+          "key1" => {:binary, "application/octet-stream", <<0, 1, 2, 1, 0>>}
+        }
+      }
+  """
+  @spec unwrap_data(integer(), :integer) :: {:ok, integer()} | {:error, :invalid_data}
+  def unwrap_data(wrapped_data, :integer) when is_integer(wrapped_data) do
+    {:ok, wrapped_data}
+  end
+
+  @spec unwrap_data(float(), :real) :: {:ok, float()} | {:error, :invalid_data}
+  def unwrap_data(wrapped_data, :real) when is_number(wrapped_data) do
+    {:ok, wrapped_data}
+  end
+
+  @spec unwrap_data(boolean(), :boolean) :: {:ok, boolean()} | {:error, :invalid_data}
+  def unwrap_data(wrapped_data, :boolean) when is_boolean(wrapped_data) do
+    {:ok, wrapped_data}
+  end
+
+  @spec unwrap_data(String.t(), :datetime) :: {:ok, DateTime.t()} | {:error, :invalid_data}
+  def unwrap_data(wrapped_data, :datetime) when is_binary(wrapped_data) do
+    with {:ok, dt, _} <- DateTime.from_iso8601(wrapped_data) do
+      {:ok, dt}
+    else
+      _any ->
+        {:error, :invalid_data}
+    end
+  end
+
+  @spec unwrap_data(binary(), :binary) :: {:ok, binary()} | {:error, :invalid_data}
+  def unwrap_data(wrapped_data, :binary) when is_binary(wrapped_data) do
+    case Base.decode64(wrapped_data) do
+      :error ->
+        {:error, :invalid_data}
+
+      result ->
+        result
+    end
+  end
+
+  @spec unwrap_data(String.t(), :string) :: {:ok, String.t()} | {:error, :invalid_data}
+  def unwrap_data(wrapped_data, :string) when is_binary(wrapped_data) do
+    if String.valid?(wrapped_data) do
+      {:ok, wrapped_data}
+    else
+      {:error, :invalid_data}
+    end
+  end
+
+  @spec unwrap_data(list(), {:array, basic_data_type()}) ::
+          {:ok, [basic_data_type()]} | {:error, :invalid_data}
+  def unwrap_data(wrapped_data, {:array, array_type})
+      when is_list(wrapped_data) and is_atom(array_type) do
+    with {:ok, reversed_list} <-
+           Enum.reduce_while(wrapped_data, {:ok, []}, fn list_item, {:ok, acc} ->
+             case unwrap_data(list_item, array_type) do
+               {:ok, unwrapped_item} ->
+                 acc_list = [unwrapped_item | acc]
+                 {:cont, {:ok, acc_list}}
+
+               _invalid ->
+                 {:halt, {:error, :invalid_data}}
+             end
+           end) do
+      {:ok, Enum.reverse(reversed_list)}
+    end
+  end
+
+  @spec unwrap_data(%{optional(String.t()) => term()}, :map) ::
+          {:ok, data()} | {:error, :invalid_data}
+  def unwrap_data(wrapped_data, :map) when is_map(wrapped_data) do
+    Enum.reduce_while(wrapped_data, {:ok, %{}}, &unwrap_map_item/2)
+  end
+
+  def unwrap_data(_any_value, any_type) when is_atom(any_type) do
+    {:error, :invalid_data}
+  end
+
+  defp unwrap_map_item({key, value}, {:ok, acc}) do
+    with %{"data" => wrapped_item, "type" => type_string, "subtype" => subtype} <- value,
+         {:ok, data_type} <- basic_type_from_string(type_string),
+         {:ok, data} <- unwrap_data(wrapped_item, data_type) do
+      updated_map = Map.put(acc, key, {data_type, subtype, data})
+
+      {:cont, {:ok, updated_map}}
+    else
+      _any ->
+        {:halt, {:error, :invalid_data}}
     end
   end
 end
