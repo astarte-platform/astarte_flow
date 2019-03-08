@@ -93,7 +93,7 @@ defmodule Astarte.Streams.Message do
         "metadata" => %{},
         "timestamp" => 1551884045074,
         "timestamp_us" => 181,
-        "type" => :integer,
+        "type" => "integer",
         "subtype" => nil
       }
   """
@@ -112,7 +112,7 @@ defmodule Astarte.Streams.Message do
       "schema" => @message_schema_version,
       "key" => key,
       "metadata" => metadata,
-      "type" => type,
+      "type" => type_to_string(type),
       "subtype" => subtype,
       "timestamp" => div(timestamp, 1000),
       "timestamp_us" => rem(timestamp, 1000),
@@ -208,6 +208,25 @@ defmodule Astarte.Streams.Message do
       "binary" -> {:ok, :binary}
       "string" -> {:ok, :string}
       _ -> {:error, :invalid_message_type}
+    end
+  end
+
+  @spec type_to_string(basic_data_type()) :: String.t()
+  defp type_to_string(data_type) do
+    case data_type do
+      :integer -> "integer"
+      :real -> "real"
+      :boolean -> "boolean"
+      :datetime -> "datetime"
+      :binary -> "binary"
+      :string -> "string"
+      {:array, :integer} -> "integer_array"
+      {:array, :real} -> "real_array"
+      {:array, :boolean} -> "boolean_array"
+      {:array, :datetime} -> "datetime_array"
+      {:array, :binary} -> "binary_array"
+      {:array, :string} -> "string_array"
+      :map -> "map"
     end
   end
 
