@@ -34,4 +34,10 @@ defmodule Astarte.Streams.MessageTest do
     assert Jason.encode!(message, pretty: true) |> Jason.decode!() |> Message.from_map() ==
              {:ok, message}
   end
+
+  test "datetime data wrap and unwrap" do
+    now = DateTime.utc_now()
+
+    assert Message.wrap_data(now, :datetime) |> Message.unwrap_data(:datetime) == {:ok, now}
+  end
 end

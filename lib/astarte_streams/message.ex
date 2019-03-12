@@ -116,7 +116,7 @@ defmodule Astarte.Streams.Message do
       "subtype" => subtype,
       "timestamp" => div(timestamp, 1000),
       "timestamp_us" => rem(timestamp, 1000),
-      "data" => data
+      "data" => wrap_data(data, type)
     }
   end
 
@@ -238,6 +238,87 @@ defmodule Astarte.Streams.Message do
     else
       {:error, :invalid_timestamp}
     end
+  end
+
+  @doc ~S"""
+  Converts a value to a "wrapped" value that can be easily serialized.
+
+  ## Examples
+
+      iex> Message.wrap_data(42, :integer)
+      42
+
+      iex> Message.wrap_data(0.5, :real)
+      0.5
+
+      iex> Message.wrap_data(false, :boolean)
+      false
+
+      iex> Message.wrap_data(<<0, 1, 2, 3>>, :binary)
+      "AAECAw=="
+
+      iex> Message.wrap_data("Hello World", :string)
+      "Hello World"
+
+      iex> Message.wrap_data([0, 1, 2], {:array, :integer})
+      [0, 1, 2]
+
+      iex> %{"my_key" => {:binary, "application/octet-stream", <<0, 1>>}}
+      ...> |> Message.wrap_data(:map)
+      %{"my_key" => %{
+        "data" => "AAE=", "subtype" => "application/octet-stream",  "type" => "binary"}
+      }
+  """
+  @spec wrap_data(integer(), :integer) :: integer()
+  def wrap_data(data, :integer) when is_integer(data) do
+    data
+  end
+
+  @spec wrap_data(number(), :real) :: number()
+  def wrap_data(data, :real) when is_number(data) do
+    data
+  end
+
+  @spec wrap_data(boolean(), :boolean) :: boolean()
+  def wrap_data(data, :boolean) when is_boolean(data) do
+    data
+  end
+
+  @spec wrap_data(DateTime.t(), :datetime) :: String.t()
+  def wrap_data(%DateTime{} = data, :datetime) do
+    DateTime.to_iso8601(data)
+  end
+
+  @spec wrap_data(binary(), :binary) :: String.t()
+  def wrap_data(data, :binary) when is_binary(data) do
+    Base.encode64(data)
+  end
+
+  @spec wrap_data(String.t(), :string) :: String.t()
+  def wrap_data(data, :string) when is_binary(data) do
+    data
+  end
+
+  @spec wrap_data([basic_data()], {:array, basic_data_type()}) :: list()
+  def wrap_data(data, {:array, array_type}) when is_list(data) do
+    for array_value <- data do
+      wrap_data(array_value, array_type)
+    end
+  end
+
+  @spec wrap_data(%{optional(String.t()) => {atom(), String.t(), data_with_array()}}, :map) :: %{
+          optional(String.t()) => %{optional(String.t()) => term()}
+        }
+  def wrap_data(data, :map) when is_map(data) do
+    Enum.reduce(data, %{}, fn {key, {item_type, item_subtype, item}}, acc ->
+      wrapped = %{
+        "data" => wrap_data(item, item_type),
+        "type" => type_to_string(item_type),
+        "subtype" => item_subtype
+      }
+
+      Map.put(acc, key, wrapped)
+    end)
   end
 
   @doc ~S"""
