@@ -144,6 +144,15 @@ defmodule Astarte.Streams.Message do
         timestamp: 1551884045074181,
         type: :integer
       }}
+
+      iex> %{
+      ...>   "schema" => "astarte_streams/message/v0.1",
+      ...> }
+      ...> |> Astarte.Streams.Message.from_map()
+      {:error, :invalid_message}
+
+      iex> Astarte.Streams.Message.from_map(%{})
+      {:error, :invalid_message}
   """
   @spec from_map(%{required(String.t()) => term()}) :: Message.t() | {:error, :invalid_message}
   def from_map(%{"schema" => @message_schema_version} = map) do
@@ -156,6 +165,9 @@ defmodule Astarte.Streams.Message do
            "timestamp_us" => micros,
            "data" => wrapped_data
          } <- map,
+         true <- String.valid?(key),
+         true <- valid_metadata?(metadata),
+         true <- String.valid?(subtype || ""),
          {:ok, type_atom} <- type_from_string(type_string),
          {:ok, data} <- unwrap_data(wrapped_data, type_atom),
          {:ok, timestamp} <- ms_us_to_timestamp(millis, micros) do
@@ -173,6 +185,10 @@ defmodule Astarte.Streams.Message do
       _ ->
         {:error, :invalid_message}
     end
+  end
+
+  def from_map(_any) do
+    {:error, :invalid_message}
   end
 
   @spec type_from_string(String.t()) :: {:ok, data_type()} | {:error, :invalid_message_type}
@@ -237,6 +253,15 @@ defmodule Astarte.Streams.Message do
       {:ok, millis * 1000 + micros}
     else
       {:error, :invalid_timestamp}
+    end
+  end
+
+  @spec valid_metadata?(term()) :: boolean()
+  defp valid_metadata?(metadata) do
+    if is_map(metadata) do
+      Enum.all?(metadata, fn {k, v} -> String.valid?(k) and String.valid?(v) end)
+    else
+      false
     end
   end
 
