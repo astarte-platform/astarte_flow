@@ -78,14 +78,14 @@ defmodule Astarte.Streams.Message do
 
   ## Examples
 
-      iex> %Astarte.Streams.Message{
+      iex> %Message{
       ...>   data: 42,
       ...>   key: "meaning-of-life",
       ...>   metadata: %{},
       ...>   timestamp: 1551884045074181,
       ...>   type: :integer
       ...> }
-      ...> |> Astarte.Streams.Message.to_map()
+      ...> |> Message.to_map()
       %{
         "schema" => "astarte_streams/message/v0.1",
         "data" => 42,
@@ -135,9 +135,9 @@ defmodule Astarte.Streams.Message do
       ...>   "type" => "integer",
       ...>   "subtype" => nil
       ...> }
-      ...> |> Astarte.Streams.Message.from_map()
+      ...> |> Message.from_map()
       {:ok,
-        %Astarte.Streams.Message{
+        %Message{
         data: 42,
         key: "meaning-of-life",
         metadata: %{},
@@ -148,10 +148,10 @@ defmodule Astarte.Streams.Message do
       iex> %{
       ...>   "schema" => "astarte_streams/message/v0.1",
       ...> }
-      ...> |> Astarte.Streams.Message.from_map()
+      ...> |> Message.from_map()
       {:error, :invalid_message}
 
-      iex> Astarte.Streams.Message.from_map(%{})
+      iex> Message.from_map(%{})
       {:error, :invalid_message}
   """
   @spec from_map(%{required(String.t()) => term()}) :: Message.t() | {:error, :invalid_message}
@@ -351,25 +351,25 @@ defmodule Astarte.Streams.Message do
 
   ## Examples
 
-      iex> Astarte.Streams.Message.unwrap_data(42, :integer)
+      iex> Message.unwrap_data(42, :integer)
       {:ok, 42}
 
-      iex> Astarte.Streams.Message.unwrap_data(0.5, :real)
+      iex> Message.unwrap_data(0.5, :real)
       {:ok, 0.5}
 
-      iex> Astarte.Streams.Message.unwrap_data(true, :boolean)
+      iex> Message.unwrap_data(true, :boolean)
       {:ok, true}
 
-      iex> Astarte.Streams.Message.unwrap_data("dGVzdA==", :binary)
+      iex> Message.unwrap_data("dGVzdA==", :binary)
       {:ok, "test"}
 
-      iex> Astarte.Streams.Message.unwrap_data("Hello World", :string)
+      iex> Message.unwrap_data("Hello World", :string)
       {:ok, "Hello World"}
 
-      iex> Astarte.Streams.Message.unwrap_data([1, 2, 3], {:array, :integer})
+      iex> Message.unwrap_data([1, 2, 3], {:array, :integer})
       {:ok, [1, 2, 3]}
 
-      iex> Astarte.Streams.Message.unwrap_data([1, 2.5, 3], {:array, :integer})
+      iex> Message.unwrap_data([1, 2.5, 3], {:array, :integer})
       {:error, :invalid_data}
 
       iex> %{
@@ -379,7 +379,7 @@ defmodule Astarte.Streams.Message do
       ...>     "data" => "AAECAQA="
       ...>   }
       ...> }
-      ...> |> Astarte.Streams.Message.unwrap_data(:map)
+      ...> |> Message.unwrap_data(:map)
       {:ok,
         %{
           "key1" => {:binary, "application/octet-stream", <<0, 1, 2, 1, 0>>}
