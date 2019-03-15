@@ -93,8 +93,53 @@ defmodule Astarte.Streams.Message do
         "metadata" => %{},
         "timestamp" => 1551884045074,
         "timestamp_us" => 181,
-        "type" => "integer",
-        "subtype" => nil
+        "type" => "integer"
+      }
+
+      iex> %Message{
+      ...>   data: <<0, 1, 2, 0>>,
+      ...>   key: "binaries_stream",
+      ...>   metadata: %{},
+      ...>   timestamp: 1551884045074181,
+      ...>   type: :binary,
+      ...>   subtype: "application/octet-stream"
+      ...> }
+      ...> |> Message.to_map()
+      %{
+        "schema" => "astarte_streams/message/v0.1",
+        "data" => "AAECAA==",
+        "key" => "binaries_stream",
+        "metadata" => %{},
+        "timestamp" => 1551884045074,
+        "timestamp_us" => 181,
+        "type" => "binary",
+        "subtype" => "application/octet-stream"
+      }
+
+      iex> %Message{
+      ...>   data: %{
+      ...>     "a" => {:real, nil, -1},
+      ...>     "b" => {:binary, "text/plain", "Ciao\n"}
+      ...>   },
+      ...>   key: "binaries_stream",
+      ...>   metadata: %{},
+      ...>   timestamp: 1551884045074181,
+      ...>   type: :map,
+      ...>   subtype: "application/octet-stream"
+      ...> }
+      ...> |> Message.to_map()
+      %{
+        "schema" => "astarte_streams/message/v0.1",
+        "data" => %{
+          "a" => %{"type" => "real", "data" => -1},
+          "b" => %{"type" => "binary", "subtype" => "text/plain", "data" => "Q2lhbwo="}
+        },
+        "key" => "binaries_stream",
+        "metadata" => %{},
+        "timestamp" => 1551884045074,
+        "timestamp_us" => 181,
+        "type" => "map",
+        "subtype" => "application/octet-stream"
       }
   """
   @spec to_map(Message.t()) :: %{required(String.t()) => term()}
@@ -113,11 +158,19 @@ defmodule Astarte.Streams.Message do
       "key" => key,
       "metadata" => metadata,
       "type" => type_to_string(type),
-      "subtype" => subtype,
       "timestamp" => div(timestamp, 1000),
       "timestamp_us" => rem(timestamp, 1000),
       "data" => wrap_data(data, type)
     }
+    |> maybe_put("subtype", subtype)
+  end
+
+  defp maybe_put(map, _key, nil) do
+    map
+  end
+
+  defp maybe_put(map, key, value) do
+    Map.put(map, key, value)
   end
 
   @doc ~S"""
@@ -132,8 +185,7 @@ defmodule Astarte.Streams.Message do
       ...>   "metadata" => %{},
       ...>   "timestamp" => 1551884045074,
       ...>   "timestamp_us" => 181,
-      ...>   "type" => "integer",
-      ...>   "subtype" => nil
+      ...>   "type" => "integer"
       ...> }
       ...> |> Message.from_map()
       {:ok,
@@ -160,15 +212,15 @@ defmodule Astarte.Streams.Message do
            "key" => key,
            "metadata" => metadata,
            "type" => type_string,
-           "subtype" => subtype,
            "timestamp" => millis,
            "timestamp_us" => micros,
            "data" => wrapped_data
          } <- map,
          true <- String.valid?(key),
          true <- valid_metadata?(metadata),
-         true <- String.valid?(subtype || ""),
          {:ok, type_atom} <- type_from_string(type_string),
+         subtype <- Map.get(map, "subtype"),
+         true <- String.valid?(subtype || ""),
          {:ok, data} <- unwrap_data(wrapped_data, type_atom),
          {:ok, timestamp} <- ms_us_to_timestamp(millis, micros) do
       message = %Message{
@@ -336,11 +388,12 @@ defmodule Astarte.Streams.Message do
         }
   def wrap_data(data, :map) when is_map(data) do
     Enum.reduce(data, %{}, fn {key, {item_type, item_subtype, item}}, acc ->
-      wrapped = %{
-        "data" => wrap_data(item, item_type),
-        "type" => type_to_string(item_type),
-        "subtype" => item_subtype
-      }
+      wrapped =
+        %{
+          "data" => wrap_data(item, item_type),
+          "type" => type_to_string(item_type)
+        }
+        |> maybe_put("subtype", item_subtype)
 
       Map.put(acc, key, wrapped)
     end)
@@ -377,12 +430,17 @@ defmodule Astarte.Streams.Message do
       ...>     "type" => "binary",
       ...>     "subtype" => "application/octet-stream",
       ...>     "data" => "AAECAQA="
+      ...>   },
+      ...>   "key2" => %{
+      ...>     "type" => "real_array",
+      ...>     "data" => [-1, 0, 0.5, 1]
       ...>   }
       ...> }
       ...> |> Message.unwrap_data(:map)
       {:ok,
         %{
-          "key1" => {:binary, "application/octet-stream", <<0, 1, 2, 1, 0>>}
+          "key1" => {:binary, "application/octet-stream", <<0, 1, 2, 1, 0>>},
+          "key2" => {{:array, :real}, nil, [-1, 0, 0.5, 1]}
         }
       }
   """
@@ -461,8 +519,10 @@ defmodule Astarte.Streams.Message do
   end
 
   defp unwrap_map_item({key, value}, {:ok, acc}) do
-    with %{"data" => wrapped_item, "type" => type_string, "subtype" => subtype} <- value,
-         {:ok, data_type} <- basic_type_from_string(type_string),
+    with %{"data" => wrapped_item, "type" => type_string} <- value,
+         {:ok, data_type} <- type_with_array_from_string(type_string),
+         subtype <- Map.get(value, "subtype"),
+         true <- String.valid?(subtype || ""),
          {:ok, data} <- unwrap_data(wrapped_item, data_type) do
       updated_map = Map.put(acc, key, {data_type, subtype, data})
 
