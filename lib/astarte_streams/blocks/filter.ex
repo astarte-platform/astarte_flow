@@ -17,6 +17,8 @@
 #
 
 defmodule Astarte.Streams.Blocks.Filter do
+  use GenStage
+
   alias Astarte.Streams.Blocks.FilterFunctions
   alias Astarte.Streams.Message
 
@@ -26,17 +28,33 @@ defmodule Astarte.Streams.Blocks.Filter do
     ]
   end
 
-  def initialize(initial_config) do
-    with {:ok, func} <- FilterFunctions.make_filter(initial_config) do
-      config = %Config{
-        good_func: func
-      }
+  def start_link(opts) do
+    GenStage.start_link(__MODULE__, opts)
+  end
 
-      {:ok, config}
+  # GenStage callbacks
+
+  @impl true
+  def init(opts) do
+    filter_config = Keyword.fetch!(opts, :filter_config)
+
+    with {:ok, func} <- FilterFunctions.make_filter(filter_config) do
+      config = %Config{good_func: func}
+      {:producer_consumer, config, dispatcher: GenStage.BroadcastDispatcher}
+    else
+      {:error, reason} ->
+        {:stop, reason}
     end
   end
 
-  def good?(%Config{} = config, %Message{} = message) do
+  @impl true
+  def handle_events(events, _from, config) do
+    filtered_events = Enum.filter(events, &good?(config, &1))
+
+    {:noreply, filtered_events, config}
+  end
+
+  defp good?(%Config{} = config, %Message{} = message) do
     %Config{
       good_func: good_func
     } = config
