@@ -76,4 +76,8 @@ defmodule Astarte.Streams.Blocks.FilterFunctions do
         {:error, :invalid_filter}
     end
   end
+
+  def make_filter(_) do
+    {:error, :invalid_config}
+  end
 end
