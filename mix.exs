@@ -46,6 +46,9 @@ defmodule Astarte.Streams.MixProject do
   defp deps do
     [
       {:excoveralls, "~> 0.10", only: :test},
+      {:gen_stage, "~> 0.14"},
+      {:hackney, "~> 1.15"},
+      {:tesla, "~> 1.2"},
       {:dialyzex, "~> 1.2", only: :dev},
       {:jason, "~> 1.1"},
       {:luerl, "~> 0.3"}
