@@ -16,10 +16,30 @@
 # limitations under the License.
 #
 
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
-use Mix.Config
+defmodule TestProducer do
+  use GenStage
 
-config :tesla, adapter: Tesla.Adapter.Hackney
+  def push(pid, message_or_messages) do
+    GenStage.call(pid, {:push, message_or_messages})
+  end
 
-import_config "#{Mix.env()}.exs"
+  def start_link do
+    GenStage.start_link(__MODULE__, :ok)
+  end
+
+  def init(:ok) do
+    {:producer, :ok, dispatcher: GenStage.BroadcastDispatcher}
+  end
+
+  def handle_demand(_demand, state) do
+    {:noreply, [], state}
+  end
+
+  def handle_call({:push, messages}, _from, state) when is_list(messages) do
+    {:reply, :ok, messages, state}
+  end
+
+  def handle_call({:push, message}, _from, state) do
+    {:reply, :ok, [message], state}
+  end
+end

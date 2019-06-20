@@ -16,10 +16,7 @@
 # limitations under the License.
 #
 
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
-use Mix.Config
-
-config :tesla, adapter: Tesla.Adapter.Hackney
-
-import_config "#{Mix.env()}.exs"
+Mox.defmock(PairingMock, for: Astarte.API.Pairing.Devices.Behaviour)
+Mox.defmock(ConnectionMock, for: Astarte.Device.Connection)
+Mox.defmock(CredentialStorageMock, for: Astarte.Device.CredentialStorage)
+Mox.defmock(InterfaceProviderMock, for: Astarte.Device.InterfaceProvider)
