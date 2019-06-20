@@ -26,6 +26,7 @@ defmodule Astarte.Streams.MixProject do
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      elixirc_paths: elixirc_paths(Mix.env()),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -43,6 +44,9 @@ defmodule Astarte.Streams.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["test/support", "lib"]
+  defp elixirc_paths(_), do: ["lib"]
+
   defp deps do
     [
       {:astarte_device, github: "astarte-platform/astarte-device-sdk-elixir"},
@@ -51,6 +55,7 @@ defmodule Astarte.Streams.MixProject do
       {:hackney, "~> 1.15"},
       {:tesla, "~> 1.2"},
       {:dialyzex, "~> 1.2", only: :dev},
+      {:mox, "~> 0.5", only: :test},
       {:jason, "~> 1.1"},
       {:luerl, "~> 0.3"}
     ]
