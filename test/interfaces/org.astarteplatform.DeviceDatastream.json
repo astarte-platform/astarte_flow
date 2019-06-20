@@ -1,0 +1,13 @@
+{
+   "interface_name": "org.astarteplatform.test.DeviceDatastream",
+   "version_major": 0,
+   "version_minor": 1,
+   "type": "datastream",
+   "ownership": "device",
+   "mappings": [
+       {
+           "endpoint": "/realValue",
+           "type": "double"
+       }
+    ]
+}
