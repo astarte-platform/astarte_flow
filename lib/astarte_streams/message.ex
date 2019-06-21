@@ -244,7 +244,7 @@ defmodule Astarte.Streams.Message do
   end
 
   @spec type_from_string(String.t()) :: {:ok, data_type()} | {:error, :invalid_message_type}
-  defp type_from_string(message_type) do
+  def type_from_string(message_type) do
     case message_type do
       "map" -> {:ok, :map}
       maybe_with_array -> type_with_array_from_string(maybe_with_array)
@@ -280,7 +280,7 @@ defmodule Astarte.Streams.Message do
   end
 
   @spec type_to_string(basic_data_type()) :: String.t()
-  defp type_to_string(data_type) do
+  def type_to_string(data_type) do
     case data_type do
       :integer -> "integer"
       :real -> "real"
