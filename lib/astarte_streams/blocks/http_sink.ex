@@ -90,7 +90,7 @@ defmodule Astarte.Streams.Blocks.HttpSink do
           []
         end
 
-      post(client, data, opts)
+      _ = post(client, data, opts)
     end
 
     {:noreply, [], config}
