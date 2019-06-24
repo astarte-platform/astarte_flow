@@ -50,6 +50,8 @@ defmodule Astarte.Streams.MixProject do
   defp deps do
     [
       {:astarte_device, github: "astarte-platform/astarte-device-sdk-elixir"},
+      {:certifi, "~> 2.5"},
+      {:tortoise, "~> 0.9"},
       {:excoveralls, "~> 0.10", only: :test},
       {:gen_stage, "~> 0.14"},
       {:hackney, "~> 1.15"},
