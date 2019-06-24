@@ -34,24 +34,29 @@ defmodule Astarte.Streams.Blocks.FilterFunctionsTest do
     assert is_function(fun) == true
 
     good_message = %Message{
+      key: "the_key",
       data: 42,
-      type: :integer
+      type: :integer,
+      timestamp: microseconds_now()
     }
 
     not_good_message = %Message{
+      key: "the_key",
       data: -1,
-      type: :integer
+      type: :integer,
+      timestamp: microseconds_now()
     }
 
     not_good_type = %Message{
+      key: "the_key",
       data: "42",
-      type: :string
+      type: :string,
+      timestamp: microseconds_now()
     }
 
     assert fun.(good_message) == true
     assert fun.(not_good_message) == false
     assert fun.(not_good_type) == false
-    assert fun.(%Message{}) == false
   end
 
   test "any other type of value != filter" do
@@ -65,24 +70,29 @@ defmodule Astarte.Streams.Blocks.FilterFunctionsTest do
     assert is_function(fun) == true
 
     good_message = %Message{
+      key: "the_key",
       data: 0,
-      type: :integer
+      type: :integer,
+      timestamp: microseconds_now()
     }
 
     good_different_type = %Message{
+      key: "the_key",
       data: "0",
-      type: :string
+      type: :string,
+      timestamp: microseconds_now()
     }
 
     not_good_message = %Message{
+      key: "the_key",
       data: 42,
-      type: :integer
+      type: :integer,
+      timestamp: microseconds_now()
     }
 
     assert fun.(good_message) == true
     assert fun.(good_different_type) == true
     assert fun.(not_good_message) == false
-    assert fun.(%Message{}) == true
   end
 
   test "invalid data when using == filter on any type of message" do
@@ -126,13 +136,17 @@ defmodule Astarte.Streams.Blocks.FilterFunctionsTest do
     assert is_function(fun) == true
 
     good_message = %Message{
+      key: "the_key",
       data: 21,
-      type: :integer
+      type: :integer,
+      timestamp: microseconds_now()
     }
 
     not_good_message = %Message{
+      key: "the_key",
       data: 20,
-      type: :integer
+      type: :integer,
+      timestamp: microseconds_now()
     }
 
     assert fun.(good_message) == true
@@ -146,8 +160,10 @@ defmodule Astarte.Streams.Blocks.FilterFunctionsTest do
     assert is_function(fun) == true
 
     not_good_type = %Message{
+      key: "the_key",
       data: "21",
-      type: :string
+      type: :string,
+      timestamp: microseconds_now()
     }
 
     not_good_type_fun = fn ->
@@ -177,5 +193,10 @@ defmodule Astarte.Streams.Blocks.FilterFunctionsTest do
     end
 
     assert capture_log(invalid_filter_fun) =~ "FilterFunctions: luerl error"
+  end
+
+  defp microseconds_now do
+    DateTime.utc_now()
+    |> DateTime.to_unix(:microsecond)
   end
 end
