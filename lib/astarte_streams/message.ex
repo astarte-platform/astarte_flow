@@ -19,13 +19,17 @@
 alias Astarte.Streams.Message
 
 defmodule Astarte.Streams.Message do
-  defstruct [
+  @enforce_keys [
     :key,
-    :metadata,
+    :data,
     :type,
+    :timestamp
+  ]
+
+  defstruct [
     :subtype,
-    :timestamp,
-    :data
+    {:metadata, %{}}
+    | @enforce_keys
   ]
 
   @message_schema_version "astarte_streams/message/v0.1"
