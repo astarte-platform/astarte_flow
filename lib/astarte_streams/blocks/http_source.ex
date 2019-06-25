@@ -256,6 +256,7 @@ defmodule Astarte.Streams.Blocks.HttpSource do
   defp build_client(base_url, headers) do
     middleware = [
       Tesla.Middleware.FollowRedirects,
+      Tesla.Middleware.DecompressResponse,
       {Tesla.Middleware.BaseUrl, base_url},
       {Tesla.Middleware.Headers, headers}
     ]
