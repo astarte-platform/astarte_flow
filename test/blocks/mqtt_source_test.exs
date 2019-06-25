@@ -99,34 +99,34 @@ defmodule Astarte.Streams.Blocks.MqttSourceTest do
       Handler.handle_message(["binary", "stuff"], <<1, 2, 3, 4>>, handler_state)
 
       assert [
-        %Message{
-          key: "mytopic",
-          data: "payload",
-          type: :binary,
-          subtype: "application/octet-stream",
-          metadata: %{
-            "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
-          }
-        },
-        %Message{
-          key: "another/topic",
-          data: "another payload",
-          type: :binary,
-          subtype: "application/octet-stream",
-          metadata: %{
-            "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
-          }
-        },
-        %Message{
-          key: "binary/stuff",
-          data: <<1, 2, 3, 4>>,
-          type: :binary,
-          subtype: "application/octet-stream",
-          metadata: %{
-            "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
-          }
-        }
-      ] = Enum.take(stream, 3)
+               %Message{
+                 key: "mytopic",
+                 data: "payload",
+                 type: :binary,
+                 subtype: "application/octet-stream",
+                 metadata: %{
+                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                 }
+               },
+               %Message{
+                 key: "another/topic",
+                 data: "another payload",
+                 type: :binary,
+                 subtype: "application/octet-stream",
+                 metadata: %{
+                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                 }
+               },
+               %Message{
+                 key: "binary/stuff",
+                 data: <<1, 2, 3, 4>>,
+                 type: :binary,
+                 subtype: "application/octet-stream",
+                 metadata: %{
+                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                 }
+               }
+             ] = Enum.take(stream, 3)
     end
 
     test "gets buffered and delivered when consumers subscribe", %{pid: pid} do
@@ -148,34 +148,34 @@ defmodule Astarte.Streams.Blocks.MqttSourceTest do
         |> Enum.take(3)
 
       assert [
-        %Message{
-          key: "mytopic",
-          data: "payload",
-          type: :binary,
-          subtype: "application/octet-stream",
-          metadata: %{
-            "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
-          }
-        },
-        %Message{
-          key: "another/topic",
-          data: "another payload",
-          type: :binary,
-          subtype: "application/octet-stream",
-          metadata: %{
-            "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
-          }
-        },
-        %Message{
-          key: "binary/stuff",
-          data: <<1, 2, 3, 4>>,
-          type: :binary,
-          subtype: "application/octet-stream",
-          metadata: %{
-            "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
-          }
-        }
-      ] = messages
+               %Message{
+                 key: "mytopic",
+                 data: "payload",
+                 type: :binary,
+                 subtype: "application/octet-stream",
+                 metadata: %{
+                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                 }
+               },
+               %Message{
+                 key: "another/topic",
+                 data: "another payload",
+                 type: :binary,
+                 subtype: "application/octet-stream",
+                 metadata: %{
+                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                 }
+               },
+               %Message{
+                 key: "binary/stuff",
+                 data: <<1, 2, 3, 4>>,
+                 type: :binary,
+                 subtype: "application/octet-stream",
+                 metadata: %{
+                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                 }
+               }
+             ] = messages
     end
   end
 end
