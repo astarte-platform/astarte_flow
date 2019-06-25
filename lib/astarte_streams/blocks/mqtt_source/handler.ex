@@ -42,12 +42,12 @@ defmodule Astarte.Streams.Blocks.MqttSource.Handler do
   end
 
   def connection(:up, state) do
-    Logger.info("Connected")
+    _ = Logger.info("Connected")
     {:ok, state}
   end
 
   def connection(:down, state) do
-    Logger.info("Disconnected")
+    _ = Logger.info("Disconnected")
     {:ok, state}
   end
 

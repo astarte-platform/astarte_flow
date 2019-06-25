@@ -109,7 +109,7 @@ defmodule Astarte.Streams.Blocks.LuaMapper do
   @doc """
   Executes the Lua script and returns the new message created using the script.
   """
-  @spec lua_map(Message.t(), Config.t()) :: {:ok, Message.t()}
+  @spec lua_map(Message.t(), Config.t()) :: {:ok, Message.t()} | {:error, reason :: term()}
   def lua_map(%Message{} = msg, %Config{luerl_chunk: chunk, luerl_state: state}) do
     lua_message = message_to_lua(msg)
 

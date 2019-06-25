@@ -194,7 +194,7 @@ defmodule Astarte.Streams.Blocks.MqttSource do
         {:ok, {Tortoise.Transport.Tcp, opts}}
 
       _ ->
-        Logger.warn("Can't parse broker url: #{inspect(broker_url)}")
+        _ = Logger.warn("Can't parse broker url: #{inspect(broker_url)}")
         {:error, :invalid_broker_url}
     end
   end

@@ -90,7 +90,7 @@ defmodule Astarte.Streams.Blocks.HttpSink do
           []
         end
 
-      post(client, data, opts)
+      _ = post(client, data, opts)
     end
 
     {:noreply, [], config}
@@ -98,17 +98,19 @@ defmodule Astarte.Streams.Blocks.HttpSink do
 
   defp post(client, data, opts) do
     case Tesla.post(client, "/", data, opts) do
-      {:error, reason} ->
-        Logger.warn("HttpSink cannot make POST request", reason: reason)
+      {:ok, %{status: status}} when status < 400 ->
+        :ok
 
       {:ok, %{status: status, body: body}} ->
-        Logger.warn("HttpSink received error status",
+        _ = Logger.warn("HttpSink received error status",
           status: status,
           body: body
         )
+        {:error, :http_error_response}
 
-      _ ->
-        :ok
+      {:error, reason} ->
+        _ = Logger.warn("HttpSink cannot make POST request", reason: reason)
+        {:error, :request_failed}
     end
   end
 

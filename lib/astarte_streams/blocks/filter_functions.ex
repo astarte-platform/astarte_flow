@@ -26,7 +26,7 @@ defmodule Astarte.Streams.Blocks.FilterFunctions do
         data == fvalue
 
       any_invalid ->
-        Logger.warn("FilterFunctions: invalid data: #{inspect(any_invalid)}")
+        _ = Logger.warn("FilterFunctions: invalid data: #{inspect(any_invalid)}")
         false
     end
 
@@ -39,7 +39,7 @@ defmodule Astarte.Streams.Blocks.FilterFunctions do
         data != fvalue
 
       any_invalid ->
-        Logger.warn("FilterFunctions: invalid data: #{inspect(any_invalid)}")
+        _ = Logger.warn("FilterFunctions: invalid data: #{inspect(any_invalid)}")
         false
     end
 
@@ -60,19 +60,19 @@ defmodule Astarte.Streams.Blocks.FilterFunctions do
                 result
 
               any_unexpected ->
-                Logger.warn("FilterFunctions: luerl unexpected: #{inspect(any_unexpected)}")
+                _ = Logger.warn("FilterFunctions: luerl unexpected: #{inspect(any_unexpected)}")
                 false
             end
 
           any_invalid ->
-            Logger.warn("FilterFunctions: invalid data: #{inspect(any_invalid)}")
+            _ = Logger.warn("FilterFunctions: invalid data: #{inspect(any_invalid)}")
             false
         end
 
         {:ok, fun}
 
       {:error, reason, _} ->
-        Logger.warn("FilterFunctions: luerl error: #{inspect(reason)}")
+        _ = Logger.warn("FilterFunctions: luerl error: #{inspect(reason)}")
         {:error, :invalid_filter}
     end
   end
