@@ -102,10 +102,12 @@ defmodule Astarte.Streams.Blocks.HttpSink do
         :ok
 
       {:ok, %{status: status, body: body}} ->
-        _ = Logger.warn("HttpSink received error status",
-          status: status,
-          body: body
-        )
+        _ =
+          Logger.warn("HttpSink received error status",
+            status: status,
+            body: body
+          )
+
         {:error, :http_error_response}
 
       {:error, reason} ->

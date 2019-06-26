@@ -89,6 +89,7 @@ defmodule Astarte.Streams.Blocks.MqttSource do
         pending_demand: 0,
         queue: :queue.new()
       }
+
       {:producer, state, dispatcher: GenStage.BroadcastDispatcher}
     else
       {:error, reason} ->
@@ -115,7 +116,8 @@ defmodule Astarte.Streams.Blocks.MqttSource do
     alias Astarte.Streams.Blocks.MqttSource.Handler
 
     with {:url, {:ok, broker_url}} <- {:url, Keyword.fetch(opts, :broker_url)},
-         {:subs, {:ok, [_head | _tail] = subscriptions}} <- {:subs, Keyword.fetch(opts, :subscriptions)},
+         {:subs, {:ok, [_head | _tail] = subscriptions}} <-
+           {:subs, Keyword.fetch(opts, :subscriptions)},
          client_id = Keyword.get_lazy(opts, :client_id, &random_client_id/0),
          {:ok, server} <- build_server(broker_url, opts) do
       subscriptions_with_qos =
