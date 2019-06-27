@@ -48,7 +48,8 @@ defmodule Astarte.Streams.Message do
 
   @type basic_data_type :: :integer | :real | :boolean | :datetime | :binary | :string
   @type data_type_with_array :: basic_data_type() | {:array, basic_data_type()}
-  @type data_type :: :map | data_type_with_array()
+  @type data_type :: %{String.t() => data_type_with_array()} | data_type_with_array()
+  @type subtype :: nil | String.t() | %{String.t() => String.t()}
   @type message_timestamp :: integer()
 
   @typedoc """
@@ -65,8 +66,8 @@ defmodule Astarte.Streams.Message do
           key: String.t(),
           metadata: message_metadata(),
           type: data_type(),
-          subtype: String.t(),
-          timestamp: non_neg_integer(),
+          subtype: subtype(),
+          timestamp: message_timestamp(),
           data: data()
         }
 
@@ -122,28 +123,38 @@ defmodule Astarte.Streams.Message do
 
       iex> %Message{
       ...>   data: %{
-      ...>     "a" => {:real, nil, -1},
-      ...>     "b" => {:binary, "text/plain", "Ciao\n"}
+      ...>     "a" => -1,
+      ...>     "b" => "Ciao\n"
       ...>   },
       ...>   key: "binaries_stream",
       ...>   metadata: %{},
       ...>   timestamp: 1551884045074181,
-      ...>   type: :map,
-      ...>   subtype: "application/octet-stream"
+      ...>   type: %{
+      ...>     "a" => :real,
+      ...>     "b" => :binary
+      ...>   },
+      ...>   subtype: %{
+      ...>     "b" => "text/plain"
+      ...>   }
       ...> }
       ...> |> Message.to_map()
       %{
         "schema" => "astarte_streams/message/v0.1",
         "data" => %{
-          "a" => %{"type" => "real", "data" => -1},
-          "b" => %{"type" => "binary", "subtype" => "text/plain", "data" => "Q2lhbwo="}
+          "a" => -1,
+          "b" => "Q2lhbwo="
         },
         "key" => "binaries_stream",
         "metadata" => %{},
         "timestamp" => 1551884045074,
         "timestamp_us" => 181,
-        "type" => "map",
-        "subtype" => "application/octet-stream"
+        "type" => %{
+          "a" => "real",
+          "b" => "binary"
+        },
+        "subtype" => %{
+          "b" => "text/plain"
+        }
       }
   """
   @spec to_map(Message.t()) :: %{required(String.t()) => term()}
@@ -247,11 +258,20 @@ defmodule Astarte.Streams.Message do
     {:error, :invalid_message}
   end
 
-  @spec type_from_string(String.t()) :: {:ok, data_type()} | {:error, :invalid_message_type}
+  @spec type_from_string(String.t() | %{String.t() => String.t()}) ::
+          {:ok, data_type()} | {:error, :invalid_message_type}
   def type_from_string(message_type) do
     case message_type do
-      "map" -> {:ok, :map}
-      maybe_with_array -> type_with_array_from_string(maybe_with_array)
+      type_string_map when is_map(type_string_map) ->
+        Enum.reduce_while(type_string_map, {:ok, %{}}, fn {key, type_string}, {:ok, acc} ->
+          case type_with_array_from_string(type_string) do
+            {:ok, type} -> {:cont, {:ok, Map.put(acc, key, type)}}
+            {:error, :invalid_message_type} -> {:halt, {:error, :invalid_message_type}}
+          end
+        end)
+
+      maybe_with_array ->
+        type_with_array_from_string(maybe_with_array)
     end
   end
 
@@ -286,19 +306,46 @@ defmodule Astarte.Streams.Message do
   @spec type_to_string(basic_data_type()) :: String.t()
   def type_to_string(data_type) do
     case data_type do
-      :integer -> "integer"
-      :real -> "real"
-      :boolean -> "boolean"
-      :datetime -> "datetime"
-      :binary -> "binary"
-      :string -> "string"
-      {:array, :integer} -> "integer_array"
-      {:array, :real} -> "real_array"
-      {:array, :boolean} -> "boolean_array"
-      {:array, :datetime} -> "datetime_array"
-      {:array, :binary} -> "binary_array"
-      {:array, :string} -> "string_array"
-      :map -> "map"
+      :integer ->
+        "integer"
+
+      :real ->
+        "real"
+
+      :boolean ->
+        "boolean"
+
+      :datetime ->
+        "datetime"
+
+      :binary ->
+        "binary"
+
+      :string ->
+        "string"
+
+      {:array, :integer} ->
+        "integer_array"
+
+      {:array, :real} ->
+        "real_array"
+
+      {:array, :boolean} ->
+        "boolean_array"
+
+      {:array, :datetime} ->
+        "datetime_array"
+
+      {:array, :binary} ->
+        "binary_array"
+
+      {:array, :string} ->
+        "string_array"
+
+      type_map when is_map(type_map) ->
+        Enum.reduce(type_map, %{}, fn {key, type}, acc ->
+          Map.put(acc, key, type_to_string(type))
+        end)
     end
   end
 
@@ -344,11 +391,9 @@ defmodule Astarte.Streams.Message do
       iex> Message.wrap_data([0, 1, 2], {:array, :integer})
       [0, 1, 2]
 
-      iex> %{"my_key" => {:binary, "application/octet-stream", <<0, 1>>}}
-      ...> |> Message.wrap_data(:map)
-      %{"my_key" => %{
-        "data" => "AAE=", "subtype" => "application/octet-stream",  "type" => "binary"}
-      }
+      iex> %{"my_key" => <<0, 1>>}
+      ...> |> Message.wrap_data(%{"my_key" => :binary})
+      %{"my_key" => "AAE="}
   """
   @spec wrap_data(integer(), :integer) :: integer()
   def wrap_data(data, :integer) when is_integer(data) do
@@ -390,16 +435,11 @@ defmodule Astarte.Streams.Message do
   @spec wrap_data(%{optional(String.t()) => {atom(), String.t(), data_with_array()}}, :map) :: %{
           optional(String.t()) => %{optional(String.t()) => term()}
         }
-  def wrap_data(data, :map) when is_map(data) do
-    Enum.reduce(data, %{}, fn {key, {item_type, item_subtype, item}}, acc ->
-      wrapped =
-        %{
-          "data" => wrap_data(item, item_type),
-          "type" => type_to_string(item_type)
-        }
-        |> maybe_put("subtype", item_subtype)
-
-      Map.put(acc, key, wrapped)
+  def wrap_data(data, types_map) when is_map(data) and is_map(types_map) do
+    Enum.reduce(data, %{}, fn {key, value}, acc ->
+      value_type = Map.fetch!(types_map, key)
+      wrapped_value = wrap_data(value, value_type)
+      Map.put(acc, key, wrapped_value)
     end)
   end
 
@@ -430,21 +470,14 @@ defmodule Astarte.Streams.Message do
       {:error, :invalid_data}
 
       iex> %{
-      ...>   "key1" => %{
-      ...>     "type" => "binary",
-      ...>     "subtype" => "application/octet-stream",
-      ...>     "data" => "AAECAQA="
-      ...>   },
-      ...>   "key2" => %{
-      ...>     "type" => "real_array",
-      ...>     "data" => [-1, 0, 0.5, 1]
-      ...>   }
+      ...>   "key1" => "AAECAQA=",
+      ...>   "key2" => [-1, 0, 0.5, 1]
       ...> }
-      ...> |> Message.unwrap_data(:map)
+      ...> |> Message.unwrap_data(%{"key1" => :binary, "key2" => {:array, :real}})
       {:ok,
         %{
-          "key1" => {:binary, "application/octet-stream", <<0, 1, 2, 1, 0>>},
-          "key2" => {{:array, :real}, nil, [-1, 0, 0.5, 1]}
+          "key1" => <<0, 1, 2, 1, 0>>,
+          "key2" => [-1, 0, 0.5, 1]
         }
       }
   """
@@ -514,26 +547,18 @@ defmodule Astarte.Streams.Message do
 
   @spec unwrap_data(%{optional(String.t()) => term()}, :map) ::
           {:ok, data()} | {:error, :invalid_data}
-  def unwrap_data(wrapped_data, :map) when is_map(wrapped_data) do
-    Enum.reduce_while(wrapped_data, {:ok, %{}}, &unwrap_map_item/2)
+  def unwrap_data(wrapped_data, type_map) when is_map(wrapped_data) and is_map(type_map) do
+    Enum.reduce_while(wrapped_data, {:ok, %{}}, fn {key, wrapped_value}, {:ok, acc} ->
+      with {:ok, type} <- Map.fetch(type_map, key),
+           {:ok, value} <- unwrap_data(wrapped_value, type) do
+        {:cont, {:ok, Map.put(acc, key, value)}}
+      else
+        _any -> {:halt, {:error, :invalid_data}}
+      end
+    end)
   end
 
   def unwrap_data(_any_value, any_type) when is_atom(any_type) do
     {:error, :invalid_data}
-  end
-
-  defp unwrap_map_item({key, value}, {:ok, acc}) do
-    with %{"data" => wrapped_item, "type" => type_string} <- value,
-         {:ok, data_type} <- type_with_array_from_string(type_string),
-         subtype <- Map.get(value, "subtype"),
-         true <- String.valid?(subtype || ""),
-         {:ok, data} <- unwrap_data(wrapped_item, data_type) do
-      updated_map = Map.put(acc, key, {data_type, subtype, data})
-
-      {:cont, {:ok, updated_map}}
-    else
-      _any ->
-        {:halt, {:error, :invalid_data}}
-    end
   end
 end
