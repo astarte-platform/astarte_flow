@@ -51,19 +51,17 @@ defmodule Astarte.Streams.Blocks.LuaMapperTest do
     }
 
     expected_message = %Message{
-      data: %{"x" => {:integer, "", -50}, "y" => {:integer, "", 0}},
+      data: %{"x" => -50, "y" => 0},
       key: "key",
       metadata: %{"test" => "metadata"},
       timestamp: 1_560_955_493_916_854,
-      type: :map
+      type: %{"x" => :integer, "y" => :integer}
     }
 
     lua_script = """
       new_message = {};
-      new_message.data = {};
-      new_message.data.x = {"integer", "", message.data * -10};
-      new_message.data.y = {"integer", "", 0};
-      new_message.type = "map";
+      new_message.data = {x = message.data * -10, y = 0};
+      new_message.type = {x = "integer", y = "integer"};
       new_message.metadata = message.metadata;
       return new_message;
     """

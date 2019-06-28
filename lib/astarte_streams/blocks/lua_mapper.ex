@@ -133,7 +133,7 @@ defmodule Astarte.Streams.Blocks.LuaMapper do
     [
       {"key", key},
       {"metadata", metadata},
-      {"type", Message.type_to_string(type)},
+      {"type", Message.serialize_type(type)},
       {"subtype", subtype},
       {"timestamp", timestamp},
       {"data", data}
@@ -150,8 +150,7 @@ defmodule Astarte.Streams.Blocks.LuaMapper do
           %Message{acc | metadata: Enum.into(value, %{})}
 
         "type" ->
-          {:ok, message_type} = Message.type_from_string(value)
-          %Message{acc | type: message_type}
+          %Message{acc | type: cast_type(value)}
 
         "subtype" ->
           %Message{acc | subtype: value}
@@ -172,35 +171,46 @@ defmodule Astarte.Streams.Blocks.LuaMapper do
           acc
       end
     end)
-    |> fix_type()
+    |> cast_data()
   end
 
-  defp fix_type(%Message{data: data, type: type} = msg) do
-    %Message{msg | data: fix_type(data, type)}
+  defp cast_type(map_type) when is_list(map_type) do
+    {:ok, type} =
+      Enum.into(map_type, %{})
+      |> Message.deserialize_type()
+
+    type
   end
 
-  defp fix_type(data, :integer) do
+  defp cast_type(type_string) when is_binary(type_string) do
+    {:ok, type} = Message.deserialize_type(type_string)
+    type
+  end
+
+  defp cast_data(%Message{data: data, type: type} = msg) do
+    %Message{msg | data: cast_data(data, type)}
+  end
+
+  defp cast_data(data, :integer) do
     data
     |> Float.round()
     |> Kernel.trunc()
   end
 
-  defp fix_type(data, {:array, type}) do
+  defp cast_data(data, {:array, type}) do
     Enum.map(data, fn {_index, item_value} ->
-      fix_type(item_value, type)
+      cast_data(item_value, type)
     end)
   end
 
-  defp fix_type(data, :map) do
-    Enum.map(data, fn {key, [{1, type_string}, {2, subtype}, {3, value}]} ->
-      {:ok, item_type} = Message.type_from_string(type_string)
-      item_value = fix_type(value, item_type)
-      {key, {item_type, subtype, item_value}}
+  defp cast_data(data, type_map) when is_list(data) and is_map(type_map) do
+    Enum.reduce(data, %{}, fn {key, item}, acc ->
+      item_type = Map.fetch!(type_map, key)
+      Map.put(acc, key, cast_data(item, item_type))
     end)
-    |> Enum.into(%{})
   end
 
-  defp fix_type(data, _type) do
+  defp cast_data(data, _type) do
     data
   end
 end
