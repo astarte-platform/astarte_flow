@@ -160,7 +160,7 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
          data_map = %{"data" => decoded_json},
          transformed_map = use_template(data_map, template),
          %{"data" => [data], "type" => type_string} <- transformed_map,
-         {:ok, type} <- Message.type_from_string(type_string) do
+         {:ok, type} <- Message.deserialize_type(type_string) do
       {:ok, %Message{msg | data: data, type: type}}
     end
   end

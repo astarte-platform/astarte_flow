@@ -133,7 +133,7 @@ defmodule Astarte.Streams.Blocks.LuaMapper do
     [
       {"key", key},
       {"metadata", metadata},
-      {"type", Message.type_to_string(type)},
+      {"type", Message.serialize_type(type)},
       {"subtype", subtype},
       {"timestamp", timestamp},
       {"data", data}
@@ -177,13 +177,13 @@ defmodule Astarte.Streams.Blocks.LuaMapper do
   defp cast_type(map_type) when is_list(map_type) do
     {:ok, type} =
       Enum.into(map_type, %{})
-      |> Message.type_from_string()
+      |> Message.deserialize_type()
 
     type
   end
 
   defp cast_type(type_string) when is_binary(type_string) do
-    {:ok, type} = Message.type_from_string(type_string)
+    {:ok, type} = Message.deserialize_type(type_string)
     type
   end
 

@@ -172,7 +172,7 @@ defmodule Astarte.Streams.Message do
       "schema" => @message_schema_version,
       "key" => key,
       "metadata" => metadata,
-      "type" => type_to_string(type),
+      "type" => serialize_type(type),
       "timestamp" => div(timestamp, 1000),
       "timestamp_us" => rem(timestamp, 1000),
       "data" => wrap_data(data, type)
@@ -233,7 +233,7 @@ defmodule Astarte.Streams.Message do
          } <- map,
          true <- String.valid?(key),
          true <- valid_metadata?(metadata),
-         {:ok, type_atom} <- type_from_string(type_string),
+         {:ok, type_atom} <- deserialize_type(type_string),
          subtype <- Map.get(map, "subtype"),
          true <- String.valid?(subtype || ""),
          {:ok, data} <- unwrap_data(wrapped_data, type_atom),
@@ -258,26 +258,26 @@ defmodule Astarte.Streams.Message do
     {:error, :invalid_message}
   end
 
-  @spec type_from_string(String.t() | %{String.t() => String.t()}) ::
+  @spec deserialize_type(String.t() | %{String.t() => String.t()}) ::
           {:ok, data_type()} | {:error, :invalid_message_type}
-  def type_from_string(message_type) do
+  def deserialize_type(message_type) do
     case message_type do
       type_string_map when is_map(type_string_map) ->
         Enum.reduce_while(type_string_map, {:ok, %{}}, fn {key, type_string}, {:ok, acc} ->
-          case type_with_array_from_string(type_string) do
+          case deserialize_type_with_array(type_string) do
             {:ok, type} -> {:cont, {:ok, Map.put(acc, key, type)}}
             {:error, :invalid_message_type} -> {:halt, {:error, :invalid_message_type}}
           end
         end)
 
       maybe_with_array ->
-        type_with_array_from_string(maybe_with_array)
+        deserialize_type_with_array(maybe_with_array)
     end
   end
 
-  @spec type_with_array_from_string(String.t()) ::
+  @spec deserialize_type_with_array(String.t()) ::
           {:ok, data_type_with_array()} | {:error, :invalid_message_type}
-  defp type_with_array_from_string(message_type) do
+  defp deserialize_type_with_array(message_type) do
     case message_type do
       "integer_array" -> {:ok, {:array, :integer}}
       "real_array" -> {:ok, {:array, :real}}
@@ -285,13 +285,13 @@ defmodule Astarte.Streams.Message do
       "datetime_array" -> {:ok, {:array, :datetime}}
       "binary_array" -> {:ok, {:array, :binary}}
       "string_array" -> {:ok, {:array, :string}}
-      maybe_basic -> basic_type_from_string(maybe_basic)
+      maybe_basic -> deserialize_basic_type(maybe_basic)
     end
   end
 
-  @spec basic_type_from_string(String.t()) ::
+  @spec deserialize_basic_type(String.t()) ::
           {:ok, basic_data_type()} | {:error, :invalid_message_type}
-  defp basic_type_from_string(message_type) do
+  defp deserialize_basic_type(message_type) do
     case message_type do
       "integer" -> {:ok, :integer}
       "real" -> {:ok, :real}
@@ -303,8 +303,8 @@ defmodule Astarte.Streams.Message do
     end
   end
 
-  @spec type_to_string(basic_data_type()) :: String.t()
-  def type_to_string(data_type) do
+  @spec serialize_type(basic_data_type()) :: String.t()
+  def serialize_type(data_type) do
     case data_type do
       :integer ->
         "integer"
@@ -344,7 +344,7 @@ defmodule Astarte.Streams.Message do
 
       type_map when is_map(type_map) ->
         Enum.reduce(type_map, %{}, fn {key, type}, acc ->
-          Map.put(acc, key, type_to_string(type))
+          Map.put(acc, key, serialize_type(type))
         end)
     end
   end
