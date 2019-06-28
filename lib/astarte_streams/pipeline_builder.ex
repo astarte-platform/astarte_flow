@@ -37,14 +37,13 @@ defmodule Astarte.Streams.PipelineBuilder do
   end
 
   def build(pipeline_desc) do
-    gs_list =
-      with {:ok, parsed} <- parse(pipeline_desc) do
-        Enum.map(parsed, fn {block, opts_list} ->
-          opts = Enum.into(opts_list, %{})
+    with {:ok, parsed} <- parse(pipeline_desc) do
+      Enum.map(parsed, fn {block, opts_list} ->
+        opts = Enum.into(opts_list, %{})
 
-          setup_block(block, opts)
-        end)
-      end
+        setup_block(block, opts)
+      end)
+    end
   end
 
   defp setup_block("http_source", opts) do

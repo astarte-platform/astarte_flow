@@ -66,7 +66,7 @@ defmodule Astarte.Streams.Blocks.MqttSourceTest do
         subscriptions: @subscriptions
       ]
 
-      {:ok, pid} = MqttSource.start_link(opts)
+      {:ok, _pid} = MqttSource.start_link(opts)
     end
   end
 
