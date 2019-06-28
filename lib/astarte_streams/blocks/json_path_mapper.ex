@@ -158,22 +158,100 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
     with %Message{data: data, type: :binary} <- msg,
          {:ok, decoded_json} <- Jason.decode(data),
          data_map = %{"data" => decoded_json},
-         transformed_map = use_template(data_map, template),
-         %{"data" => [data], "type" => type_string} <- transformed_map,
-         {:ok, type} <- Message.deserialize_type(type_string) do
-      {:ok, %Message{msg | data: data, type: type}}
+         transformed_map = replace(template, data_map),
+         %{"data" => data, "type" => serialized_type} <- transformed_map,
+         {:ok, type} <- Message.deserialize_type(serialized_type),
+         {:ok, typed_data} <- cast_data(data, type) do
+      {:ok, %Message{msg | data: typed_data, type: type}}
+    else
+      {:error, reason} -> {:error, reason}
     end
   end
 
-  defp use_template(input, template) when is_map(template) do
-    Enum.map(template, fn {key, value} ->
-      {replace(key, input), replace(value, input)}
+  defp cast_data(data, type_map) when is_map(data) and is_map(type_map) do
+    Enum.reduce_while(data, {:ok, %{}}, fn {key, item}, {:ok, acc} ->
+      item_type = Map.fetch!(type_map, key)
+
+      case cast_data(item, item_type) do
+        {:ok, typed_data} -> {:cont, {:ok, Map.put(acc, key, typed_data)}}
+        {:error, :cannot_cast_data} -> {:halt, {:error, :cannot_cast_data}}
+      end
     end)
-    |> Enum.into(%{})
+  end
+
+  defp cast_data(data, {:array, type}) when is_list(data) and not is_map(type) do
+    result =
+      Enum.reduce_while(data, {:ok, []}, fn item, {:ok, acc} ->
+        case cast_data(item, type) do
+          {:ok, typed_data} -> {:cont, {:ok, [typed_data | acc]}}
+          {:error, :cannot_cast_data} -> {:halt, {:error, :cannot_cast_data}}
+        end
+      end)
+
+    case result do
+      {:ok, reversed_array} -> {:ok, Enum.reverse(reversed_array)}
+      {:error, :cannot_cast_data} -> {:error, :cannot_cast_data}
+    end
+  end
+
+  defp cast_data(data, {:array, type}) when not is_map(data) and not is_map(type) do
+    with {:ok, typed_data} <- cast_data(data, type) do
+      {:ok, [typed_data]}
+    end
+  end
+
+  defp cast_data(data, :integer) when is_number(data) do
+    as_integer =
+      data
+      |> Float.round()
+      |> Kernel.trunc()
+
+    {:ok, as_integer}
+  end
+
+  defp cast_data(data, :real) when is_number(data) do
+    {:ok, data * 1.0}
+  end
+
+  defp cast_data(data, :boolean) when is_boolean(data) do
+    {:ok, data}
+  end
+
+  defp cast_data(data, :datetime) when is_binary(data) do
+    case DateTime.from_iso8601(data) do
+      {:ok, datetime, 0} ->
+        {:ok, datetime}
+        {:error, :cannot_cast_data}
+    end
+  end
+
+  defp cast_data(data, :string) when is_binary(data) do
+    if String.valid?(data) do
+      {:ok, data}
+    else
+      {:error, :cannot_cast_data}
+    end
+  end
+
+  defp cast_data(data, :binary) when is_binary(data) do
+    {:ok, data}
+  end
+
+  defp cast_data(_data, type) when is_atom(type) do
+    {:error, :cannot_cast_data}
+  end
+
+  defp replace(template, input) when is_map(template) do
+    Enum.reduce(template, %{}, fn {key, value}, acc ->
+      Map.put(acc, replace(key, input), replace(value, input))
+    end)
   end
 
   defp replace({:json_path, path}, input) do
-    ExJsonPath.eval(input, path)
+    case ExJsonPath.eval(input, path) do
+      [result] -> result
+      result -> result
+    end
   end
 
   defp replace(value, _input) do
