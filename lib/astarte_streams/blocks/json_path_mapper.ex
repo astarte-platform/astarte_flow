@@ -23,6 +23,7 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
   """
 
   use GenStage
+  alias Astarte.Streams.Blocks.JsonPathMapper.JsonTemplate
   alias Astarte.Streams.Message
   require Logger
 
@@ -48,7 +49,7 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
     def from_keyword(kl) do
       with {:ok, template} <- Keyword.fetch(kl, :template),
            {:ok, template_map} <- Jason.decode(template),
-           compiled_template = compile_template(template_map) do
+           {:ok, compiled_template} <- JsonTemplate.compile_template(template_map) do
         {:ok,
          %Config{
            compiled_template: compiled_template
@@ -60,53 +61,6 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
         _any ->
           {:error, :invalid_template}
       end
-    end
-
-    defp compile_template(template_array) when is_list(template_array) do
-      Enum.map(template_array, fn
-        value when is_map(value) ->
-          compile_template(value)
-
-        value when is_list(value) ->
-          compile_template(value)
-
-        value ->
-          wrap_item(value)
-      end)
-    end
-
-    defp compile_template(template_map) when is_map(template_map) do
-      Enum.map(template_map, fn
-        {key, value} when is_map(value) ->
-          {wrap_item(key), compile_template(value)}
-
-        {key, value} when is_list(value) ->
-          {wrap_item(key), compile_template(value)}
-
-        {key, value} ->
-          {wrap_item(key), wrap_item(value)}
-      end)
-      |> Enum.into(%{})
-    end
-
-    defp wrap_item(item) when is_binary(item) do
-      case String.trim(item) do
-        "{{" <> rest ->
-          if String.slice(rest, -2, 2) == "}}" do
-            path_string = String.slice(rest, 0..-3)
-            {:ok, json_path} = ExJsonPath.compile(path_string)
-            {:json_path, json_path}
-          else
-            item
-          end
-
-        any ->
-          any
-      end
-    end
-
-    defp wrap_item(item) do
-      item
     end
   end
 
@@ -158,12 +112,14 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
     with %Message{data: data, type: :binary} <- msg,
          {:ok, decoded_json} <- Jason.decode(data),
          data_map = %{"data" => decoded_json},
-         transformed_map = replace(template, data_map),
-         %{"data" => data, "type" => serialized_type} <- transformed_map,
+         {:ok, transformed_map} <- JsonTemplate.render(template, data_map),
+         {:render, %{"data" => data, "type" => serialized_type}} <- {:render, transformed_map},
          {:ok, type} <- Message.deserialize_type(serialized_type),
          {:ok, typed_data} <- cast_data(data, type) do
       {:ok, %Message{msg | data: typed_data, type: type}}
     else
+      %Message{} -> {:error, :unsupported_type}
+      {:render, _} -> {:error, :invalid_template_render}
       {:error, reason} -> {:error, reason}
     end
   end
@@ -239,22 +195,5 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
 
   defp cast_data(_data, type) when is_atom(type) do
     {:error, :cannot_cast_data}
-  end
-
-  defp replace(template, input) when is_map(template) do
-    Enum.reduce(template, %{}, fn {key, value}, acc ->
-      Map.put(acc, replace(key, input), replace(value, input))
-    end)
-  end
-
-  defp replace({:json_path, path}, input) do
-    case ExJsonPath.eval(input, path) do
-      [result] -> result
-      result -> result
-    end
-  end
-
-  defp replace(value, _input) do
-    value
   end
 end
