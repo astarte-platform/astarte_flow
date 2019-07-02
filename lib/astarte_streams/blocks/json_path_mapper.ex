@@ -112,11 +112,12 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
     with %Message{data: data, type: :binary} <- msg,
          {:ok, decoded_json} <- Jason.decode(data),
          data_map = %{"data" => decoded_json},
-         {:ok, transformed_map} <- JsonTemplate.render(template, data_map),
-         {:render, %{"data" => data, "type" => serialized_type}} <- {:render, transformed_map},
+         {:ok, rendered_map} <- JsonTemplate.render(template, data_map),
+         {:render, %{"data" => data, "type" => serialized_type}} <- {:render, rendered_map},
          {:ok, type} <- Message.deserialize_type(serialized_type),
-         {:ok, typed_data} <- cast_data(data, type) do
-      {:ok, %Message{msg | data: typed_data, type: type}}
+         {:ok, typed_data} <- cast_data(data, type),
+         msg_with_data_and_type = %Message{msg | data: typed_data, type: type} do
+      merge_message(msg_with_data_and_type, rendered_map)
     else
       %Message{} -> {:error, :unsupported_type}
       {:render, _} -> {:error, :invalid_template_render}
@@ -195,5 +196,37 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
 
   defp cast_data(_data, type) when is_atom(type) do
     {:error, :cannot_cast_data}
+  end
+
+  defp merge_message(the_message, map) do
+    Enum.reduce_while(map, {:ok, the_message}, fn {key_bin, value}, {:ok, acc} ->
+      case key_bin do
+        "key" ->
+          {:cont, {:ok, %Message{acc | key: value}}}
+
+        "metadata" ->
+          {:cont, {:ok, %Message{acc | metadata: Enum.into(value, %{})}}}
+
+        "subtype" ->
+          {:cont, {:ok, %Message{acc | subtype: value}}}
+
+        "timestamp" ->
+          int_timestamp =
+            value
+            |> Float.round()
+            |> Kernel.trunc()
+
+          {:cont, {:ok, %Message{acc | timestamp: int_timestamp}}}
+
+        "data" ->
+          {:cont, {:ok, acc}}
+
+        "type" ->
+          {:cont, {:ok, acc}}
+
+        _key ->
+          {:halt, {:error, :invalid_template_render}}
+      end
+    end)
   end
 end
