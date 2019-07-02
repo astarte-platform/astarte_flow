@@ -23,6 +23,7 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
   """
 
   use GenStage
+  alias Astarte.Streams.Blocks.JsonPathMapper.JsonTemplate
   alias Astarte.Streams.Message
   require Logger
 
@@ -48,7 +49,7 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
     def from_keyword(kl) do
       with {:ok, template} <- Keyword.fetch(kl, :template),
            {:ok, template_map} <- Jason.decode(template),
-           compiled_template = compile_template(template_map) do
+           {:ok, compiled_template} <- JsonTemplate.compile_template(template_map) do
         {:ok,
          %Config{
            compiled_template: compiled_template
@@ -60,53 +61,6 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
         _any ->
           {:error, :invalid_template}
       end
-    end
-
-    defp compile_template(template_array) when is_list(template_array) do
-      Enum.map(template_array, fn
-        value when is_map(value) ->
-          compile_template(value)
-
-        value when is_list(value) ->
-          compile_template(value)
-
-        value ->
-          wrap_item(value)
-      end)
-    end
-
-    defp compile_template(template_map) when is_map(template_map) do
-      Enum.map(template_map, fn
-        {key, value} when is_map(value) ->
-          {wrap_item(key), compile_template(value)}
-
-        {key, value} when is_list(value) ->
-          {wrap_item(key), compile_template(value)}
-
-        {key, value} ->
-          {wrap_item(key), wrap_item(value)}
-      end)
-      |> Enum.into(%{})
-    end
-
-    defp wrap_item(item) when is_binary(item) do
-      case String.trim(item) do
-        "{{" <> rest ->
-          if String.slice(rest, -2, 2) == "}}" do
-            path_string = String.slice(rest, 0..-3)
-            {:ok, json_path} = ExJsonPath.compile(path_string)
-            {:json_path, json_path}
-          else
-            item
-          end
-
-        any ->
-          any
-      end
-    end
-
-    defp wrap_item(item) do
-      item
     end
   end
 
@@ -158,25 +112,121 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
     with %Message{data: data, type: :binary} <- msg,
          {:ok, decoded_json} <- Jason.decode(data),
          data_map = %{"data" => decoded_json},
-         transformed_map = use_template(data_map, template),
-         %{"data" => [data], "type" => type_string} <- transformed_map,
-         {:ok, type} <- Message.deserialize_type(type_string) do
-      {:ok, %Message{msg | data: data, type: type}}
+         {:ok, rendered_map} <- JsonTemplate.render(template, data_map),
+         {:render, %{"data" => data, "type" => serialized_type}} <- {:render, rendered_map},
+         {:ok, type} <- Message.deserialize_type(serialized_type),
+         {:ok, typed_data} <- cast_data(data, type),
+         msg_with_data_and_type = %Message{msg | data: typed_data, type: type} do
+      merge_message(msg_with_data_and_type, rendered_map)
+    else
+      %Message{} -> {:error, :unsupported_type}
+      {:render, _} -> {:error, :invalid_template_render}
+      {:error, reason} -> {:error, reason}
     end
   end
 
-  defp use_template(input, template) when is_map(template) do
-    Enum.map(template, fn {key, value} ->
-      {replace(key, input), replace(value, input)}
+  defp cast_data(data, type_map) when is_map(data) and is_map(type_map) do
+    Enum.reduce_while(data, {:ok, %{}}, fn {key, item}, {:ok, acc} ->
+      item_type = Map.fetch!(type_map, key)
+
+      case cast_data(item, item_type) do
+        {:ok, typed_data} -> {:cont, {:ok, Map.put(acc, key, typed_data)}}
+        {:error, :cannot_cast_data} -> {:halt, {:error, :cannot_cast_data}}
+      end
     end)
-    |> Enum.into(%{})
   end
 
-  defp replace({:json_path, path}, input) do
-    ExJsonPath.eval(input, path)
+  defp cast_data(data, {:array, type}) when is_list(data) and not is_map(type) do
+    result =
+      Enum.reduce_while(data, {:ok, []}, fn item, {:ok, acc} ->
+        case cast_data(item, type) do
+          {:ok, typed_data} -> {:cont, {:ok, [typed_data | acc]}}
+          {:error, :cannot_cast_data} -> {:halt, {:error, :cannot_cast_data}}
+        end
+      end)
+
+    case result do
+      {:ok, reversed_array} -> {:ok, Enum.reverse(reversed_array)}
+      {:error, :cannot_cast_data} -> {:error, :cannot_cast_data}
+    end
   end
 
-  defp replace(value, _input) do
-    value
+  defp cast_data(data, {:array, type}) when not is_map(data) and not is_map(type) do
+    with {:ok, typed_data} <- cast_data(data, type) do
+      {:ok, [typed_data]}
+    end
+  end
+
+  defp cast_data(data, :integer) when is_number(data) do
+    as_integer =
+      data
+      |> Float.round()
+      |> Kernel.trunc()
+
+    {:ok, as_integer}
+  end
+
+  defp cast_data(data, :real) when is_number(data) do
+    {:ok, data * 1.0}
+  end
+
+  defp cast_data(data, :boolean) when is_boolean(data) do
+    {:ok, data}
+  end
+
+  defp cast_data(data, :datetime) when is_binary(data) do
+    case DateTime.from_iso8601(data) do
+      {:ok, datetime, 0} ->
+        {:ok, datetime}
+        {:error, :cannot_cast_data}
+    end
+  end
+
+  defp cast_data(data, :string) when is_binary(data) do
+    if String.valid?(data) do
+      {:ok, data}
+    else
+      {:error, :cannot_cast_data}
+    end
+  end
+
+  defp cast_data(data, :binary) when is_binary(data) do
+    {:ok, data}
+  end
+
+  defp cast_data(_data, type) when is_atom(type) do
+    {:error, :cannot_cast_data}
+  end
+
+  defp merge_message(the_message, map) do
+    Enum.reduce_while(map, {:ok, the_message}, fn {key_bin, value}, {:ok, acc} ->
+      case key_bin do
+        "key" ->
+          {:cont, {:ok, %Message{acc | key: value}}}
+
+        "metadata" ->
+          {:cont, {:ok, %Message{acc | metadata: Enum.into(value, %{})}}}
+
+        "subtype" ->
+          {:cont, {:ok, %Message{acc | subtype: value}}}
+
+        "timestamp" ->
+          int_timestamp =
+            value
+            |> Float.round()
+            |> Kernel.trunc()
+
+          {:cont, {:ok, %Message{acc | timestamp: int_timestamp}}}
+
+        "data" ->
+          {:cont, {:ok, acc}}
+
+        "type" ->
+          {:cont, {:ok, acc}}
+
+        _key ->
+          {:halt, {:error, :invalid_template_render}}
+      end
+    end)
   end
 end
