@@ -60,7 +60,8 @@ defmodule Astarte.Streams.Blocks.JsonPathMapperTest do
       data: json,
       key: "test",
       timestamp: 1_560_955_493_916_854,
-      type: :binary
+      type: :binary,
+      subtype: "application/json"
     }
 
     out_message = %Message{
@@ -119,7 +120,8 @@ defmodule Astarte.Streams.Blocks.JsonPathMapperTest do
       data: json,
       key: "test",
       timestamp: 1_560_955_493_916_854,
-      type: :binary
+      type: :binary,
+      subtype: "application/json"
     }
 
     out_message = %Message{
@@ -178,7 +180,8 @@ defmodule Astarte.Streams.Blocks.JsonPathMapperTest do
       data: json,
       key: "test",
       timestamp: 1_560_955_493_916_854,
-      type: :binary
+      type: :binary,
+      subtype: "application/json"
     }
 
     out_message = %Message{
@@ -221,7 +224,8 @@ defmodule Astarte.Streams.Blocks.JsonPathMapperTest do
       data: json,
       key: "test",
       timestamp: 1_560_955_493_916_854,
-      type: :binary
+      type: :binary,
+      subtype: "application/json"
     }
 
     out_message = %Message{
@@ -275,7 +279,8 @@ defmodule Astarte.Streams.Blocks.JsonPathMapperTest do
       data: json,
       key: "test",
       timestamp: 1_560_955_493_916_854,
-      type: :binary
+      type: :binary,
+      subtype: "application/json"
     }
 
     out_message = %Message{
