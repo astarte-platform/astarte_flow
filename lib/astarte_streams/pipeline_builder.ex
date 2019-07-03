@@ -24,6 +24,7 @@ defmodule Astarte.Streams.PipelineBuilder do
     RandomProducer,
     JsonMapper,
     LuaMapper,
+    MapSplitter,
     JsonPathMapper,
     HttpSource,
     HttpSink
@@ -103,6 +104,30 @@ defmodule Astarte.Streams.PipelineBuilder do
     } = opts
 
     {JsonPathMapper, [template: template]}
+  end
+
+  defp setup_block("split_map", opts) do
+    key_action = Map.get(opts, "key_action", "replace")
+    delimiter = Map.get(opts, "delimiter", "")
+    fallback_action = Map.get(opts, "fallback_action", "pass_through")
+    fallback_key = Map.get(opts, "fallback_key", "fallback_key")
+
+    key_action_opt =
+      case key_action do
+        "none" -> :none
+        "replace" -> :replace
+        "append" -> {:append, delimiter}
+        "prepend" -> {:prepend, delimiter}
+      end
+
+    fallback_action_opt =
+      case fallback_action do
+        "discard" -> :discard
+        "replace_key" -> {:replace_key, fallback_key}
+        "pass_through" -> :pass_through
+      end
+
+    {MapSplitter, [key_action: key_action_opt, fallback_action: fallback_action_opt]}
   end
 
   defp setup_block("to_json", _opts) do
