@@ -116,7 +116,7 @@ defmodule Astarte.Streams.Blocks.JsonPathMapper do
          {:render, %{"data" => data, "type" => serialized_type}} <- {:render, rendered_map},
          {:ok, type} <- Message.deserialize_type(serialized_type),
          {:ok, typed_data} <- cast_data(data, type),
-         msg_with_data_and_type = %Message{msg | data: typed_data, type: type} do
+         msg_with_data_and_type = %Message{msg | data: typed_data, type: type, subtype: nil} do
       merge_message(msg_with_data_and_type, rendered_map)
     else
       %Message{} -> {:error, :unsupported_type}
