@@ -145,7 +145,7 @@ defmodule Astarte.Streams.PipelineBuilder do
     with pipeline = build(pipeline_string),
          {:ok, pids} <- start_all(pipeline) do
       pids
-      |> List.last()
+      |> List.first()
       |> List.wrap()
       |> GenStage.stream()
     end
