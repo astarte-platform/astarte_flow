@@ -26,7 +26,8 @@ defmodule Astarte.Streams.PipelineBuilder do
     LuaMapper,
     JsonPathMapper,
     HttpSource,
-    HttpSink
+    HttpSink,
+    VirtualDevicePool
   }
 
   def parse(pipeline_desc) do
@@ -107,6 +108,32 @@ defmodule Astarte.Streams.PipelineBuilder do
 
   defp setup_block("to_json", _opts) do
     {JsonMapper, []}
+  end
+
+  defp setup_block("virtual_device_pool", opts) do
+    %{
+      "pairing_url" => pairing_url,
+      "devices" => devices_array
+    } = opts
+
+    devices =
+      for device_obj <- devices_array do
+        %{
+          "realm" => realm,
+          "device_id" => device_id,
+          "credentials_secret" => credentials_secret,
+          "interfaces_directory" => interfaces_directory
+        } = device_obj
+
+        [
+          device_id: device_id,
+          realm: realm,
+          credentials_secret: credentials_secret,
+          interface_provider: interfaces_directory
+        ]
+      end
+
+    {VirtualDevicePool, [pairing_url: pairing_url, devices: devices]}
   end
 
   def start_all(pipeline) do
