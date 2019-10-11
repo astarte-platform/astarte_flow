@@ -50,7 +50,9 @@ defmodule Astarte.Streams.Blocks.LuaMapper do
     def from_keyword(kl) do
       lua_script = Keyword.get(kl, :script, "return message;")
 
-      luerl_state = :luerl.init()
+      luerl_state =
+        :luerl.init()
+        |> intialize_lua_tables()
 
       with {:ok, chunk, state} <- :luerl.load(lua_script, luerl_state) do
         {:ok,
@@ -63,6 +65,22 @@ defmodule Astarte.Streams.Blocks.LuaMapper do
           _ = Logger.warn("Error while loading Lua script: #{inspect(any)}")
           {:error, :invalid_lua_script}
       end
+    end
+
+    defp intialize_lua_tables(luerl_state) do
+      uuid_table = [
+        {:get_v5_base64,
+         fn [namespace, string], state ->
+           base64enc =
+             UUID.uuid5(namespace, string)
+             |> UUID.string_to_binary!()
+             |> Base.url_encode64(padding: false)
+
+           {[base64enc], state}
+         end}
+      ]
+
+      :luerl.set_table([:uuid], uuid_table, luerl_state)
     end
   end
 
