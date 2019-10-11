@@ -57,7 +57,7 @@ defmodule Astarte.Streams.PipelineBuilder do
     {HttpSource,
      [
        base_url: base_url,
-       target_paths: [target_paths],
+       target_paths: target_paths,
        polling_interval_ms: polling_interval_ms,
        headers: [{"Authorization", authorization_header}]
      ]}
