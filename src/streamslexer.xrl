@@ -14,8 +14,14 @@ Rules.
 {SCRIPT}  : {token, {string,  TokenLine, script_to_binary(TokenChars)}}.
 \|            : {token, {'|',  TokenLine}}.
 \.            : {token, {'.',  TokenLine}}.
+\,            : {token, {',',  TokenLine}}.
+\:            : {token, {':',  TokenLine}}.
 \(            : {token, {'(',  TokenLine}}.
 \)            : {token, {')',  TokenLine}}.
+\[            : {token, {'[',  TokenLine}}.
+\]            : {token, {']',  TokenLine}}.
+\{            : {token, {'{',  TokenLine}}.
+\}            : {token, {'}',  TokenLine}}.
 {WHITESPACE}+ : skip_token.
 {SCRIPT} : {token, {script,  TokenLine, list_to_binary(TokenChars)}}.
 
