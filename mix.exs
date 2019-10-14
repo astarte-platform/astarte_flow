@@ -52,6 +52,7 @@ defmodule Astarte.Streams.MixProject do
       {:astarte_device, github: "astarte-platform/astarte-device-sdk-elixir"},
       {:certifi, "~> 2.5"},
       {:tortoise, "~> 0.9"},
+      {:elixir_uuid, "~> 1.2"},
       {:excoveralls, "~> 0.10", only: :test},
       {:exjsonpath, github: "ispirata/exjsonpath"},
       {:gen_stage, "~> 0.14"},
