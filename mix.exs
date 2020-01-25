@@ -39,7 +39,7 @@ defmodule Astarte.Streams.MixProject do
 
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:lager, :logger],
       mod: {Astarte.Streams.Application, []}
     ]
   end

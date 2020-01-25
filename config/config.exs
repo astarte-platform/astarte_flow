@@ -22,4 +22,13 @@ use Mix.Config
 
 config :tesla, adapter: Tesla.Adapter.Hackney
 
+# lager is used by rabbit_common.
+# Silent it by setting the higher loglevel.
+config :lager,
+  error_logger_redirect: false,
+  handlers: [level: :critical]
+
+# make amqp supervisors logs less verbose
+config :logger, handle_otp_reports: false
+
 import_config "#{Mix.env()}.exs"
