@@ -28,6 +28,7 @@ defmodule Astarte.Streams.PipelineBuilder do
     JsonPathMapper,
     HttpSource,
     HttpSink,
+    Sorter,
     VirtualDevicePool
   }
 
@@ -105,6 +106,12 @@ defmodule Astarte.Streams.PipelineBuilder do
     } = opts
 
     {JsonPathMapper, [template: template]}
+  end
+
+  defp setup_block("sort", opts) do
+    %{} = opts
+
+    {Sorter, []}
   end
 
   defp setup_block("split_map", opts) do

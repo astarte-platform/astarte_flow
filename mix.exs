@@ -61,7 +61,8 @@ defmodule Astarte.Streams.MixProject do
       {:dialyzex, "~> 1.2", only: :dev},
       {:mox, "~> 0.5", only: :test},
       {:jason, "~> 1.1"},
-      {:luerl, "~> 0.3"}
+      {:luerl, "~> 0.3"},
+      {:prioqueue, "~> 0.2.0"}
     ]
   end
 end
