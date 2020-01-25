@@ -39,17 +39,17 @@ defmodule Astarte.Streams.PipelineBuilder do
     end
   end
 
-  def build(pipeline_desc) do
+  def build(pipeline_desc, config \\ %{}) do
     with {:ok, parsed} <- parse(pipeline_desc) do
       Enum.map(parsed, fn {block, opts_list} ->
         opts = Enum.into(opts_list, %{})
 
-        setup_block(block, opts)
+        setup_block(block, opts, config)
       end)
     end
   end
 
-  defp setup_block("http_source", opts) do
+  defp setup_block("http_source", opts, config) do
     %{
       "base_url" => base_url,
       "target_paths" => target_paths,
@@ -59,66 +59,67 @@ defmodule Astarte.Streams.PipelineBuilder do
 
     {HttpSource,
      [
-       base_url: base_url,
-       target_paths: target_paths,
-       polling_interval_ms: polling_interval_ms,
-       headers: [{"Authorization", authorization_header}]
+       base_url: eval(base_url, config),
+       target_paths: eval(target_paths, config),
+       polling_interval_ms: eval(polling_interval_ms, config),
+       headers: [{"Authorization", eval(authorization_header, config)}]
      ]}
   end
 
-  defp setup_block("random_source", opts) do
+  defp setup_block("random_source", opts, config) do
     %{
       "key" => key,
       "min" => min,
       "max" => max
     } = opts
 
-    {RandomProducer, [key: key, type: :real, min: min, max: max]}
+    {RandomProducer,
+     [key: eval(key, config), type: :real, min: eval(min, config), max: eval(max, config)]}
   end
 
-  defp setup_block("filter", opts) do
+  defp setup_block("filter", opts, config) do
     %{
       "script" => script
     } = opts
 
-    {Filter, [filter_config: %{operator: :luerl_script, script: script}]}
+    {Filter, [filter_config: %{operator: :luerl_script, script: eval(script, config)}]}
   end
 
-  defp setup_block("http_sink", opts) do
+  defp setup_block("http_sink", opts, config) do
     %{
       "url" => url
     } = opts
 
-    {HttpSink, [url: url]}
+    {HttpSink, [url: eval(url, config)]}
   end
 
-  defp setup_block("lua_map", opts) do
+  defp setup_block("lua_map", opts, config) do
     %{
       "script" => script
     } = opts
 
-    {LuaMapper, [script: script]}
+    {LuaMapper, [script: eval(script, config)]}
   end
 
-  defp setup_block("json_path_map", opts) do
+  defp setup_block("json_path_map", opts, config) do
     %{
       "template" => template
     } = opts
 
-    {JsonPathMapper, [template: template]}
+    {JsonPathMapper, [template: eval(template, config)]}
   end
 
-  defp setup_block("sort", opts) do
+  defp setup_block("sort", opts, _config) do
     %{} = opts
 
     {Sorter, []}
   end
 
-  defp setup_block("split_map", opts) do
-    key_action = Map.get(opts, "key_action", "replace")
-    delimiter = Map.get(opts, "delimiter", "")
-    fallback_action = Map.get(opts, "fallback_action", "pass_through")
-    fallback_key = Map.get(opts, "fallback_key", "fallback_key")
+  defp setup_block("split_map", opts, config) do
+    key_action = eval(Map.get(opts, "key_action", "replace"), config)
+    delimiter = eval(Map.get(opts, "delimiter", ""), config)
+    fallback_action = eval(Map.get(opts, "fallback_action", "pass_through"), config)
+    fallback_key = eval(Map.get(opts, "fallback_key", "fallback_key"), config)
 
     key_action_opt =
       case key_action do
@@ -138,15 +139,17 @@ defmodule Astarte.Streams.PipelineBuilder do
     {MapSplitter, [key_action: key_action_opt, fallback_action: fallback_action_opt]}
   end
 
-  defp setup_block("to_json", _opts) do
+  defp setup_block("to_json", _opts, _config) do
     {JsonMapper, []}
   end
 
-  defp setup_block("virtual_device_pool", opts) do
+  defp setup_block("virtual_device_pool", opts, config) do
     %{
       "pairing_url" => pairing_url,
-      "devices" => devices_array
+      "devices" => devices
     } = opts
+
+    devices_array = eval(devices, config)
 
     devices =
       for device_obj <- devices_array do
@@ -158,14 +161,14 @@ defmodule Astarte.Streams.PipelineBuilder do
         } = device_obj
 
         [
-          device_id: device_id,
-          realm: realm,
-          credentials_secret: credentials_secret,
-          interface_provider: interfaces_directory
+          device_id: eval(device_id, config),
+          realm: eval(realm, config),
+          credentials_secret: eval(credentials_secret, config),
+          interface_provider: eval(interfaces_directory, config)
         ]
       end
 
-    {VirtualDevicePool, [pairing_url: pairing_url, devices: devices]}
+    {VirtualDevicePool, [pairing_url: eval(pairing_url, config), devices: devices]}
   end
 
   def start_all(pipeline) do
@@ -200,13 +203,21 @@ defmodule Astarte.Streams.PipelineBuilder do
     h
   end
 
-  def stream(pipeline_string) do
-    with pipeline = build(pipeline_string),
+  def stream(pipeline_string, config \\ %{}) do
+    with pipeline = build(pipeline_string, config),
          {:ok, pids} <- start_all(pipeline) do
       pids
       |> List.first()
       |> List.wrap()
       |> GenStage.stream()
     end
+  end
+
+  defp eval({:json_path, path}, config) do
+    ExJsonPath.eval(config, path)
+  end
+
+  defp eval(any, _config) do
+    any
   end
 end
