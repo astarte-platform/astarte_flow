@@ -16,16 +16,18 @@
 # limitations under the License.
 #
 
-defmodule Astarte.StreamsWeb.Router do
-  use Astarte.StreamsWeb, :router
+defmodule Astarte.StreamsWeb.FallbackController do
+  @moduledoc """
+  Translates controller action results into valid `Plug.Conn` responses.
 
-  pipeline :api do
-    plug :accepts, ["json"]
-  end
+  See `Phoenix.Controller.action_fallback/1` for more details.
+  """
+  use Astarte.StreamsWeb, :controller
 
-  scope "/v1/:realm", Astarte.StreamsWeb do
-    pipe_through :api
-
-    resources "/flows", FlowController, except: [:new, :edit]
+  def call(conn, {:error, :not_found}) do
+    conn
+    |> put_status(:not_found)
+    |> put_view(Astarte.StreamsWeb.ErrorView)
+    |> render(:"404")
   end
 end

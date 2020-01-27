@@ -16,16 +16,19 @@
 # limitations under the License.
 #
 
-defmodule Astarte.StreamsWeb.Router do
-  use Astarte.StreamsWeb, :router
+defmodule Astarte.StreamsWeb.FlowView do
+  use Astarte.StreamsWeb, :view
+  alias Astarte.StreamsWeb.FlowView
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  def render("index.json", %{flows: flows}) do
+    %{data: render_many(flows, FlowView, "flow.json")}
   end
 
-  scope "/v1/:realm", Astarte.StreamsWeb do
-    pipe_through :api
+  def render("show.json", %{flow: flow}) do
+    %{data: render_one(flow, FlowView, "flow.json")}
+  end
 
-    resources "/flows", FlowController, except: [:new, :edit]
+  def render("flow.json", %{flow: flow}) do
+    %{id: flow.id}
   end
 end

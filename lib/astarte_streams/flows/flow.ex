@@ -16,16 +16,23 @@
 # limitations under the License.
 #
 
-defmodule Astarte.StreamsWeb.Router do
-  use Astarte.StreamsWeb, :router
+defmodule Astarte.Streams.Flows.Flow do
+  use Ecto.Schema
+  import Ecto.Changeset
+  alias Astarte.Streams.Flows.Flow
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  @primary_key false
+  @derive {Phoenix.Param, key: :name}
+  embedded_schema do
+    field :config, :map
+    field :name, :string
+    field :pipeline, :string
   end
 
-  scope "/v1/:realm", Astarte.StreamsWeb do
-    pipe_through :api
-
-    resources "/flows", FlowController, except: [:new, :edit]
+  @doc false
+  def changeset(%Flow{} = flow, attrs) do
+    flow
+    |> cast(attrs, [:pipeline, :name, :config])
+    |> validate_required([:pipeline, :name, :config])
   end
 end

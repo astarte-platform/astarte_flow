@@ -16,16 +16,22 @@
 # limitations under the License.
 #
 
-defmodule Astarte.StreamsWeb.Router do
-  use Astarte.StreamsWeb, :router
+defmodule Astarte.StreamsWeb.ChangesetView do
+  use Astarte.StreamsWeb, :view
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  @doc """
+  Traverses and translates changeset errors.
+
+  See `Ecto.Changeset.traverse_errors/2` and
+  `Astarte.StreamsWeb.ErrorHelpers.translate_error/1` for more details.
+  """
+  def translate_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
   end
 
-  scope "/v1/:realm", Astarte.StreamsWeb do
-    pipe_through :api
-
-    resources "/flows", FlowController, except: [:new, :edit]
+  def render("error.json", %{changeset: changeset}) do
+    # When encoded, the changeset returns its errors
+    # as a JSON object. So we just pass it forward.
+    %{errors: translate_errors(changeset)}
   end
 end
