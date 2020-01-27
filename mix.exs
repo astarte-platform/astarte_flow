@@ -27,6 +27,7 @@ defmodule Astarte.Streams.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
+      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -65,7 +66,12 @@ defmodule Astarte.Streams.MixProject do
       {:jason, "~> 1.1"},
       {:luerl, "~> 0.3"},
       {:prioqueue, "~> 0.2.0"},
-      {:amqp, "~> 1.3"}
+      {:amqp, "~> 1.3"},
+      {:phoenix, "~> 1.4.11"},
+      {:phoenix_pubsub, "~> 1.1"},
+      {:phoenix_ecto, "~> 4.0"},
+      {:gettext, "~> 0.11"},
+      {:plug_cowboy, "~> 2.0"}
     ]
   end
 end

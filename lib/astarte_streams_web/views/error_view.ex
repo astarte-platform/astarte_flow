@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2020 Ispirata Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,22 +16,19 @@
 # limitations under the License.
 #
 
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
+defmodule Astarte.StreamsWeb.ErrorView do
+  use Astarte.StreamsWeb, :view
 
-use Mix.Config
+  # If you want to customize a particular status code
+  # for a certain format, you may uncomment below.
+  # def render("500.json", _assigns) do
+  #   %{errors: %{detail: "Internal Server Error"}}
+  # end
 
-config :astarte_device,
-  connection_mod: ConnectionMock,
-  pairing_devices_mod: PairingMock
-
-config :tesla, adapter: Tesla.Mock
-
-# We don't run a server during test. If one is required,
-# you can enable the server option below.
-config :astarte_streams, Astarte.StreamsWeb.Endpoint,
-  http: [port: 4002],
-  server: false
-
-# Print only warnings and errors during test
-config :logger, level: :warn
+  # By default, Phoenix returns the status message from
+  # the template name. For example, "404.json" becomes
+  # "Not Found".
+  def template_not_found(template, _assigns) do
+    %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
+  end
+end

@@ -20,3 +20,23 @@
 # and its dependencies with the aid of the Mix.Config module.
 
 use Mix.Config
+
+# For development, we disable any cache and enable
+# debugging and code reloading.
+#
+# The watchers configuration can be used to run external
+# watchers to your application. For example, we use it
+# with webpack to recompile .js and .css sources.
+config :astarte_streams, Astarte.StreamsWeb.Endpoint,
+  http: [port: 4009],
+  debug_errors: true,
+  code_reloader: true,
+  check_origin: false,
+  watchers: []
+
+# Set a higher stacktrace during development. Avoid configuring such
+# in production as building large stacktraces may be expensive.
+config :phoenix, :stacktrace_depth, 20
+
+# Initialize plugs at runtime for faster development compilation
+config :phoenix, :plug_init_mode, :runtime

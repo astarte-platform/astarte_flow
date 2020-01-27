@@ -20,3 +20,15 @@
 # and its dependencies with the aid of the Mix.Config module.
 
 use Mix.Config
+
+# For production, don't forget to configure the url host
+# to something meaningful, Phoenix uses this information
+# when generating URLs.
+#
+config :astarte_streams, Astarte.StreamsWeb.Endpoint,
+  url: [host: "example.com", port: 80],
+  http: [:inet6, port: String.to_integer(System.get_env("PORT") || "4009")],
+  server: true
+
+# Do not print debug messages in production
+config :logger, level: :info
