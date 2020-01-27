@@ -39,7 +39,7 @@ defmodule Astarte.Streams.MixProject do
 
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:lager, :logger],
       mod: {Astarte.Streams.Application, []}
     ]
   end
@@ -50,6 +50,8 @@ defmodule Astarte.Streams.MixProject do
   defp deps do
     [
       {:astarte_device, github: "astarte-platform/astarte-device-sdk-elixir"},
+      {:astarte_core, github: "astarte-platform/astarte_core"},
+      {:cyanide, github: "ispirata/cyanide"},
       {:certifi, "~> 2.5"},
       {:tortoise, "~> 0.9"},
       {:elixir_uuid, "~> 1.2"},
@@ -62,7 +64,8 @@ defmodule Astarte.Streams.MixProject do
       {:mox, "~> 0.5", only: :test},
       {:jason, "~> 1.1"},
       {:luerl, "~> 0.3"},
-      {:prioqueue, "~> 0.2.0"}
+      {:prioqueue, "~> 0.2.0"},
+      {:amqp, "~> 1.3"}
     ]
   end
 end
