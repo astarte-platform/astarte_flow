@@ -21,7 +21,7 @@ defmodule Astarte.StreamsWeb.FlowView do
   alias Astarte.StreamsWeb.FlowView
 
   def render("index.json", %{flows: flows}) do
-    %{data: render_many(flows, FlowView, "flow.json")}
+    %{data: render_many(flows, FlowView, "flow_name.json")}
   end
 
   def render("show.json", %{flow: flow}) do
@@ -29,6 +29,10 @@ defmodule Astarte.StreamsWeb.FlowView do
   end
 
   def render("flow.json", %{flow: flow}) do
-    %{id: flow.id}
+    %{name: flow.name, pipeline: flow.pipeline, config: flow.config}
+  end
+
+  def render("flow_name.json", %{flow: flow}) do
+    flow.name
   end
 end
