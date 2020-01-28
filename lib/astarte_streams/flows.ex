@@ -21,36 +21,34 @@ defmodule Astarte.Streams.Flows do
   The Flows context.
   """
 
-  import Ecto.Query, warn: false
-  alias Astarte.Streams.Repo
-
   alias Astarte.Streams.Flows.Flow
+  alias Astarte.Streams.Flows.Registry, as: FlowsRegistry
+  alias Astarte.Streams.Flows.RealmRegistry
+  alias Astarte.Streams.Flows.Supervisor, as: FlowsSupervisor
+  require Logger
 
   @doc """
-  Returns the list of flows.
-
-  ## Examples
-
-      iex> list_flows()
-      [%Flow{}, ...]
-
+  Returns the list of flows for a realm.
   """
-  def list_flows do
-    raise "TODO"
+  def list_flows(realm) do
+    Registry.lookup(RealmRegistry, realm)
+    |> Enum.map(fn {_pid, name} -> name end)
   end
 
   @doc """
   Gets a single flow.
 
-  Raises if the Flow does not exist.
-
-  ## Examples
-
-      iex> get_flow!(123)
-      %Flow{}
-
+  Returns `{:error, :not_found}` if the flow does not exist.
   """
-  def get_flow!(id), do: raise("TODO")
+  def get_flow(realm, name) do
+    case Registry.lookup(FlowsRegistry, {realm, name}) do
+      [] ->
+        {:error, :not_found}
+
+      [{pid, nil}] ->
+        {:ok, Flow.get_flow(pid)}
+    end
+  end
 
   @doc """
   Creates a flow.
@@ -64,24 +62,20 @@ defmodule Astarte.Streams.Flows do
       {:error, ...}
 
   """
-  def create_flow(attrs \\ %{}) do
-    raise "TODO"
-  end
+  def create_flow(realm, attrs) do
+    changeset = Flow.changeset(%Flow{}, attrs)
 
-  @doc """
-  Updates a flow.
+    with {:ok, %Flow{} = flow} <- Ecto.Changeset.apply_action(changeset, :insert),
+         args = [realm: realm, flow: flow],
+         {:ok, _pid} <- DynamicSupervisor.start_child(FlowsSupervisor, {Flow, args}) do
+      {:ok, flow}
+    else
+      {:error, {:already_started, _pid}} ->
+        {:error, Ecto.Changeset.add_error(changeset, :name, "is already taken")}
 
-  ## Examples
-
-      iex> update_flow(flow, %{field: new_value})
-      {:ok, %Flow{}}
-
-      iex> update_flow(flow, %{field: bad_value})
-      {:error, ...}
-
-  """
-  def update_flow(%Flow{} = flow, attrs) do
-    raise "TODO"
+      {:error, other} ->
+        {:error, other}
+    end
   end
 
   @doc """
@@ -96,20 +90,12 @@ defmodule Astarte.Streams.Flows do
       {:error, ...}
 
   """
-  def delete_flow(%Flow{} = flow) do
-    raise "TODO"
-  end
-
-  @doc """
-  Returns a data structure for tracking flow changes.
-
-  ## Examples
-
-      iex> change_flow(flow)
-      %Todo{...}
-
-  """
-  def change_flow(%Flow{} = flow) do
-    raise "TODO"
+  def delete_flow(realm, %Flow{name: name}) do
+    with [{pid, nil}] <- Registry.lookup(FlowsRegistry, {realm, name}) do
+      DynamicSupervisor.terminate_child(FlowsSupervisor, pid)
+    else
+      [] ->
+        {:error, :not_found}
+    end
   end
 end
