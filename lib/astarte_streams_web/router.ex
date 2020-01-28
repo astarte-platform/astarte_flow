@@ -26,6 +26,6 @@ defmodule Astarte.StreamsWeb.Router do
   scope "/v1/:realm", Astarte.StreamsWeb do
     pipe_through :api
 
-    resources "/flows", FlowController, except: [:new, :edit]
+    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
   end
 end
