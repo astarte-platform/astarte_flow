@@ -31,4 +31,14 @@ config :lager,
 # make amqp supervisors logs less verbose
 config :logger, handle_otp_reports: false
 
+# Configures the endpoint
+config :astarte_streams, Astarte.StreamsWeb.Endpoint,
+  url: [host: "localhost"],
+  secret_key_base: "o/WvTw7d0OPFuYFKe9Wk0MtjJsUaiX+g+JkkZIfhg18frniYdbQnZ1DC0V2gZVY4",
+  render_errors: [view: Astarte.StreamsWeb.ErrorView, accepts: ~w(json)],
+  pubsub: [name: Astarte.Streams.PubSub, adapter: Phoenix.PubSub.PG2]
+
+# Use Jason for JSON parsing in Phoenix
+config :phoenix, :json_library, Jason
+
 import_config "#{Mix.env()}.exs"

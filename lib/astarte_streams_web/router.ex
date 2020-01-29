@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2020 Ispirata Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,19 +16,16 @@
 # limitations under the License.
 #
 
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
+defmodule Astarte.StreamsWeb.Router do
+  use Astarte.StreamsWeb, :router
 
-use Mix.Config
+  pipeline :api do
+    plug :accepts, ["json"]
+  end
 
-# For production, don't forget to configure the url host
-# to something meaningful, Phoenix uses this information
-# when generating URLs.
-#
-config :astarte_streams, Astarte.StreamsWeb.Endpoint,
-  url: [host: "example.com", port: 80],
-  http: [:inet6, port: String.to_integer(System.get_env("PORT") || "4009")],
-  server: true
+  scope "/v1/:realm", Astarte.StreamsWeb do
+    pipe_through :api
 
-# Do not print debug messages in production
-config :logger, level: :info
+    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
+  end
+end

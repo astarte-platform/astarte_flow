@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2020 Ispirata Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,19 +16,23 @@
 # limitations under the License.
 #
 
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
+defmodule Astarte.StreamsWeb.FlowView do
+  use Astarte.StreamsWeb, :view
+  alias Astarte.StreamsWeb.FlowView
 
-use Mix.Config
+  def render("index.json", %{flows: flows}) do
+    %{data: render_many(flows, FlowView, "flow_name.json")}
+  end
 
-# For production, don't forget to configure the url host
-# to something meaningful, Phoenix uses this information
-# when generating URLs.
-#
-config :astarte_streams, Astarte.StreamsWeb.Endpoint,
-  url: [host: "example.com", port: 80],
-  http: [:inet6, port: String.to_integer(System.get_env("PORT") || "4009")],
-  server: true
+  def render("show.json", %{flow: flow}) do
+    %{data: render_one(flow, FlowView, "flow.json")}
+  end
 
-# Do not print debug messages in production
-config :logger, level: :info
+  def render("flow.json", %{flow: flow}) do
+    %{name: flow.name, pipeline: flow.pipeline, config: flow.config}
+  end
+
+  def render("flow_name.json", %{flow: flow}) do
+    flow.name
+  end
+end
