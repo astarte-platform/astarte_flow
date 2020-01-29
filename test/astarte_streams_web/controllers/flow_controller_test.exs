@@ -21,13 +21,14 @@ defmodule Astarte.StreamsWeb.FlowControllerTest do
 
   alias Astarte.Streams.Flows
   alias Astarte.Streams.Flows.Flow
+  alias Astarte.Streams.Flows.Supervisor, as: FlowsSupervisor
 
-  @create_attrs %{}
-  @update_attrs %{}
-  @invalid_attrs %{}
+  @realm "test"
+  @create_attrs %{"name" => "test", "pipeline" => "test", "config" => %{"key" => "test"}}
+  @invalid_attrs %{"name" => 42, "pipeline" => "test", "config" => %{"key" => "test"}}
 
   def fixture(:flow) do
-    {:ok, flow} = Flows.create_flow(@create_attrs)
+    {:ok, flow} = Flows.create_flow(@realm, @create_attrs)
     flow
   end
 
@@ -37,64 +38,57 @@ defmodule Astarte.StreamsWeb.FlowControllerTest do
 
   describe "index" do
     test "lists all flows", %{conn: conn} do
-      conn = get(conn, Routes.flow_path(conn, :index))
+      conn = get(conn, Routes.flow_path(conn, :index, @realm))
       assert json_response(conn, 200)["data"] == []
     end
   end
 
   describe "create flow" do
-    test "renders flow when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.flow_path(conn, :create), flow: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+    setup [:cleanup_flows]
 
-      conn = get(conn, Routes.flow_path(conn, :show, id))
+    test "renders flow when data is valid", %{conn: conn} do
+      conn = post(conn, Routes.flow_path(conn, :create, @realm), data: @create_attrs)
+      assert %{"name" => name} = json_response(conn, 201)["data"]
+
+      conn = get(conn, Routes.flow_path(conn, :show, @realm, name))
 
       assert %{
-               "id" => id
+               "name" => name
              } = json_response(conn, 200)["data"]
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.flow_path(conn, :create), flow: @invalid_attrs)
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-  end
-
-  describe "update flow" do
-    setup [:create_flow]
-
-    test "renders flow when data is valid", %{conn: conn, flow: %Flow{id: id} = flow} do
-      conn = put(conn, Routes.flow_path(conn, :update, flow), flow: @update_attrs)
-      assert %{"id" => ^id} = json_response(conn, 200)["data"]
-
-      conn = get(conn, Routes.flow_path(conn, :show, id))
-
-      assert %{
-               "id" => id
-             } = json_response(conn, 200)["data"]
-    end
-
-    test "renders errors when data is invalid", %{conn: conn, flow: flow} do
-      conn = put(conn, Routes.flow_path(conn, :update, flow), flow: @invalid_attrs)
+      conn = post(conn, Routes.flow_path(conn, :create, @realm), data: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
 
   describe "delete flow" do
-    setup [:create_flow]
+    setup [:cleanup_flows, :create_flow]
 
     test "deletes chosen flow", %{conn: conn, flow: flow} do
-      conn = delete(conn, Routes.flow_path(conn, :delete, flow))
+      conn = delete(conn, Routes.flow_path(conn, :delete, @realm, flow))
       assert response(conn, 204)
 
-      assert_error_sent 404, fn ->
-        get(conn, Routes.flow_path(conn, :show, flow))
-      end
+      conn = get(conn, Routes.flow_path(conn, :show, @realm, flow))
+      assert response(conn, 404)
     end
   end
 
   defp create_flow(_) do
     flow = fixture(:flow)
     {:ok, flow: flow}
+  end
+
+  defp cleanup_flows(_context) do
+    on_exit(fn ->
+      DynamicSupervisor.which_children(FlowsSupervisor)
+      |> Enum.each(fn {_, pid, _, _} ->
+        DynamicSupervisor.terminate_child(FlowsSupervisor, pid)
+      end)
+
+      # Wait a moment to ensure they all go down
+      :timer.sleep(100)
+    end)
   end
 end

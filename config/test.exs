@@ -33,5 +33,7 @@ config :astarte_streams, Astarte.StreamsWeb.Endpoint,
   http: [port: 4002],
   server: false
 
+config :astarte_streams, :pipelines_dir, "test/support/pipelines"
+
 # Print only warnings and errors during test
 config :logger, level: :warn
