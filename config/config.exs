@@ -41,4 +41,7 @@ config :astarte_streams, Astarte.StreamsWeb.Endpoint,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :astarte_streams, :astarte_instance, "astarte"
+config :astarte_streams, :target_namespace, "astarte"
+
 import_config "#{Mix.env()}.exs"
