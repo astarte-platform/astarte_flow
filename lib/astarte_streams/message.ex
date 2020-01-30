@@ -221,7 +221,8 @@ defmodule Astarte.Streams.Message do
       iex> Message.from_map(%{})
       {:error, :invalid_message}
   """
-  @spec from_map(%{required(String.t()) => term()}) :: Message.t() | {:error, :invalid_message}
+  @spec from_map(%{required(String.t()) => term()}) ::
+          {:ok, Message.t()} | {:error, :invalid_message}
   def from_map(%{"schema" => @message_schema_version} = map) do
     with %{
            "key" => key,
