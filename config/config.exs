@@ -44,4 +44,11 @@ config :phoenix, :json_library, Jason
 config :astarte_streams, :astarte_instance, "astarte"
 config :astarte_streams, :target_namespace, "astarte"
 
+config :astarte_streams, :default_amqp_connection,
+  host: "localhost",
+  username: "guest",
+  password: "guest",
+  virtual_host: "/",
+  port: 5672
+
 import_config "#{Mix.env()}.exs"
