@@ -20,6 +20,8 @@ defmodule Astarte.Streams.PipelineBuilder do
   @moduledoc false
 
   alias Astarte.Streams.Blocks.{
+    Container,
+    DeviceEventsProducer,
     Filter,
     RandomProducer,
     JsonMapper,
@@ -47,6 +49,26 @@ defmodule Astarte.Streams.PipelineBuilder do
         setup_block(block, opts, config)
       end)
     end
+  end
+
+  defp setup_block("astarte_devices_source", _opts, _config) do
+    {DeviceEventsProducer,
+     [
+       routing_key: "trigger_engine",
+       connection: Application.fetch_env!(:astarte_streams, :default_amqp_connection)
+     ]}
+  end
+
+  defp setup_block("container", opts, config) do
+    %{
+      "image" => image
+    } = opts
+
+    {Container,
+     [
+       image: eval(image, config),
+       connection: Application.fetch_env!(:astarte_streams, :default_amqp_connection)
+     ]}
   end
 
   defp setup_block("http_source", opts, config) do
