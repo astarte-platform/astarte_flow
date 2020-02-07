@@ -131,7 +131,7 @@ defmodule Astarte.Streams.K8s do
               "queues" => [queue]
             }
           },
-          "id" => "worker_0"
+          "id" => "worker-0"
         }
       ]
     }
