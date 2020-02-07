@@ -92,6 +92,16 @@ defmodule Astarte.Streams.K8s do
     end
   end
 
+  def flow_status(flow_name) do
+    namespace = Application.fetch_env!(:astarte_streams, :target_namespace)
+    op = K8s.Client.get(@api_version, @flow_kind, namespace: namespace, name: flow_name)
+
+    with {:ok, conn} <- Conn.lookup(:default),
+         {:ok, result} <- Client.run(op, conn) do
+      {:ok, result["status"]["state"]}
+    end
+  end
+
   @spec block_custom_resource(ContainerBlock.t()) :: map()
   def block_custom_resource(block) do
     %ContainerBlock{
