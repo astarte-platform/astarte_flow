@@ -32,6 +32,7 @@ defmodule Astarte.Streams.Blocks.Container do
 
   alias Astarte.Streams.Blocks.Container.RabbitMQClient
   alias Astarte.Streams.Message
+  alias Astarte.Streams.K8s.ContainerBlock
 
   @retry_timeout_ms 10_000
 
@@ -76,6 +77,11 @@ defmodule Astarte.Streams.Blocks.Container do
                | {:amqp_client, module()}
   def start_link(opts) do
     GenStage.start_link(__MODULE__, opts)
+  end
+
+  def get_container_block(pid) do
+    # We use a long timeout since the block can be busy connecting to RabbitMQ
+    GenStage.call(pid, :get_container_block, 30_000)
   end
 
   @impl true
@@ -174,6 +180,35 @@ defmodule Astarte.Streams.Blocks.Container do
         amqp_client.reject(channel, meta.delivery_tag, requeue: false)
         {:noreply, [], state}
     end
+  end
+
+  @impl true
+  def handle_call(:get_container_block, _from, %State{channel: nil} = state) do
+    # We're currently disconnected
+    {:reply, {:error, :not_connected}, [], state}
+  end
+
+  def handle_call(:get_container_block, _from, state) do
+    %State{
+      id: block_id,
+      image: image,
+      inbound_routing_key: exchange_routing_key,
+      outbound_queues: [queue]
+    } = state
+
+    container_block = %ContainerBlock{
+      block_id: block_id,
+      image: image,
+      exchange_routing_key: exchange_routing_key,
+      queue: queue,
+      # TODO: these are random values since we are currently forced to provide them to the struct
+      cpu_limit: "1",
+      memory_limit: "2048M",
+      cpu_requests: "0",
+      memory_requests: "256M"
+    }
+
+    {:reply, {:ok, container_block}, [], state}
   end
 
   defp connect(%State{amqp_client: amqp_client} = state) do
