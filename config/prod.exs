@@ -32,3 +32,8 @@ config :astarte_streams, Astarte.StreamsWeb.Endpoint,
 
 # Do not print debug messages in production
 config :logger, level: :info
+
+config :k8s,
+  clusters: %{
+    default: %{}
+  }
