@@ -25,6 +25,7 @@ defmodule Astarte.Streams.Blocks.Container.RabbitMQClient do
   }
 
   @behaviour Astarte.Streams.Blocks.Container.AMQPClient
+  @timeout 10_000
 
   @doc """
   Initialize the AMQP client config
@@ -34,9 +35,10 @@ defmodule Astarte.Streams.Blocks.Container.RabbitMQClient do
   def generate_config(opts) do
     # TODO: validate opts
 
+    queue_prefix = Keyword.fetch!(opts, :queue_prefix)
     connection = Keyword.get(opts, :connection, [])
 
-    config = %{connection: connection}
+    config = %{connection: connection, queue_prefix: queue_prefix}
 
     {:ok, config}
   end
@@ -48,15 +50,23 @@ defmodule Astarte.Streams.Blocks.Container.RabbitMQClient do
           {:ok, map()} | {:error, reason :: term()}
   @impl true
   def setup(config) do
-    with {:ok, conn} <- Connection.open(config.connection),
+    queue_prefix = config.queue_prefix
+    # We add a timeout so the block doesn't wait too much for the connection
+    conn_opts = Keyword.put(config.connection, :connection_timeout, @timeout)
+
+    with {:ok, conn} <- Connection.open(conn_opts),
          {:ok, chan} <- Channel.open(conn),
          # TODO: we assume a single outbound/inbound queue for now, publishing on the default
          # exchange with the queue name as routing key.
-         {:ok, %{queue: outbound_queue}} <- Queue.declare(chan, "", auto_delete: true),
-         {:ok, %{queue: inbound_queue}} <- Queue.declare(chan, "", auto_delete: true) do
+         {:ok, %{queue: outbound_queue}} <-
+           Queue.declare(chan, queue_prefix <> "-outbound", auto_delete: true),
+         {:ok, %{queue: inbound_queue}} <-
+           Queue.declare(chan, queue_prefix <> "-inbound", auto_delete: true) do
       ret = %{
         channel: chan,
+        outbound_routing_key: outbound_queue,
         outbound_queues: [outbound_queue],
+        inbound_routing_key: inbound_queue,
         inbound_queues: [inbound_queue]
       }
 

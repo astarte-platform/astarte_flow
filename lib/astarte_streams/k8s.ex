@@ -20,6 +20,7 @@ defmodule Astarte.Streams.K8s do
   require Logger
 
   alias K8s.Client
+  alias K8s.Conn
 
   @api_version "api.astarte-platform.org/v1alpha1"
   @flow_kind "Flow"
@@ -62,10 +63,12 @@ defmodule Astarte.Streams.K8s do
 
   @spec delete_flow(String.t()) :: {:ok, reference() | map()} | {:error, atom() | binary()}
   def delete_flow(flow_name) do
-    namespace = Application.fetch_env!(:astarte_streams, :target_namespace)
+    with {:ok, conn} <- Conn.lookup(:default) do
+      namespace = Application.fetch_env!(:astarte_streams, :target_namespace)
 
-    Client.delete(@api_version, @flow_kind, namespace: namespace, name: flow_name)
-    |> Client.run(:default)
+      Client.delete(@api_version, @flow_kind, namespace: namespace, name: flow_name)
+      |> Client.run(conn)
+    end
   end
 
   @spec try_delete_flow(String.t()) :: :ok | {:error, atom() | binary()}
@@ -83,8 +86,19 @@ defmodule Astarte.Streams.K8s do
     with :ok <- try_delete_flow(flow_name),
          resource = flow_custom_resource(realm, flow_name, blocks),
          create_operation = Client.create(resource),
-         {:ok, _result} <- Client.run(create_operation, :default) do
+         {:ok, conn} <- Conn.lookup(:default),
+         {:ok, _result} <- Client.run(create_operation, conn) do
       :ok
+    end
+  end
+
+  def flow_status(flow_name) do
+    namespace = Application.fetch_env!(:astarte_streams, :target_namespace)
+    op = K8s.Client.get(@api_version, @flow_kind, namespace: namespace, name: flow_name)
+
+    with {:ok, conn} <- Conn.lookup(:default),
+         {:ok, result} <- Client.run(op, conn) do
+      {:ok, result["status"]["state"]}
     end
   end
 
@@ -127,7 +141,7 @@ defmodule Astarte.Streams.K8s do
               "queues" => [queue]
             }
           },
-          "id" => "worker_0"
+          "id" => "worker-0"
         }
       ]
     }
