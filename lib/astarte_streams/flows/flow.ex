@@ -25,12 +25,16 @@ defmodule Astarte.Streams.Flows.Flow do
   use GenServer
   use Ecto.Schema
   import Ecto.Changeset
+  alias Astarte.Streams.Blocks.Container
   alias Astarte.Streams.Flows.Flow
   alias Astarte.Streams.Flows.Registry, as: FlowsRegistry
   alias Astarte.Streams.Flows.RealmRegistry
+  alias Astarte.Streams.K8s
   alias Astarte.Streams.PipelineBuilder
   alias Astarte.Streams.Pipelines
   require Logger
+
+  @retry_timeout_ms 10_000
 
   @primary_key false
   @derive {Phoenix.Param, key: :name}
@@ -52,8 +56,9 @@ defmodule Astarte.Streams.Flows.Flow do
       :realm,
       :flow,
       :pipeline,
-      :last_block_pid,
-      pipeline_pids: []
+      :status,
+      container_block_pids: [],
+      block_pids: []
     ]
   end
 
@@ -109,56 +114,188 @@ defmodule Astarte.Streams.Flows.Flow do
 
     with {:ok, pipeline_desc} <- Pipelines.get_pipeline(realm, flow.pipeline),
          pipeline = PipelineBuilder.build(pipeline_desc, %{"config" => flow.config}),
-         state = %State{realm: realm, flow: flow, pipeline: pipeline},
-         {:ok, state} <- start_pipeline(pipeline, state) do
+         state = %State{realm: realm, flow: flow, pipeline: pipeline, status: :starting_blocks},
+         {:ok, state} <- start_flow(realm, flow, pipeline, state) do
       _ = Registry.register(RealmRegistry, realm, flow)
+      # Right here all blocks are started, next step is bringing up the containers
+      Logger.debug("Flow #{flow.name} initialized.")
+      send(self(), :initialize_k8s_flow)
+
       {:ok, state}
     else
       {:error, :not_found} ->
         {:stop, :pipeline_not_found}
+
+      {:error, reason} ->
+        {:stop, reason}
     end
   end
 
-  defp start_pipeline(pipeline, state) do
-    # We reverse the pipeline, so we're going from the last block to the first one
-    Enum.reverse(pipeline)
-    |> Enum.reduce_while({:ok, state}, fn
-      # This is the last one, no need to connect it to anything
-      {block_module, block_opts}, {:ok, %{pipeline_pids: []} = state} ->
-        case block_module.start_link(block_opts) do
+  defp start_flow(realm, flow, pipeline, state) do
+    id_prefix = "#{realm}-#{flow.name}"
+
+    with {:ok, {block_pids, container_block_pids, _}} <-
+           start_blocks(id_prefix, pipeline) do
+      {:ok,
+       %{
+         state
+         | block_pids: block_pids,
+           container_block_pids: container_block_pids
+       }}
+    end
+  end
+
+  defp start_blocks(id_prefix, pipeline) do
+    Enum.reduce_while(pipeline, {:ok, {[], [], 0}}, fn
+      # Special case: container block
+      {Container = block_module, block_opts}, {:ok, {block_pids, container_block_pids, block_idx}} ->
+        # Pass a deterministic id
+        id = id_prefix <> to_string(block_idx)
+
+        full_opts = Keyword.put(block_opts, :id, id)
+
+        case start_block(block_module, full_opts) do
           {:ok, pid} ->
-            _ = Process.monitor(pid)
+            new_block_pids = [pid | block_pids]
+            new_container_block_pids = [pid | container_block_pids]
 
-            {:cont, {:ok, %{state | last_block_pid: pid, pipeline_pids: [pid]}}}
+            {:cont, {:ok, {new_block_pids, new_container_block_pids, block_idx + 1}}}
 
-          _any ->
-            {:halt, {:error, :start_all_failed}}
+          {:error, reason} ->
+            {:halt, {:error, reason}}
         end
 
-      {block_module, block_opts}, {:ok, %{pipeline_pids: [previous | _tail] = pids} = state} ->
-        case block_module.start_link(block_opts) do
+      {block_module, block_opts}, {:ok, {block_pids, container_block_pids, block_idx}} ->
+        case start_block(block_module, block_opts) do
           {:ok, pid} ->
-            _ = Process.monitor(pid)
+            new_block_pids = [pid | block_pids]
 
-            GenStage.sync_subscribe(previous, to: pid)
+            {:cont, {:ok, {new_block_pids, container_block_pids, block_idx + 1}}}
 
-            {:cont, {:ok, %{state | pipeline_pids: [pid | pids]}}}
-
-          _any ->
-            {:halt, {:error, :start_all_failed}}
+          {:error, reason} ->
+            {:halt, {:error, reason}}
         end
     end)
   end
 
+  defp start_block(block_module, block_opts) do
+    case block_module.start_link(block_opts) do
+      {:ok, pid} ->
+        {:ok, pid}
+
+      error ->
+        _ =
+          Logger.error(
+            "Could not start block #{inspect(block_module)} with opts #{inspect(block_opts)}: #{
+              inspect(error)
+            }"
+          )
+
+        {:error, :block_start_failed}
+    end
+  end
+
   @impl true
-  def handle_info({:DOWN, _ref, :process, _pid, reason}, %State{flow: flow} = state) do
+  def handle_info({:EXIT, _pid, :normal}, state) do
+    # Ignore normal exits
+    {:noreply, state}
+  end
+
+  def handle_info({:EXIT, _pid, reason}, %State{flow: flow} = state) do
     _ =
       Logger.error("A block crashed with reason #{inspect(reason)}.",
         flow: flow.name,
-        tag: "flow_crash"
+        tag: "flow_block_crash"
       )
 
     {:stop, reason, state}
+  end
+
+  def handle_info(:initialize_k8s_flow, state) do
+    %{
+      realm: realm,
+      flow: flow,
+      container_block_pids: container_block_pids
+    } = state
+
+    with {:ok, container_blocks} <- collect_container_blocks(container_block_pids),
+         :ok <- K8s.create_flow(realm, flow.name, container_blocks) do
+      Logger.debug("Flow #{flow.name} K8s containers created.")
+      send(self(), :check_flow_status)
+
+      {:noreply, %{state | status: :creating_containers}}
+    else
+      error ->
+        Logger.warn(
+          "K8s initialization failed: #{inspect(error)}. Retrying in #{@retry_timeout_ms} ms.",
+          flow: flow.name
+        )
+
+        Process.send_after(self(), :initialize_k8s_flow, @retry_timeout_ms)
+        {:noreply, state}
+    end
+  end
+
+  def handle_info(:check_flow_status, %State{flow: flow} = state) do
+    case K8s.flow_status(flow.name) do
+      {:ok, "Flowing"} ->
+        Logger.debug("Flow #{flow.name} K8s in Flowing state.")
+
+        send(self(), :connect_blocks)
+        {:noreply, %{state | status: :connecting_blocks}}
+
+      _other ->
+        Process.send_after(self(), :check_flow_status, @retry_timeout_ms)
+
+        {:noreply, state}
+    end
+
+    {:noreply, %{state | status: :waiting_blocks_connection}}
+  end
+
+  def handle_info(:connect_blocks, state) do
+    %{
+      block_pids: block_pids,
+      flow: flow
+    } = state
+
+    # block_pids is populated reducing on the pipeline, so the first element is the last block
+    with :ok <- connect_blocks(block_pids) do
+      Logger.debug("Flow #{flow.name} is ready.")
+
+      {:noreply, %{state | status: :flowing}}
+    else
+      error ->
+        Logger.warn("Block connection failed: #{inspect(error)}.",
+          flow: flow.name,
+          tag: "flow_block_connection_failed"
+        )
+
+        # TODO: we don't try to recover from this state right now
+        {:stop, state}
+    end
+  end
+
+  defp connect_blocks([subscriber, publisher | tail]) do
+    with {:ok, _subscription_tag} <- GenStage.sync_subscribe(subscriber, to: publisher) do
+      connect_blocks([publisher | tail])
+    end
+  end
+
+  defp connect_blocks([_first_publisher]) do
+    :ok
+  end
+
+  defp collect_container_blocks(container_block_pids) do
+    Enum.reduce_while(container_block_pids, {:ok, []}, fn pid, {:ok, acc} ->
+      case Container.get_container_block(pid) do
+        {:ok, container_block} ->
+          {:cont, {:ok, [container_block | acc]}}
+
+        {:error, reason} ->
+          {:halt, {:error, reason}}
+      end
+    end)
   end
 
   @impl true
@@ -166,8 +303,14 @@ defmodule Astarte.Streams.Flows.Flow do
     {:reply, flow, state}
   end
 
-  def handle_call(:tap, _from, %State{last_block_pid: last_block_pid} = state) do
+  def handle_call(:tap, _from, %State{block_pids: [last_block_pid | _tail]} = state) do
+    # block_pids is populated reducing on the pipeline, so the first element is the last block
     stream = GenStage.stream([last_block_pid])
     {:reply, stream, state}
+  end
+
+  @impl true
+  def terminate(_reason, state) do
+    K8s.try_delete_flow(state.flow.name)
   end
 end
