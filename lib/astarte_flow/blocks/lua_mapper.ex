@@ -45,14 +45,18 @@ defmodule Astarte.Flow.Blocks.LuaMapper do
     ## Options
 
       * `:script` - a Lua 5.3 script. Defaults to `"return message;"`.
+      * `:config` - a configuration object.
     """
     @spec from_keyword(list(option())) :: {:ok, t()}
     def from_keyword(kl) do
       lua_script = Keyword.get(kl, :script, "return message;")
+      config = Keyword.get(kl, :config, [])
 
       luerl_state =
         :luerl.init()
         |> intialize_lua_tables()
+
+      luerl_state = :luerl.set_table([:config], config, luerl_state)
 
       with {:ok, chunk, state} <- :luerl.load(lua_script, luerl_state) do
         {:ok,
