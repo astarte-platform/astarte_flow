@@ -16,11 +16,11 @@
 # limitations under the License.
 #
 
-alias Astarte.Streams.Message
+alias Astarte.Flow.Message
 
-defmodule Astarte.Streams.MessageTest do
+defmodule Astarte.Flow.MessageTest do
   use ExUnit.Case
-  doctest Astarte.Streams.Message
+  doctest Astarte.Flow.Message
 
   test "JSON serialization and deserialization" do
     message = %Message{

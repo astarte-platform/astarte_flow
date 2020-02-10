@@ -27,7 +27,7 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
-config :astarte_streams, Astarte.StreamsWeb.Endpoint,
+config :astarte_flow, Astarte.FlowWeb.Endpoint,
   http: [port: 4009],
   debug_errors: true,
   code_reloader: true,

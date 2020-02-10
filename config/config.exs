@@ -32,19 +32,19 @@ config :lager,
 config :logger, handle_otp_reports: false
 
 # Configures the endpoint
-config :astarte_streams, Astarte.StreamsWeb.Endpoint,
+config :astarte_flow, Astarte.FlowWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "o/WvTw7d0OPFuYFKe9Wk0MtjJsUaiX+g+JkkZIfhg18frniYdbQnZ1DC0V2gZVY4",
-  render_errors: [view: Astarte.StreamsWeb.ErrorView, accepts: ~w(json)],
-  pubsub: [name: Astarte.Streams.PubSub, adapter: Phoenix.PubSub.PG2]
+  render_errors: [view: Astarte.FlowWeb.ErrorView, accepts: ~w(json)],
+  pubsub: [name: Astarte.Flow.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :astarte_streams, :astarte_instance, "astarte"
-config :astarte_streams, :target_namespace, "astarte"
+config :astarte_flow, :astarte_instance, "astarte"
+config :astarte_flow, :target_namespace, "astarte"
 
-config :astarte_streams, :default_amqp_connection,
+config :astarte_flow, :default_amqp_connection,
   host: "localhost",
   username: "guest",
   password: "guest",

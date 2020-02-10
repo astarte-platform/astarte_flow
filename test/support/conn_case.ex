@@ -16,17 +16,17 @@
 # limitations under the License.
 #
 
-defmodule Astarte.StreamsWeb.ConnCase do
+defmodule Astarte.FlowWeb.ConnCase do
   use ExUnit.CaseTemplate
 
   using do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      alias Astarte.StreamsWeb.Router.Helpers, as: Routes
+      alias Astarte.FlowWeb.Router.Helpers, as: Routes
 
       # The default endpoint for testing
-      @endpoint Astarte.StreamsWeb.Endpoint
+      @endpoint Astarte.FlowWeb.Endpoint
     end
   end
 

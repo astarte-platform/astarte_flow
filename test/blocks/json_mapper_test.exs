@@ -16,11 +16,11 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.JsonMapperTest do
+defmodule Astarte.Flow.Blocks.JsonMapperTest do
   use ExUnit.Case
-  alias Astarte.Streams.Blocks.JsonMapper
-  alias Astarte.Streams.Blocks.JsonMapper.Config
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.JsonMapper
+  alias Astarte.Flow.Blocks.JsonMapper.Config
+  alias Astarte.Flow.Message
 
   test "real valued message to JSON" do
     real_value_message = %Message{

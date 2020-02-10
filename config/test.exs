@@ -29,11 +29,11 @@ config :tesla, adapter: Tesla.Mock
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :astarte_streams, Astarte.StreamsWeb.Endpoint,
+config :astarte_flow, Astarte.FlowWeb.Endpoint,
   http: [port: 4002],
   server: false
 
-config :astarte_streams, :pipelines_dir, "test/support/pipelines"
+config :astarte_flow, :pipelines_dir, "test/support/pipelines"
 
 # Print only warnings and errors during test
 config :logger, level: :warn

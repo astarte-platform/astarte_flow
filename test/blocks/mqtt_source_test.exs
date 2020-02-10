@@ -16,11 +16,11 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.MqttSourceTest do
+defmodule Astarte.Flow.Blocks.MqttSourceTest do
   use ExUnit.Case
 
-  alias Astarte.Streams.Blocks.MqttSource
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.MqttSource
+  alias Astarte.Flow.Message
 
   @subscriptions ["#"]
   @broker_url "mqtt://notarealbrokerbutshouldworkfine"
@@ -105,7 +105,7 @@ defmodule Astarte.Streams.Blocks.MqttSourceTest do
                  type: :binary,
                  subtype: "application/octet-stream",
                  metadata: %{
-                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                   "Astarte.Flow.Blocks.MqttSource.broker_url" => @broker_url
                  }
                },
                %Message{
@@ -114,7 +114,7 @@ defmodule Astarte.Streams.Blocks.MqttSourceTest do
                  type: :binary,
                  subtype: "application/octet-stream",
                  metadata: %{
-                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                   "Astarte.Flow.Blocks.MqttSource.broker_url" => @broker_url
                  }
                },
                %Message{
@@ -123,7 +123,7 @@ defmodule Astarte.Streams.Blocks.MqttSourceTest do
                  type: :binary,
                  subtype: "application/octet-stream",
                  metadata: %{
-                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                   "Astarte.Flow.Blocks.MqttSource.broker_url" => @broker_url
                  }
                }
              ] = Enum.take(stream, 3)
@@ -154,7 +154,7 @@ defmodule Astarte.Streams.Blocks.MqttSourceTest do
                  type: :binary,
                  subtype: "application/octet-stream",
                  metadata: %{
-                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                   "Astarte.Flow.Blocks.MqttSource.broker_url" => @broker_url
                  }
                },
                %Message{
@@ -163,7 +163,7 @@ defmodule Astarte.Streams.Blocks.MqttSourceTest do
                  type: :binary,
                  subtype: "application/octet-stream",
                  metadata: %{
-                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                   "Astarte.Flow.Blocks.MqttSource.broker_url" => @broker_url
                  }
                },
                %Message{
@@ -172,7 +172,7 @@ defmodule Astarte.Streams.Blocks.MqttSourceTest do
                  type: :binary,
                  subtype: "application/octet-stream",
                  metadata: %{
-                   "Astarte.Streams.Blocks.MqttSource.broker_url" => @broker_url
+                   "Astarte.Flow.Blocks.MqttSource.broker_url" => @broker_url
                  }
                }
              ] = messages

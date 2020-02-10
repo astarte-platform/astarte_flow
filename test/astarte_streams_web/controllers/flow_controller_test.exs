@@ -16,12 +16,12 @@
 # limitations under the License.
 #
 
-defmodule Astarte.StreamsWeb.FlowControllerTest do
-  use Astarte.StreamsWeb.ConnCase
+defmodule Astarte.FlowWeb.FlowControllerTest do
+  use Astarte.FlowWeb.ConnCase
 
-  alias Astarte.Streams.Flows
-  alias Astarte.Streams.Flows.Flow
-  alias Astarte.Streams.Flows.Supervisor, as: FlowsSupervisor
+  alias Astarte.Flow.Flows
+  alias Astarte.Flow.Flows.Flow
+  alias Astarte.Flow.Flows.Supervisor, as: FlowsSupervisor
 
   @realm "test"
   @create_attrs %{"name" => "test", "pipeline" => "test", "config" => %{"key" => "test"}}
