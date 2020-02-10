@@ -16,12 +16,12 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.DeviceEventsProducerTest do
+defmodule Astarte.Flow.Blocks.DeviceEventsProducerTest do
   use ExUnit.Case
 
-  alias Astarte.Streams.Blocks.DeviceEventsProducer
-  alias Astarte.Streams.Blocks.DeviceEventsProducer.EventsDecoder
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.DeviceEventsProducer
+  alias Astarte.Flow.Blocks.DeviceEventsProducer.EventsDecoder
+  alias Astarte.Flow.Message
 
   alias Astarte.Core.Triggers.SimpleEvents.{
     DeviceConnectedEvent,
@@ -31,7 +31,7 @@ defmodule Astarte.Streams.Blocks.DeviceEventsProducerTest do
   }
 
   defmodule FakeAMQPClient do
-    @behaviour Astarte.Streams.Blocks.DeviceEventsProducer.AMQPClient
+    @behaviour Astarte.Flow.Blocks.DeviceEventsProducer.AMQPClient
 
     def generate_config(_opts) do
       {:ok, %{}}

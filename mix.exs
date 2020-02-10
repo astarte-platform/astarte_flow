@@ -16,12 +16,12 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.MixProject do
+defmodule Astarte.Flow.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :astarte_streams,
+      app: :astarte_flow,
       version: "0.1.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
@@ -41,7 +41,7 @@ defmodule Astarte.Streams.MixProject do
   def application do
     [
       extra_applications: [:lager, :logger],
-      mod: {Astarte.Streams.Application, []}
+      mod: {Astarte.Flow.Application, []}
     ]
   end
 

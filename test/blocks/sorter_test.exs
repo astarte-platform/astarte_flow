@@ -16,12 +16,12 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.SorterTest do
+defmodule Astarte.Flow.Blocks.SorterTest do
   use ExUnit.Case
-  alias Astarte.Streams.Blocks.Sorter
-  alias Astarte.Streams.Blocks.Sorter.Config
-  alias Astarte.Streams.Blocks.Sorter.State
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.Sorter
+  alias Astarte.Flow.Blocks.Sorter.Config
+  alias Astarte.Flow.Blocks.Sorter.State
+  alias Astarte.Flow.Message
 
   test "reorder messages" do
     msg1 = %Message{

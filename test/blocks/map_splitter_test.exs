@@ -16,11 +16,11 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.MapSplitterTest do
+defmodule Astarte.Flow.Blocks.MapSplitterTest do
   use ExUnit.Case
-  alias Astarte.Streams.Blocks.MapSplitter
-  alias Astarte.Streams.Blocks.MapSplitter.Config
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.MapSplitter
+  alias Astarte.Flow.Blocks.MapSplitter.Config
+  alias Astarte.Flow.Message
 
   test "split a map typed message into different messages" do
     in_message = %Message{

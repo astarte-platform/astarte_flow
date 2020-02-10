@@ -16,12 +16,12 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.VirtualDevicePoolTest do
+defmodule Astarte.Flow.Blocks.VirtualDevicePoolTest do
   use ExUnit.Case
   import Mox
 
-  alias Astarte.Streams.Blocks.VirtualDevicePool
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.VirtualDevicePool
+  alias Astarte.Flow.Message
 
   @pairing_url "http://localhost:4003"
   @realm "test"

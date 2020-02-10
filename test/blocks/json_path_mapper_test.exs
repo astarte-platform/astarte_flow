@@ -16,11 +16,11 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.JsonPathMapperTest do
+defmodule Astarte.Flow.Blocks.JsonPathMapperTest do
   use ExUnit.Case
-  alias Astarte.Streams.Blocks.JsonPathMapper
-  alias Astarte.Streams.Blocks.JsonPathMapper.Config
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.JsonPathMapper
+  alias Astarte.Flow.Blocks.JsonPathMapper.Config
+  alias Astarte.Flow.Message
 
   test "simple message from JSON" do
     template = ~S"""

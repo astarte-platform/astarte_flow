@@ -16,9 +16,9 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.JsonPathMapper.JsonTemplateTest do
+defmodule Astarte.Flow.Blocks.JsonPathMapper.JsonTemplateTest do
   use ExUnit.Case
-  alias Astarte.Streams.Blocks.JsonPathMapper.JsonTemplate
+  alias Astarte.Flow.Blocks.JsonPathMapper.JsonTemplate
 
   test "render string literal" do
     assert JsonTemplate.compile_template("foo bar") == {:ok, "foo bar"}

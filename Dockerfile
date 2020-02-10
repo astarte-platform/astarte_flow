@@ -38,6 +38,6 @@ RUN apt-get -qq install libssl1.1
 # We have to redefine this here since it goes out of scope for each build stage
 ARG BUILD_ENV=prod
 
-COPY --from=builder /app/_build/$BUILD_ENV/rel/astarte_streams .
+COPY --from=builder /app/_build/$BUILD_ENV/rel/astarte_flow .
 
-CMD ["./bin/astarte_streams", "start"]
+CMD ["./bin/astarte_flow", "start"]

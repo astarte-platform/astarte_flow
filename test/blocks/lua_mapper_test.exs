@@ -16,11 +16,11 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.LuaMapperTest do
+defmodule Astarte.Flow.Blocks.LuaMapperTest do
   use ExUnit.Case
-  alias Astarte.Streams.Blocks.LuaMapper
-  alias Astarte.Streams.Blocks.LuaMapper.Config
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.LuaMapper
+  alias Astarte.Flow.Blocks.LuaMapper.Config
+  alias Astarte.Flow.Message
 
   test "identity lua mapping" do
     message = %Message{

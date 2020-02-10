@@ -16,16 +16,16 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.FlowsTest do
+defmodule Astarte.Flow.FlowsTest do
   use ExUnit.Case
 
-  alias Astarte.Streams.Flows
+  alias Astarte.Flow.Flows
 
   describe "flows" do
     setup [:cleanup_flows]
 
-    alias Astarte.Streams.Flows.Flow
-    alias Astarte.Streams.Flows.Supervisor, as: FlowsSupervisor
+    alias Astarte.Flow.Flows.Flow
+    alias Astarte.Flow.Flows.Supervisor, as: FlowsSupervisor
 
     @realm "test"
     @valid_attrs %{"name" => "test", "pipeline" => "test", "config" => %{"key" => "test"}}

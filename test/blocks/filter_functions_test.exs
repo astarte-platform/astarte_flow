@@ -16,12 +16,12 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.FilterFunctionsTest do
+defmodule Astarte.Flow.Blocks.FilterFunctionsTest do
   use ExUnit.Case
-  doctest Astarte.Streams.Blocks.FilterFunctions
+  doctest Astarte.Flow.Blocks.FilterFunctions
   import ExUnit.CaptureLog
-  alias Astarte.Streams.Blocks.FilterFunctions
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.FilterFunctions
+  alias Astarte.Flow.Message
 
   test "any other type of value == filter" do
     {:ok, fun} =

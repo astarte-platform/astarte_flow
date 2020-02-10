@@ -16,11 +16,11 @@
 # limitations under the License.
 #
 
-defmodule Astarte.Streams.Blocks.HttpSourceTest do
+defmodule Astarte.Flow.Blocks.HttpSourceTest do
   use ExUnit.Case
 
-  alias Astarte.Streams.Blocks.HttpSource
-  alias Astarte.Streams.Message
+  alias Astarte.Flow.Blocks.HttpSource
+  alias Astarte.Flow.Message
 
   @base_url "http://example.com"
   @json_body ~s({"the_answer": 42})
@@ -100,7 +100,7 @@ defmodule Astarte.Streams.Blocks.HttpSourceTest do
                type: :binary,
                subtype: "application/octet-stream",
                metadata: %{
-                 "Astarte.Streams.Blocks.HttpSource.base_url" => @base_url
+                 "Astarte.Flow.Blocks.HttpSource.base_url" => @base_url
                }
              } = message
     end
@@ -135,7 +135,7 @@ defmodule Astarte.Streams.Blocks.HttpSourceTest do
                type: :binary,
                subtype: "application/octet-stream",
                metadata: %{
-                 "Astarte.Streams.Blocks.HttpSource.base_url" => @base_url
+                 "Astarte.Flow.Blocks.HttpSource.base_url" => @base_url
                }
              } = m1
 
@@ -145,7 +145,7 @@ defmodule Astarte.Streams.Blocks.HttpSourceTest do
                type: :binary,
                subtype: "application/octet-stream",
                metadata: %{
-                 "Astarte.Streams.Blocks.HttpSource.base_url" => @base_url
+                 "Astarte.Flow.Blocks.HttpSource.base_url" => @base_url
                }
              } = m2
 
@@ -155,7 +155,7 @@ defmodule Astarte.Streams.Blocks.HttpSourceTest do
                type: :binary,
                subtype: "application/octet-stream",
                metadata: %{
-                 "Astarte.Streams.Blocks.HttpSource.base_url" => @base_url
+                 "Astarte.Flow.Blocks.HttpSource.base_url" => @base_url
                }
              } = m3
 
@@ -165,7 +165,7 @@ defmodule Astarte.Streams.Blocks.HttpSourceTest do
                type: :binary,
                subtype: "application/octet-stream",
                metadata: %{
-                 "Astarte.Streams.Blocks.HttpSource.base_url" => @base_url
+                 "Astarte.Flow.Blocks.HttpSource.base_url" => @base_url
                }
              } = m4
     end
@@ -197,7 +197,7 @@ defmodule Astarte.Streams.Blocks.HttpSourceTest do
                type: :binary,
                subtype: "application/octet-stream",
                metadata: %{
-                 "Astarte.Streams.Blocks.HttpSource.base_url" => @base_url
+                 "Astarte.Flow.Blocks.HttpSource.base_url" => @base_url
                }
              } = message1
 
@@ -207,7 +207,7 @@ defmodule Astarte.Streams.Blocks.HttpSourceTest do
                type: :binary,
                subtype: "application/octet-stream",
                metadata: %{
-                 "Astarte.Streams.Blocks.HttpSource.base_url" => @base_url
+                 "Astarte.Flow.Blocks.HttpSource.base_url" => @base_url
                }
              } = message2
     end
@@ -262,9 +262,9 @@ defmodule Astarte.Streams.Blocks.HttpSourceTest do
                type: :binary,
                subtype: "application/json",
                metadata: %{
-                 "Astarte.Streams.Blocks.HttpSource.base_url" => @base_url,
-                 "Astarte.Streams.Blocks.HttpSource.my-custom-header" => "my_custom_value",
-                 "Astarte.Streams.Blocks.HttpSource.server" => "nginx"
+                 "Astarte.Flow.Blocks.HttpSource.base_url" => @base_url,
+                 "Astarte.Flow.Blocks.HttpSource.my-custom-header" => "my_custom_value",
+                 "Astarte.Flow.Blocks.HttpSource.server" => "nginx"
                }
              } = json_message
 
@@ -274,9 +274,9 @@ defmodule Astarte.Streams.Blocks.HttpSourceTest do
                type: :binary,
                subtype: "application/xml",
                metadata: %{
-                 "Astarte.Streams.Blocks.HttpSource.base_url" => @base_url,
-                 "Astarte.Streams.Blocks.HttpSource.my-custom-header" => "my_custom_value",
-                 "Astarte.Streams.Blocks.HttpSource.server" => "nginx"
+                 "Astarte.Flow.Blocks.HttpSource.base_url" => @base_url,
+                 "Astarte.Flow.Blocks.HttpSource.my-custom-header" => "my_custom_value",
+                 "Astarte.Flow.Blocks.HttpSource.server" => "nginx"
                }
              } = xml_message
     end
