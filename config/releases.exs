@@ -29,6 +29,10 @@ config :astarte_streams,
 config :astarte_streams, Astarte.StreamsWeb.Endpoint,
   http: [port: System.get_env("ASTARTE_STREAMS_PORT", "4010") |> String.to_integer()]
 
+config :astarte_streams,
+       :pipelines_dir,
+       System.get_env("ASTARTE_STREAMS_PIPELINES_DIR", "/pipelines")
+
 config :astarte_streams, :default_amqp_connection,
   host: System.get_env("ASTARTE_STREAMS_DEFAULT_AMQP_CONNECTION_HOST", "localhost"),
   username: System.get_env("ASTARTE_STREAMS_DEFAULT_AMQP_CONNECTION_USERNAME", "guest"),
