@@ -120,7 +120,9 @@ defmodule Astarte.Flow.PipelineBuilder do
       "script" => script
     } = opts
 
-    {LuaMapper, [script: eval(script, config)]}
+    lua_config = Map.get(opts, "config", [])
+
+    {LuaMapper, [script: eval(script, config), config: eval(lua_config, config)]}
   end
 
   defp setup_block("json_path_map", opts, config) do
