@@ -29,6 +29,7 @@ defmodule Astarte.Flow.K8s do
     @enforce_keys [
       :block_id,
       :image,
+      :config,
       :exchange_routing_key,
       :queue,
       :cpu_limit,
@@ -41,6 +42,7 @@ defmodule Astarte.Flow.K8s do
     defstruct [
       :block_id,
       :image,
+      :config,
       :exchange_routing_key,
       :queue,
       :cpu_limit,
@@ -106,6 +108,7 @@ defmodule Astarte.Flow.K8s do
   def block_custom_resource(block) do
     %ContainerBlock{
       block_id: block_id,
+      config: config,
       image: image,
       exchange_routing_key: exchange_routing_key,
       queue: queue,
@@ -116,7 +119,7 @@ defmodule Astarte.Flow.K8s do
     } = block
 
     %{
-      "config" => "{}",
+      "config" => Jason.encode!(config),
       "environment" => [],
       "id" => block_id,
       "image" => image,

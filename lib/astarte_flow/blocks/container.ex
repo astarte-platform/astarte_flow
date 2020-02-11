@@ -43,6 +43,7 @@ defmodule Astarte.Flow.Blocks.Container do
       :id,
       :amqp_client,
       :channel,
+      :amqp_config,
       :config,
       :channel_ref,
       :conn_ref,
@@ -61,6 +62,7 @@ defmodule Astarte.Flow.Blocks.Container do
 
   * `:id` (required) - The id of the block, it has to be unique between all container blocks.
   * `:image` (required) - The tag of the docker image that will be used by the block.
+  * `:config` - The Flow configuration that will be passed to the container.
   * `:connection` - A keyword list containing the options that will be passed to
     `AMQP.Connection.open/1`. Defaults to `[]`.
   * `:amqp_client` - A module that implements the
@@ -73,6 +75,7 @@ defmodule Astarte.Flow.Blocks.Container do
              option:
                {:id, String.t()}
                | {:image, String.t()}
+               | {:config, map()}
                | {:connection, keyword()}
                | {:amqp_client, module()}
   def start_link(opts) do
@@ -91,14 +94,16 @@ defmodule Astarte.Flow.Blocks.Container do
     id = Keyword.fetch!(opts, :id)
     image = Keyword.fetch!(opts, :image)
     amqp_client = Keyword.get(opts, :amqp_client, RabbitMQClient)
+    config = Keyword.get(opts, :config) || %{}
 
     amqp_opts = Keyword.put(opts, :queue_prefix, id)
 
-    with {:ok, config} <- amqp_client.generate_config(amqp_opts) do
+    with {:ok, amqp_config} <- amqp_client.generate_config(amqp_opts) do
       state = %State{
         id: id,
         amqp_client: amqp_client,
         channel: nil,
+        amqp_config: amqp_config,
         config: config,
         channel_ref: nil,
         conn_ref: nil,
@@ -192,6 +197,7 @@ defmodule Astarte.Flow.Blocks.Container do
     %State{
       id: block_id,
       image: image,
+      config: config,
       inbound_routing_key: exchange_routing_key,
       outbound_queues: [queue]
     } = state
@@ -199,6 +205,7 @@ defmodule Astarte.Flow.Blocks.Container do
     container_block = %ContainerBlock{
       block_id: block_id,
       image: image,
+      config: config,
       exchange_routing_key: exchange_routing_key,
       queue: queue,
       # TODO: these are random values since we are currently forced to provide them to the struct
@@ -212,7 +219,7 @@ defmodule Astarte.Flow.Blocks.Container do
   end
 
   defp connect(%State{amqp_client: amqp_client} = state) do
-    case amqp_client.setup(state.config) do
+    case amqp_client.setup(state.amqp_config) do
       {:ok, result} ->
         %{
           channel: channel,
