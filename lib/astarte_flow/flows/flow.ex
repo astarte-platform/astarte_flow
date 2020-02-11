@@ -135,7 +135,7 @@ defmodule Astarte.Flow.Flows.Flow do
     id_prefix = "#{realm}-#{flow.name}"
 
     with {:ok, {block_pids, container_block_pids, _}} <-
-           start_blocks(id_prefix, pipeline) do
+           start_blocks(id_prefix, pipeline, flow.config) do
       {:ok,
        %{
          state
@@ -145,14 +145,17 @@ defmodule Astarte.Flow.Flows.Flow do
     end
   end
 
-  defp start_blocks(id_prefix, pipeline) do
+  defp start_blocks(id_prefix, pipeline, flow_config) do
     Enum.reduce_while(pipeline, {:ok, {[], [], 0}}, fn
       # Special case: container block
       {Container = block_module, block_opts}, {:ok, {block_pids, container_block_pids, block_idx}} ->
         # Pass a deterministic id
         id = id_prefix <> to_string(block_idx)
 
-        full_opts = Keyword.put(block_opts, :id, id)
+        full_opts =
+          block_opts
+          |> Keyword.put(:id, id)
+          |> Keyword.put(:config, flow_config)
 
         case start_block(block_module, full_opts) do
           {:ok, pid} ->
