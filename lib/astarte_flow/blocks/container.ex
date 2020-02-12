@@ -257,4 +257,13 @@ defmodule Astarte.Flow.Blocks.Container do
         state
     end
   end
+
+  @impl true
+  def terminate(_reason, %State{channel: channel, amqp_client: amqp_client} = state) do
+    if channel do
+      amqp_client.close_connection(channel.conn)
+    end
+
+    {:noreply, state}
+  end
 end

@@ -94,4 +94,13 @@ defmodule Astarte.Flow.Blocks.Container.RabbitMQClient do
     {:ok, consumer_tag} = Basic.consume(channel, queue)
     consumer_tag
   end
+
+  @impl true
+  def close_connection(conn) do
+    if Process.alive?(conn.pid) do
+      Connection.close(conn)
+    else
+      :ok
+    end
+  end
 end
