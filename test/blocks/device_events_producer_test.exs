@@ -58,7 +58,13 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducerTest do
 
     def push_event(pid, %SimpleEvent{} = event) do
       payload = SimpleEvent.encode(event)
-      meta = %{delivery_tag: "fake"}
+
+      headers = [
+        {"x_astarte_realm", :longstr, event.realm},
+        {"x_astarte_device_id", :longstr, event.device_id}
+      ]
+
+      meta = %{delivery_tag: "fake", headers: headers}
 
       send(pid, {:basic_deliver, payload, meta})
     end
@@ -169,6 +175,113 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducerTest do
     end
   end
 
+  describe "DeviceEventsProducer filter" do
+    test "ignores Events for other device ids" do
+      device_id = "kRIHRTCWSeCZOC9DhCBIcg"
+      other_device_id = "aqaF_EfBSUubaexIkm9XVA"
+
+      {:ok, pid} =
+        DeviceEventsProducer.start_link(
+          routing_key: "test",
+          realm: "test",
+          target_devices: [device_id],
+          client: FakeAMQPClient
+        )
+
+      interface = "com.astarte-platform.genericsensors.Values"
+      path = "/test/value"
+      value = 42.3
+      bson_value = %{"v" => value} |> Cyanide.encode!()
+      realm = "test"
+      timestamp_ms = 1_580_031_400_664
+      timestamp_us = timestamp_ms * 1000
+
+      event = %IncomingDataEvent{
+        interface: interface,
+        path: path,
+        bson_value: bson_value
+      }
+
+      other_simple_event = %SimpleEvent{
+        realm: realm,
+        device_id: other_device_id,
+        timestamp: timestamp_ms,
+        event: {:incoming_data_event, event}
+      }
+
+      ok_simple_event = %SimpleEvent{
+        realm: realm,
+        device_id: device_id,
+        timestamp: timestamp_ms,
+        event: {:incoming_data_event, event}
+      }
+
+      FakeAMQPClient.push_event(pid, other_simple_event)
+      FakeAMQPClient.push_event(pid, ok_simple_event)
+
+      [message] = GenStage.stream([pid]) |> Enum.take(1)
+
+      assert %Message{
+               key: "#{realm}/#{device_id}/#{interface}#{path}",
+               type: :real,
+               data: value,
+               timestamp: timestamp_us
+             } == message
+    end
+
+    test "ignores Events for other realm" do
+      realm = "test"
+      other_realm = "other"
+
+      {:ok, pid} =
+        DeviceEventsProducer.start_link(
+          routing_key: "test",
+          realm: realm,
+          client: FakeAMQPClient
+        )
+
+      interface = "com.astarte-platform.genericsensors.Values"
+      path = "/test/value"
+      value = 42.3
+      bson_value = %{"v" => value} |> Cyanide.encode!()
+      device_id = "kRIHRTCWSeCZOC9DhCBIcg"
+      timestamp_ms = 1_580_031_400_664
+      timestamp_us = timestamp_ms * 1000
+
+      event = %IncomingDataEvent{
+        interface: interface,
+        path: path,
+        bson_value: bson_value
+      }
+
+      other_simple_event = %SimpleEvent{
+        realm: other_realm,
+        device_id: device_id,
+        timestamp: timestamp_ms,
+        event: {:incoming_data_event, event}
+      }
+
+      ok_simple_event = %SimpleEvent{
+        realm: realm,
+        device_id: device_id,
+        timestamp: timestamp_ms,
+        event: {:incoming_data_event, event}
+      }
+
+      FakeAMQPClient.push_event(pid, other_simple_event)
+      FakeAMQPClient.push_event(pid, ok_simple_event)
+
+      [message] = GenStage.stream([pid]) |> Enum.take(1)
+
+      assert %Message{
+               key: "#{realm}/#{device_id}/#{interface}#{path}",
+               type: :real,
+               data: value,
+               timestamp: timestamp_us
+             } == message
+    end
+  end
+
   describe "EventsDecoder.decode_simple_event" do
     test "returns error when decoding random binary" do
       assert {:error, :decode_failed} = EventsDecoder.decode_simple_event(<<1, 2, 3>>)
@@ -263,7 +376,8 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducerTest do
   end
 
   defp start_producer(_context) do
-    {:ok, pid} = DeviceEventsProducer.start_link(routing_key: "test", client: FakeAMQPClient)
+    {:ok, pid} =
+      DeviceEventsProducer.start_link(routing_key: "test", realm: "test", client: FakeAMQPClient)
 
     {:ok, producer: pid}
   end
