@@ -39,4 +39,5 @@ defmodule Astarte.Flow.Blocks.Container.AMQPClient do
               opts :: keyword
             ) :: any
   @callback consume(channel :: Channel.t(), queue :: binary()) :: Basic.consumer_tag()
+  @callback close_connection(conn :: Connection.t()) :: :ok | {:error, any}
 end

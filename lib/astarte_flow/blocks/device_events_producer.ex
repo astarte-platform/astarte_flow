@@ -223,4 +223,13 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer do
         {:noreply, Enum.reverse(messages), state}
     end
   end
+
+  @impl true
+  def terminate(_reason, %State{channel: channel, client: client} = state) do
+    if channel do
+      client.close_connection(channel.conn)
+    end
+
+    {:noreply, state}
+  end
 end

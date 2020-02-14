@@ -32,4 +32,5 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.AMQPClient do
               opts :: keyword
             ) :: any
   @callback consume(channel :: Channel.t(), config) :: Basic.consumer_tag()
+  @callback close_connection(conn :: Connection.t()) :: :ok | {:error, any}
 end
