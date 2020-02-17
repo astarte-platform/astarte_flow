@@ -141,10 +141,14 @@ defmodule Astarte.Flow.PipelineBuilder do
     {JsonPathMapper, [template: eval(template, config)]}
   end
 
-  defp setup_block("sort", opts, _config) do
-    %{} = opts
+  defp setup_block("sort", opts, config) do
+    %{
+      "window_size_ms" => window_size_ms
+    } = opts
 
-    {Sorter, []}
+    deduplicate = Map.get(opts, "deduplicate", false)
+
+    {Sorter, [delay_ms: eval(window_size_ms, config), deduplicate: eval(deduplicate, config)]}
   end
 
   defp setup_block("split_map", opts, config) do
