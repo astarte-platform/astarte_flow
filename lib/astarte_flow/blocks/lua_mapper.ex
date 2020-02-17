@@ -84,7 +84,16 @@ defmodule Astarte.Flow.Blocks.LuaMapper do
          end}
       ]
 
-      :luerl.set_table([:uuid], uuid_table, luerl_state)
+      luerl_state = :luerl.set_table([:uuid], uuid_table, luerl_state)
+
+      string_utils_table = [
+        {:split,
+         fn [string, pattern], state ->
+           {[String.split(string, pattern)], state}
+         end}
+      ]
+
+      :luerl.set_table([:string_utils], string_utils_table, luerl_state)
     end
   end
 
