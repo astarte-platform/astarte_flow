@@ -51,12 +51,12 @@ defmodule Astarte.Flow.Blocks.SorterTest do
     in_messages = [msg1, msg2, msg3]
     expected_messages = [msg3, msg1, msg2]
 
+    {:ok, config} = Config.from_keyword([])
+
     state =
       Enum.reduce(in_messages, %State{}, fn message, state ->
-        Sorter.process_message(message, state)
+        Sorter.process_message(message, config, state)
       end)
-
-    {:ok, config} = Config.from_keyword([])
 
     {out_messages, {config, state}} = Sorter.take_ready(0, {config, state})
 
@@ -99,12 +99,12 @@ defmodule Astarte.Flow.Blocks.SorterTest do
     in_messages = [msg1, msg2, msg3]
     expected_messages = [msg3, msg2]
 
+    {:ok, config} = Config.from_keyword(deduplicate: true)
+
     state =
       Enum.reduce(in_messages, %State{}, fn message, state ->
-        Sorter.process_message(message, state)
+        Sorter.process_message(message, config, state)
       end)
-
-    {:ok, config} = Config.from_keyword(deduplicate: true)
 
     {out_messages, {config, state}} = Sorter.take_ready(0, {config, state})
 
@@ -153,12 +153,12 @@ defmodule Astarte.Flow.Blocks.SorterTest do
     in_messages = [msg1, msg2, msg3]
     expected_messages = [msg3, msg3, msg2]
 
+    {:ok, config} = Config.from_keyword([])
+
     state =
       Enum.reduce(in_messages, %State{}, fn message, state ->
-        Sorter.process_message(message, state)
+        Sorter.process_message(message, config, state)
       end)
-
-    {:ok, config} = Config.from_keyword([])
 
     {out_messages, {config, state}} = Sorter.take_ready(0, {config, state})
 
@@ -215,12 +215,12 @@ defmodule Astarte.Flow.Blocks.SorterTest do
     in_messages = [msg1, msg2, msg3, msg4]
     expected_messages = [msg4, msg1, msg2]
 
+    {:ok, config} = Config.from_keyword(deduplicate: true)
+
     state =
       Enum.reduce(in_messages, %State{}, fn message, state ->
-        Sorter.process_message(message, state)
+        Sorter.process_message(message, config, state)
       end)
-
-    {:ok, config} = Config.from_keyword(deduplicate: true)
 
     {out_messages, {config, state}} = Sorter.take_ready(0, {config, state})
 

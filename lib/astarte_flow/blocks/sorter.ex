@@ -112,7 +112,7 @@ defmodule Astarte.Flow.Blocks.Sorter do
 
     {queues, messages} =
       Enum.reduce(queues, {queues, []}, fn {key, queue}, {queues_acc, msg_acc} ->
-        {queue, backwards_msg_acc} = dequeue_all_ready(policy, queue, ts + delay, msg_acc)
+        {queue, backwards_msg_acc} = dequeue_all_ready(policy, queue, ts - delay, msg_acc)
         msg_acc = Enum.reverse(backwards_msg_acc)
 
         queues_acc =
@@ -172,7 +172,7 @@ defmodule Astarte.Flow.Blocks.Sorter do
   def handle_events(events, _from, {config, state}) do
     new_state =
       Enum.reduce(events, state, fn message, acc ->
-        process_message(message, acc)
+        process_message(message, config, acc)
       end)
 
     {:noreply, [], {config, new_state}}
@@ -181,9 +181,13 @@ defmodule Astarte.Flow.Blocks.Sorter do
   @doc """
   Process a message and stores it into the block state.
   """
-  @spec process_message(Message.t(), State.t()) :: State.t()
-  def process_message(%Message{} = msg, %{last_timestamp: last_ts, queues: queues} = state) do
-    queues = maybe_insert(queues, msg, last_ts)
+  @spec process_message(Message.t(), Config.t(), State.t()) :: State.t()
+  def process_message(
+        %Message{} = msg,
+        config,
+        %{last_timestamp: last_ts, queues: queues} = state
+      ) do
+    queues = maybe_insert(queues, msg, last_ts - config.delay_us)
 
     %State{state | queues: queues}
   end
