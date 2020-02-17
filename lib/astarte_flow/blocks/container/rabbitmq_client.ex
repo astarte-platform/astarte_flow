@@ -46,31 +46,64 @@ defmodule Astarte.Flow.Blocks.Container.RabbitMQClient do
   @doc """
   Initialize the AMQP channel
   """
-  @spec setup(config :: map) ::
+  @spec setup(config :: map, type :: :producer | :consumer | :producer_consumer) ::
           {:ok, map()} | {:error, reason :: term()}
   @impl true
-  def setup(config) do
+  def setup(config, type) do
     queue_prefix = config.queue_prefix
     # We add a timeout so the block doesn't wait too much for the connection
     conn_opts = Keyword.put(config.connection, :connection_timeout, @timeout)
 
     with {:ok, conn} <- Connection.open(conn_opts),
          {:ok, chan} <- Channel.open(conn),
-         # TODO: we assume a single outbound/inbound queue for now, publishing on the default
-         # exchange with the queue name as routing key.
-         {:ok, %{queue: outbound_queue}} <-
+         {:ok, queues_info} <- queues_setup(chan, queue_prefix, type) do
+      {:ok, Map.put(queues_info, :channel, chan)}
+    end
+  end
+
+  defp queues_setup(chan, queue_prefix, :producer_consumer) do
+    # TODO: we assume a single outbound/inbound queue for now, publishing on the default
+    # exchange with the queue name as routing key.
+    with {:ok, %{queue: outbound_queue}} <-
            Queue.declare(chan, queue_prefix <> "-outbound", auto_delete: true),
          {:ok, %{queue: inbound_queue}} <-
            Queue.declare(chan, queue_prefix <> "-inbound", auto_delete: true) do
-      ret = %{
-        channel: chan,
-        outbound_routing_key: outbound_queue,
-        outbound_queues: [outbound_queue],
-        inbound_routing_key: inbound_queue,
-        inbound_queues: [inbound_queue]
-      }
+      {:ok,
+       %{
+         outbound_routing_key: outbound_queue,
+         outbound_queues: [outbound_queue],
+         inbound_routing_key: inbound_queue,
+         inbound_queues: [inbound_queue]
+       }}
+    end
+  end
 
-      {:ok, ret}
+  defp queues_setup(chan, queue_prefix, :producer) do
+    # Producer, so only inbound queue
+    with {:ok, %{queue: inbound_queue}} <-
+           Queue.declare(chan, queue_prefix <> "-inbound", auto_delete: true) do
+      {:ok,
+       %{
+         outbound_routing_key: nil,
+         outbound_queues: [],
+         inbound_routing_key: inbound_queue,
+         inbound_queues: [inbound_queue]
+       }}
+    end
+  end
+
+  defp queues_setup(chan, queue_prefix, :consumer) do
+    # Consumer, so only outbound queue
+
+    with {:ok, %{queue: outbound_queue}} <-
+           Queue.declare(chan, queue_prefix <> "-outbound", auto_delete: true) do
+      {:ok,
+       %{
+         outbound_routing_key: outbound_queue,
+         outbound_queues: [outbound_queue],
+         inbound_routing_key: nil,
+         inbound_queues: []
+       }}
     end
   end
 

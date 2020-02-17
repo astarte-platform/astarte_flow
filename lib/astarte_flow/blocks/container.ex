@@ -48,6 +48,7 @@ defmodule Astarte.Flow.Blocks.Container do
       :channel_ref,
       :conn_ref,
       :image,
+      :type,
       :inbound_routing_key,
       :outbound_routing_key,
       outbound_queues: [],
@@ -75,6 +76,7 @@ defmodule Astarte.Flow.Blocks.Container do
              option:
                {:id, String.t()}
                | {:image, String.t()}
+               | {:type, :producer | :consumer | :producer_consumer}
                | {:config, map()}
                | {:connection, keyword()}
                | {:amqp_client, module()}
@@ -93,6 +95,7 @@ defmodule Astarte.Flow.Blocks.Container do
 
     id = Keyword.fetch!(opts, :id)
     image = Keyword.fetch!(opts, :image)
+    type = Keyword.fetch!(opts, :type)
     amqp_client = Keyword.get(opts, :amqp_client, RabbitMQClient)
     config = Keyword.get(opts, :config) || %{}
 
@@ -101,6 +104,7 @@ defmodule Astarte.Flow.Blocks.Container do
     with {:ok, amqp_config} <- amqp_client.generate_config(amqp_opts) do
       state = %State{
         id: id,
+        type: type,
         amqp_client: amqp_client,
         channel: nil,
         amqp_config: amqp_config,
@@ -112,7 +116,16 @@ defmodule Astarte.Flow.Blocks.Container do
 
       send(self(), :connect)
 
-      {:producer_consumer, state, dispatcher: GenStage.BroadcastDispatcher}
+      case type do
+        :producer ->
+          {:producer, state, dispatcher: GenStage.BroadcastDispatcher}
+
+        :producer_consumer ->
+          {:producer_consumer, state, dispatcher: GenStage.BroadcastDispatcher}
+
+        :consumer ->
+          {:consumer, state}
+      end
     else
       {:error, reason} ->
         {:stop, reason}
@@ -219,7 +232,7 @@ defmodule Astarte.Flow.Blocks.Container do
   end
 
   defp connect(%State{amqp_client: amqp_client} = state) do
-    case amqp_client.setup(state.amqp_config) do
+    case amqp_client.setup(state.amqp_config, state.type) do
       {:ok, result} ->
         %{
           channel: channel,
