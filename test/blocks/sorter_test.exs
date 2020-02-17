@@ -51,12 +51,12 @@ defmodule Astarte.Flow.Blocks.SorterTest do
     in_messages = [msg1, msg2, msg3]
     expected_messages = [msg3, msg1, msg2]
 
+    {:ok, config} = Config.from_keyword([])
+
     state =
       Enum.reduce(in_messages, %State{}, fn message, state ->
-        Sorter.process_message(message, state)
+        Sorter.process_message(message, config, state)
       end)
-
-    {:ok, config} = Config.from_keyword([])
 
     {out_messages, {config, state}} = Sorter.take_ready(0, {config, state})
 
@@ -99,12 +99,12 @@ defmodule Astarte.Flow.Blocks.SorterTest do
     in_messages = [msg1, msg2, msg3]
     expected_messages = [msg3, msg2]
 
+    {:ok, config} = Config.from_keyword(deduplicate: true)
+
     state =
       Enum.reduce(in_messages, %State{}, fn message, state ->
-        Sorter.process_message(message, state)
+        Sorter.process_message(message, config, state)
       end)
-
-    {:ok, config} = Config.from_keyword(deduplicate: true)
 
     {out_messages, {config, state}} = Sorter.take_ready(0, {config, state})
 
@@ -153,12 +153,12 @@ defmodule Astarte.Flow.Blocks.SorterTest do
     in_messages = [msg1, msg2, msg3]
     expected_messages = [msg3, msg3, msg2]
 
+    {:ok, config} = Config.from_keyword([])
+
     state =
       Enum.reduce(in_messages, %State{}, fn message, state ->
-        Sorter.process_message(message, state)
+        Sorter.process_message(message, config, state)
       end)
-
-    {:ok, config} = Config.from_keyword([])
 
     {out_messages, {config, state}} = Sorter.take_ready(0, {config, state})
 
@@ -215,12 +215,12 @@ defmodule Astarte.Flow.Blocks.SorterTest do
     in_messages = [msg1, msg2, msg3, msg4]
     expected_messages = [msg4, msg1, msg2]
 
+    {:ok, config} = Config.from_keyword(deduplicate: true)
+
     state =
       Enum.reduce(in_messages, %State{}, fn message, state ->
-        Sorter.process_message(message, state)
+        Sorter.process_message(message, config, state)
       end)
-
-    {:ok, config} = Config.from_keyword(deduplicate: true)
 
     {out_messages, {config, state}} = Sorter.take_ready(0, {config, state})
 
@@ -231,6 +231,65 @@ defmodule Astarte.Flow.Blocks.SorterTest do
     assert out_messages == expected_messages
 
     {out_messages, {_config, _state}} = Sorter.take_ready(1_579_955_892_927_853, {config, state})
+
+    assert out_messages == []
+  end
+
+  test "too old messages are not accepted" do
+    msg1 = %Message{
+      data: 1,
+      key: "key",
+      metadata: %{"test" => "metadata"},
+      timestamp: 10001,
+      type: :integer
+    }
+
+    msg2 = %Message{
+      data: 2,
+      key: "key",
+      metadata: %{"test" => "metadata"},
+      timestamp: 10100,
+      type: :integer
+    }
+
+    msg3 = %Message{
+      data: 3,
+      key: "key",
+      metadata: %{"test" => "metadata"},
+      timestamp: 10101,
+      type: :integer
+    }
+
+    msg4 = %Message{
+      data: 4,
+      key: "key",
+      metadata: %{"test" => "metadata"},
+      timestamp: 9999,
+      type: :integer
+    }
+
+    in_messages = [msg1, msg2, msg3, msg4]
+
+    {:ok, config} = Config.from_keyword(deduplicate: false, delay_ms: 10)
+
+    initial_state = %State{
+      last_timestamp: 20000
+    }
+
+    state =
+      Enum.reduce(in_messages, initial_state, fn message, state ->
+        Sorter.process_message(message, config, state)
+      end)
+
+    {out_messages, {config, state}} = Sorter.take_ready(20002, {config, state})
+
+    assert out_messages == [msg1]
+
+    {out_messages, {config, state}} = Sorter.take_ready(20102, {config, state})
+
+    assert out_messages == [msg2, msg3]
+
+    {out_messages, {_config, _state}} = Sorter.take_ready(30000, {config, state})
 
     assert out_messages == []
   end

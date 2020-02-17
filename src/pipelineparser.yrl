@@ -1,5 +1,5 @@
 Nonterminals topology blocks block with_props with_prop value array array_elements object object_elements kv_pair.
-Terminals '|' '.' ',' ':' '(' ')' '[' ']' '{' '}' identifier integer string json_path.
+Terminals '|' '.' ',' ':' '(' ')' '[' ']' '{' '}' boolean identifier integer string json_path.
 Rootsymbol topology.
 
 topology -> blocks : lists:reverse('$1').
@@ -16,6 +16,7 @@ with_props -> with_props with_prop : ['$2' | '$1'].
 with_prop -> '.' identifier '(' value ')' : {extract_token('$2'), '$4'}.
 
 value -> json_path : extract_token('$1').
+value -> boolean : extract_token('$1').
 value -> string : extract_token('$1').
 value -> integer : extract_token('$1').
 value -> array : '$1'.
