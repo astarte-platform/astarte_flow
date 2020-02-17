@@ -51,7 +51,7 @@ defmodule Astarte.Flow.PipelineBuilder do
     end
   end
 
-  defp setup_block("astarte_devices_source", opts, _config) do
+  defp setup_block("astarte_devices_source", opts, config) do
     %{
       "realm" => realm
     } = opts
@@ -61,8 +61,8 @@ defmodule Astarte.Flow.PipelineBuilder do
     {DeviceEventsProducer,
      [
        routing_key: "trigger_engine",
-       realm: realm,
-       target_devices: target_devices,
+       realm: eval(realm, config),
+       target_devices: eval(target_devices, config),
        connection: Application.fetch_env!(:astarte_flow, :default_amqp_connection)
      ]}
   end
