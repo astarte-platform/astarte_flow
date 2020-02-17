@@ -199,12 +199,18 @@ defmodule Astarte.Flow.Flows.Flow do
   end
 
   @impl true
-  def handle_info({:EXIT, _pid, :normal}, state) do
-    # Ignore normal exits
+  def handle_info({:EXIT, port, _reason}, state) when is_port(port) do
+    # Ignore port exits
     {:noreply, state}
   end
 
-  def handle_info({:EXIT, _pid, reason}, %State{flow: flow} = state) do
+  def handle_info({:EXIT, pid, reason}, state)
+      when is_pid(pid) and reason in [:normal, :shutdown] do
+    # Don't log on normal or shutdown exits
+    {:stop, reason, state}
+  end
+
+  def handle_info({:EXIT, pid, reason}, %State{flow: flow} = state) when is_pid(pid) do
     _ =
       Logger.error("A block crashed with reason #{inspect(reason)}.",
         flow: flow.name,
