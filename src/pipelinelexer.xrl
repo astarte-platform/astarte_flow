@@ -1,5 +1,7 @@
 Definitions.
 
+TRUE = true
+FALSE = false
 IDENTIFIER  = [a-zA-Z_]+
 WHITESPACE = [\s\t\n\r]
 INTEGER = [0-9]+
@@ -8,6 +10,9 @@ SCRIPT = \"\"\"([^"]*(\"?\"?[^"]))*\"\"\"
 JSON_PATH = \$\{[^}]*\}
 
 Rules.
+
+{TRUE} : {token, {boolean,  TokenLine, true}}.
+{FALSE} : {token, {boolean,  TokenLine, false}}.
 
 {IDENTIFIER}  : {token, {identifier,  TokenLine, list_to_binary(TokenChars)}}.
 {INTEGER}  : {token, {integer,  TokenLine, list_to_integer(TokenChars)}}.
