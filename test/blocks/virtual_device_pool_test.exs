@@ -22,6 +22,7 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePoolTest do
 
   alias Astarte.Flow.Blocks.VirtualDevicePool
   alias Astarte.Flow.Message
+  alias Astarte.Flow.VirtualDevicesSupervisor
 
   @pairing_url "http://localhost:4003"
   @realm "test"
@@ -193,9 +194,9 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePoolTest do
   defp start_pool(_) do
     {:ok, pool} = VirtualDevicePool.start_link(@valid_opts)
 
-    %{state: %{devices: devices}} = :sys.get_state(pool)
-
-    device_pids = Map.values(devices)
+    device_pids =
+      DynamicSupervisor.which_children(VirtualDevicesSupervisor)
+      |> Enum.map(fn {_, pid, _, _} -> pid end)
 
     # Check that all devices are started
     assert length(device_pids) == @device_count
@@ -207,9 +208,9 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePoolTest do
 
     # Kill all Astarte.Device on exit after every test
     on_exit(fn ->
-      for {_key, pid} <- devices do
+      for pid <- device_pids do
         ref = Process.monitor(pid)
-        Process.exit(pid, :normal)
+        DynamicSupervisor.terminate_child(VirtualDevicesSupervisor, pid)
 
         assert_receive {:DOWN, ^ref, :process, ^pid, _reason}, 500
       end

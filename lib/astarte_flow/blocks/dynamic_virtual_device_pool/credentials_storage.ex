@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2020 Ispirata Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@
 # limitations under the License.
 #
 
-Mox.defmock(PairingAgentMock, for: Astarte.API.Pairing.Agent.Behaviour)
-Mox.defmock(PairingMock, for: Astarte.API.Pairing.Devices.Behaviour)
+defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool.CredentialsStorage do
+  @callback fetch_credentials_secret(realm :: String.t(), device_id :: String.t()) ::
+              {:ok, credentials_secret :: String.t()} | :error
 
-Mox.defmock(CredentialsStorageMock,
-  for: Astarte.Flow.Blocks.DynamicVirtualDevicePool.CredentialsStorage
-)
-
-Mox.defmock(ConnectionMock, for: Astarte.Device.Connection)
-Mox.defmock(InterfaceProviderMock, for: Astarte.Device.InterfaceProvider)
+  @callback store_credentials_secret(
+              realm :: String.t(),
+              device_id :: String.t(),
+              credentials_secret :: String.t()
+            ) :: :ok | {:error, reason :: any()}
+end

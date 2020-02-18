@@ -22,6 +22,7 @@ defmodule Astarte.Flow.PipelineBuilder do
   alias Astarte.Flow.Blocks.{
     Container,
     DeviceEventsProducer,
+    DynamicVirtualDevicePool,
     Filter,
     RandomProducer,
     JsonMapper,
@@ -179,13 +180,16 @@ defmodule Astarte.Flow.PipelineBuilder do
     {JsonMapper, []}
   end
 
-  defp setup_block("virtual_device_pool", opts, config) do
+  # If it has target_devices, it's a normal VirtualDevicePool
+  defp setup_block("virtual_device_pool", %{"target_devices" => _} = opts, config) do
+    alias Astarte.Device.SimpleInterfaceProvider
+
     %{
       "pairing_url" => pairing_url,
-      "devices" => devices
+      "target_devices" => target_devices
     } = opts
 
-    devices_array = eval(devices, config)
+    devices_array = eval(target_devices, config)
 
     devices =
       for device_obj <- devices_array do
@@ -193,18 +197,38 @@ defmodule Astarte.Flow.PipelineBuilder do
           "realm" => realm,
           "device_id" => device_id,
           "credentials_secret" => credentials_secret,
-          "interfaces_directory" => interfaces_directory
+          "interfaces" => interfaces
         } = device_obj
 
         [
           device_id: eval(device_id, config),
           realm: eval(realm, config),
           credentials_secret: eval(credentials_secret, config),
-          interface_provider: eval(interfaces_directory, config)
+          interface_provider: {SimpleInterfaceProvider, eval(interfaces, config)}
         ]
       end
 
     {VirtualDevicePool, [pairing_url: eval(pairing_url, config), devices: devices]}
+  end
+
+  # If it has interfaces in the top level, it's a DynamicVirtualDevicePool
+  defp setup_block("virtual_device_pool", %{"interfaces" => _} = opts, config) do
+    alias Astarte.Device.SimpleInterfaceProvider
+
+    pairing_url = Map.fetch!(opts, "pairing_url") |> eval(config)
+    realms = Map.fetch!(opts, "realms") |> eval(config)
+    interfaces = Map.fetch!(opts, "interfaces") |> eval(config)
+
+    pairing_jwt_map =
+      Enum.into(realms, %{}, fn %{"realm" => realm, "jwt" => jwt} -> {realm, jwt} end)
+
+    opts = [
+      pairing_url: pairing_url,
+      pairing_jwt_map: pairing_jwt_map,
+      interface_provider: {SimpleInterfaceProvider, interfaces}
+    ]
+
+    {DynamicVirtualDevicePool, opts}
   end
 
   def start_all(pipeline) do
