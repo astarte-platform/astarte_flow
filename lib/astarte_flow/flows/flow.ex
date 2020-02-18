@@ -114,14 +114,22 @@ defmodule Astarte.Flow.Flows.Flow do
 
     with {:ok, pipeline_desc} <- Pipelines.get_pipeline(realm, flow.pipeline),
          pipeline = PipelineBuilder.build(pipeline_desc, %{"config" => flow.config}),
-         state = %State{realm: realm, flow: flow, pipeline: pipeline, status: :starting_blocks},
+         state = %State{realm: realm, flow: flow, pipeline: pipeline},
          {:ok, state} <- start_flow(realm, flow, pipeline, state) do
       _ = Registry.register(RealmRegistry, realm, flow)
       # Right here all blocks are started, next step is bringing up the containers
       Logger.debug("Flow #{flow.name} initialized.")
-      send(self(), :initialize_k8s_flow)
 
-      {:ok, state}
+      if state.container_pids == [] do
+        # No containers, so no need to use K8s
+        send(self(), :connect_blocks)
+
+        {:ok, %{state | status: :connecting_blocks}}
+      else
+        send(self(), :initialize_k8s_flow)
+
+        {:ok, %{state | status: :collecting_containers}}
+      end
     else
       {:error, :not_found} ->
         {:stop, :pipeline_not_found}
