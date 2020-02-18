@@ -58,5 +58,6 @@ defmodule Astarte.FlowWeb.Endpoint do
     key: "_astarte_flow_key",
     signing_salt: "PNSxHV7l"
 
+  plug CORSPlug
   plug Astarte.FlowWeb.Router
 end
