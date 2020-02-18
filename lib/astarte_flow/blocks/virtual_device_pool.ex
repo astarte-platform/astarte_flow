@@ -30,18 +30,7 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
 
   alias Astarte.Device
   alias Astarte.Flow.Message
-
-  defmodule Config do
-    @moduledoc false
-
-    @type t() :: %__MODULE__{
-            devices: %{optional({realm :: String.t(), device_id :: String.t()}) => pid()}
-          }
-
-    defstruct [
-      :devices
-    ]
-  end
+  alias Astarte.Flow.VirtualDevicesSupervisor
 
   @doc """
   Starts the `VirtualDevicePool`.
@@ -92,7 +81,7 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
 
     with {:ok, devices} <- start_devices(base_opts, devices),
          :ok <- wait_for_device_connections(devices) do
-      {:consumer, %Config{devices: devices}}
+      {:consumer, nil}
     else
       {:error, reason} ->
         {:stop, reason}
@@ -106,17 +95,14 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
       end
 
     result =
-      Enum.reduce_while(full_device_options, %{}, fn opts, acc ->
-        realm = Keyword.fetch!(opts, :realm)
-        device_id = Keyword.fetch!(opts, :device_id)
-
-        case Device.start_link(opts) do
+      Enum.reduce_while(full_device_options, [], fn opts, acc ->
+        case DynamicSupervisor.start_child(VirtualDevicesSupervisor, {Device, opts}) do
           {:ok, pid} ->
-            {:cont, Map.put(acc, {realm, device_id}, pid)}
+            {:cont, [pid | acc]}
 
           {:error, {:already_started, pid}} ->
             # Someone else is already using this device, but that's fine
-            {:cont, Map.put(acc, {realm, device_id}, pid)}
+            {:cont, [pid | acc]}
 
           {:error, reason} ->
             {:halt, {:error, reason}}
@@ -133,25 +119,19 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
   end
 
   defp wait_for_device_connections(devices) do
-    Enum.each(devices, fn {_key, device_pid} ->
+    Enum.each(devices, fn device_pid ->
       Device.wait_for_connection(device_pid)
     end)
   end
 
   @impl true
-  def handle_events(events, _from, config) do
-    Enum.each(events, fn message ->
-      handle_message(message, config)
-    end)
+  def handle_events(events, _from, state) do
+    Enum.each(events, &handle_message/1)
 
-    {:noreply, [], config}
+    {:noreply, [], state}
   end
 
-  defp handle_message(message, config) do
-    %Config{
-      devices: devices
-    } = config
-
+  defp handle_message(message) do
     %Message{
       key: key,
       data: data,
@@ -159,7 +139,7 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
     } = message
 
     with {:ok, {realm, device_id, interface, path}} <- parse_key(key),
-         {:ok, pid} <- fetch_device(realm, device_id, devices),
+         {:ok, pid} <- fetch_device(realm, device_id),
          {:ok, timestamp} <- DateTime.from_unix(timestamp_micros, :microsecond),
          normalized_data = normalize_data(data),
          :ok <-
@@ -183,12 +163,12 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
     end
   end
 
-  defp fetch_device(realm, device_id, devices) do
-    case Map.fetch(devices, {realm, device_id}) do
-      {:ok, pid} ->
+  defp fetch_device(realm, device_id) do
+    case Astarte.Device.get_pid(realm, device_id) do
+      pid when is_pid(pid) ->
         {:ok, pid}
 
-      :error ->
+      nil ->
         {:error, :device_not_found}
     end
   end
