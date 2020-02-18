@@ -27,6 +27,7 @@ use Mix.Config
 #
 config :astarte_flow, Astarte.FlowWeb.Endpoint,
   url: [host: "example.com", port: 80],
+  check_origin: false,
   http: [:inet6, port: String.to_integer(System.get_env("PORT") || "4009")],
   server: true
 
