@@ -120,7 +120,7 @@ defmodule Astarte.Flow.Flows.Flow do
       # Right here all blocks are started, next step is bringing up the containers
       Logger.debug("Flow #{flow.name} initialized.")
 
-      if state.container_pids == [] do
+      if state.container_block_pids == [] do
         # No containers, so no need to use K8s
         send(self(), :connect_blocks)
 
