@@ -33,6 +33,10 @@ config :astarte_flow,
        :pipelines_dir,
        System.get_env("ASTARTE_FLOW_PIPELINES_DIR", "/pipelines")
 
+config :astarte_flow,
+       :persistency_dir,
+       System.get_env("ASTARTE_FLOW_PERSISTENCY_DIR", "/datastore")
+
 config :astarte_flow, :default_amqp_connection,
   host: System.get_env("ASTARTE_FLOW_DEFAULT_AMQP_CONNECTION_HOST", "localhost"),
   username: System.get_env("ASTARTE_FLOW_DEFAULT_AMQP_CONNECTION_USERNAME", "guest"),
