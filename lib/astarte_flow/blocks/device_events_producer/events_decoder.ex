@@ -97,9 +97,6 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.EventsDecoder do
       {:ok, %{"v" => %_{} = value}} ->
         {:ok, value}
 
-      {:ok, %{"v" => value}} when is_map(value) ->
-        {:error, :object_aggregation_not_yet_supported}
-
       {:ok, %{"v" => value}} ->
         {:ok, value}
 
@@ -108,6 +105,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.EventsDecoder do
     end
   end
 
+  # TODO: arrays are still missing
   defp value_to_type(value) do
     case value do
       v when is_boolean(v) ->
@@ -129,8 +127,12 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.EventsDecoder do
         {:ok, :binary}
 
       v when is_map(v) ->
-        # TODO: add support to object aggregations
-        {:error, :unsupported_type}
+        Enum.reduce_while(v, {:ok, %{}}, fn {item_key, item_value}, {:ok, acc} ->
+          case value_to_type(item_value) do
+            {:ok, type} -> {:cont, {:ok, Map.put(acc, item_key, type)}}
+            error -> {:halt, error}
+          end
+        end)
 
       _ ->
         {:error, :unsupported_type}
