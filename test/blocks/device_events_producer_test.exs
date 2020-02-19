@@ -74,6 +74,10 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducerTest do
 
       send(pid, {:basic_deliver, payload, meta})
     end
+
+    def close_connection(_) do
+      :ok
+    end
   end
 
   describe "DeviceEventsProducer" do
