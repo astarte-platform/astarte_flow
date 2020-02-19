@@ -118,6 +118,59 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducerTest do
              } == message
     end
 
+    test "converts an object aggregated IncomingData SimpleEvent to a Message", %{producer: pid} do
+      interface = "com.astarte-platform.example.ObjectAggregated"
+      path = "/"
+
+      value = %{
+        "real" => 4.2,
+        "real2" => 1.0,
+        "int" => 1,
+        "bool" => true,
+        "string" => "アスタルテ",
+        "bin" => {0, <<0, 1, 2>>},
+        "datetime" => DateTime.from_unix!(1_582_112_861_835, :millisecond)
+      }
+
+      bson_value = %{"v" => value} |> Cyanide.encode!()
+      realm = "test"
+      device_id = "kRIHRTCWSeCZOC9DhCBIcg"
+      timestamp_ms = 1_580_031_400_664
+      timestamp_us = timestamp_ms * 1000
+
+      event = %IncomingDataEvent{
+        interface: interface,
+        path: path,
+        bson_value: bson_value
+      }
+
+      simple_event = %SimpleEvent{
+        realm: realm,
+        device_id: device_id,
+        timestamp: timestamp_ms,
+        event: {:incoming_data_event, event}
+      }
+
+      FakeAMQPClient.push_event(pid, simple_event)
+
+      [message] = GenStage.stream([pid]) |> Enum.take(1)
+
+      assert %Message{
+               key: "#{realm}/#{device_id}/#{interface}#{path}",
+               type: %{
+                 "real" => :real,
+                 "real2" => :real,
+                 "int" => :integer,
+                 "bool" => :boolean,
+                 "string" => :string,
+                 "bin" => :binary,
+                 "datetime" => :datetime
+               },
+               data: value,
+               timestamp: timestamp_us
+             } == message
+    end
+
     test "ignores a DeviceConnected SimpleEvent", %{producer: pid} do
       realm = "test"
       device_id = "kRIHRTCWSeCZOC9DhCBIcg"
@@ -315,12 +368,6 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducerTest do
       # This is how Cyanide represents BSON binaries
       assert {:ok, %Message{type: :binary, data: <<1, 2, 3, 4>>}} =
                event_fixture(value: {0, <<1, 2, 3, 4>>})
-               |> EventsDecoder.simple_event_to_message()
-    end
-
-    test "temporarily fails with aggregation object" do
-      assert {:error, :object_aggregation_not_yet_supported} =
-               event_fixture(value: %{an: "object", other: "value"})
                |> EventsDecoder.simple_event_to_message()
     end
 
