@@ -204,7 +204,7 @@ defmodule Astarte.Flow.PipelineBuilder do
           device_id: eval(device_id, config),
           realm: eval(realm, config),
           credentials_secret: eval(credentials_secret, config),
-          interface_provider: {SimpleInterfaceProvider, eval(interfaces, config)}
+          interface_provider: {SimpleInterfaceProvider, interfaces: eval(interfaces, config)}
         ]
       end
 
@@ -227,7 +227,7 @@ defmodule Astarte.Flow.PipelineBuilder do
     opts = [
       pairing_url: pairing_url,
       pairing_jwt_map: pairing_jwt_map,
-      interface_provider: {SimpleInterfaceProvider, interfaces}
+      interface_provider: {SimpleInterfaceProvider, interfaces: interfaces}
     ]
 
     {DynamicVirtualDevicePool, opts}
