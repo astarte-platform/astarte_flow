@@ -220,7 +220,9 @@ defmodule Astarte.Flow.PipelineBuilder do
     interfaces = Map.fetch!(opts, "interfaces") |> eval(config)
 
     pairing_jwt_map =
-      Enum.into(realms, %{}, fn %{"realm" => realm, "jwt" => jwt} -> {realm, jwt} end)
+      Enum.into(realms, %{}, fn %{"realm" => realm, "jwt" => jwt} ->
+        {eval(realm, config), eval(jwt, config)}
+      end)
 
     opts = [
       pairing_url: pairing_url,
