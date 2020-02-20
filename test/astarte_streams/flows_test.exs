@@ -108,8 +108,13 @@ defmodule Astarte.Flow.FlowsTest do
       assert cs.errors[:name] != nil
     end
 
-    test "create_flow/2 with invalid name returns error changeset" do
+    test "create_flow/2 with non-string name returns error changeset" do
       attrs = Map.put(@valid_attrs, "name", 42)
+      assert {:error, %Ecto.Changeset{}} = Flows.create_flow(@realm, attrs)
+    end
+
+    test "create_flow/2 with invalid string name returns error changeset" do
+      attrs = Map.put(@valid_attrs, "name", "no_underscores_allowed")
       assert {:error, %Ecto.Changeset{}} = Flows.create_flow(@realm, attrs)
     end
 
