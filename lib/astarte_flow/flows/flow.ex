@@ -50,6 +50,7 @@ defmodule Astarte.Flow.Flows.Flow do
     flow
     |> cast(attrs, [:pipeline, :name, :config])
     |> validate_required([:pipeline, :name])
+    |> validate_format(:name, ~r/^[a-zA-Z0-9][a-zA-Z0-9-]+$/)
   end
 
   defmodule State do
