@@ -40,7 +40,7 @@ defmodule Astarte.Flow.Flows.Flow do
   @primary_key false
   @derive {Phoenix.Param, key: :name}
   embedded_schema do
-    field :config, :map
+    field :config, :map, default: %{}
     field :name, :string
     field :pipeline, :string
   end
@@ -49,7 +49,7 @@ defmodule Astarte.Flow.Flows.Flow do
   def changeset(%Flow{} = flow, attrs) do
     flow
     |> cast(attrs, [:pipeline, :name, :config])
-    |> validate_required([:pipeline, :name, :config])
+    |> validate_required([:pipeline, :name])
   end
 
   defmodule State do
