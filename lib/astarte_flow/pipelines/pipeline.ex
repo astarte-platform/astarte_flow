@@ -16,20 +16,23 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.Router do
-  use Astarte.FlowWeb, :router
+defmodule Astarte.Flow.Pipelines.Pipeline do
+  use Ecto.Schema
+  import Ecto.Changeset
+  alias Astarte.Flow.Pipelines.Pipeline
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  @primary_key false
+  @derive {Phoenix.Param, key: :name}
+  embedded_schema do
+    field :description, :string
+    field :name, :string
+    field :source, :string
   end
 
-  scope "/v1/:realm", Astarte.FlowWeb do
-    pipe_through :api
-
-    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
-
-    resources "/pipelines", PipelineController, param: "name", only: [:index, :show]
+  @doc false
+  def changeset(%Pipeline{} = pipeline, attrs) do
+    pipeline
+    |> cast(attrs, [:name, :description, :source])
+    |> validate_required([:name, :description, :source])
   end
-
-  get "/health", Astarte.FlowWeb.HealthController, :show
 end

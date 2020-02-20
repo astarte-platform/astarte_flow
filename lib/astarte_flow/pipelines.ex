@@ -19,11 +19,28 @@
 defmodule Astarte.Flow.Pipelines do
   require Logger
 
+  alias Astarte.Flow.Pipelines.Pipeline
+
+  def list_pipelines(realm) when is_binary(realm) do
+    Path.join(pipelines_dir(), "*.pipeline")
+    |> Path.wildcard()
+    |> Enum.map(fn filename ->
+      pipeline_name = Path.basename(filename, ".pipeline")
+
+      %Pipeline{name: pipeline_name}
+    end)
+  end
+
   def get_pipeline(realm, name) when is_binary(realm) and is_binary(name) do
     pipeline_file = Path.join(pipelines_dir(), name <> ".pipeline")
 
-    with {:ok, pipeline_desc} <- File.read(pipeline_file) do
-      {:ok, pipeline_desc}
+    with {:ok, source} <- File.read(pipeline_file) do
+      pipeline = %Pipeline{
+        name: name,
+        source: source
+      }
+
+      {:ok, pipeline}
     else
       _ ->
         _ = Logger.warn("Cannot read pipeline file #{pipeline_file}")
