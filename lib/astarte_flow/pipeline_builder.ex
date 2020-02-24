@@ -73,9 +73,19 @@ defmodule Astarte.Flow.PipelineBuilder do
       "image" => image
     } = opts
 
+    # TODO: this should be auto-deduced by the position in the pipeline
+    type =
+      case Map.get(opts, "type", "producer_consumer") do
+        "producer" -> :producer
+        "producer_consumer" -> :producer_consumer
+        "consumer" -> :consumer
+        other -> raise "Invalid type in container block: #{inspect(other)}"
+      end
+
     {Container,
      [
        image: eval(image, config),
+       type: type,
        connection: Application.fetch_env!(:astarte_flow, :default_amqp_connection)
      ]}
   end

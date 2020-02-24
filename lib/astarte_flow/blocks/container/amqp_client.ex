@@ -22,9 +22,10 @@ defmodule Astarte.Flow.Blocks.Container.AMQPClient do
   alias AMQP.{Basic, Channel}
 
   @typep config :: term()
+  @typep block_type :: :producer | :consumer | :producer_consumer
 
   @callback generate_config(opts :: any) :: {:ok, config} | {:error, any}
-  @callback setup(config) :: {:ok, map()} | {:error, any}
+  @callback setup(config, block_type) :: {:ok, map()} | {:error, any}
   @callback publish(
               channel :: Channel.t(),
               exchange :: binary(),

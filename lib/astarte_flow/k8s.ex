@@ -110,13 +110,13 @@ defmodule Astarte.Flow.K8s do
       block_id: block_id,
       config: config,
       image: image,
-      exchange_routing_key: exchange_routing_key,
-      queue: queue,
       cpu_limit: cpu_limit,
       memory_limit: memory_limit,
       cpu_requests: cpu_requests,
       memory_requests: memory_requests
     } = block
+
+    rabbitmq_map = build_rabbitmq_map(block)
 
     %{
       "config" => Jason.encode!(config),
@@ -136,17 +136,41 @@ defmodule Astarte.Flow.K8s do
       "workers" => [
         %{
           "dataProvider" => %{
-            "rabbitmq" => %{
-              "exchange" => %{
-                "name" => "",
-                "routingKey" => exchange_routing_key
-              },
-              "queues" => [queue]
-            }
+            "rabbitmq" => rabbitmq_map
           },
           "id" => "worker-0"
         }
       ]
+    }
+  end
+
+  defp build_rabbitmq_map(%ContainerBlock{exchange_routing_key: nil, queue: queue}) do
+    %{
+      "queues" => [queue]
+    }
+  end
+
+  defp build_rabbitmq_map(%ContainerBlock{exchange_routing_key: exchange_routing_key, queue: nil}) do
+    %{
+      "exchange" => %{
+        "name" => "",
+        "routingKey" => exchange_routing_key
+      }
+    }
+  end
+
+  defp build_rabbitmq_map(block) do
+    %ContainerBlock{
+      exchange_routing_key: exchange_routing_key,
+      queue: queue
+    } = block
+
+    %{
+      "exchange" => %{
+        "name" => "",
+        "routingKey" => exchange_routing_key
+      },
+      "queues" => [queue]
     }
   end
 
