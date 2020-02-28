@@ -20,37 +20,28 @@ defmodule Astarte.Flow.Pipelines do
   require Logger
 
   alias Astarte.Flow.Pipelines.Pipeline
+  alias Astarte.Flow.Pipelines.DETSStorage
+
+  @storage Application.get_env(:astarte_flow, :pipelines_storage_mod, DETSStorage)
 
   def list_pipelines(realm) when is_binary(realm) do
-    Path.join(pipelines_dir(), "*.pipeline")
-    |> Path.wildcard()
-    |> Enum.map(fn filename ->
-      pipeline_name = Path.basename(filename, ".pipeline")
-
-      %Pipeline{name: pipeline_name}
-    end)
+    @storage.list_pipelines(realm)
   end
 
   def get_pipeline(realm, name) when is_binary(realm) and is_binary(name) do
-    pipeline_file = Path.join(pipelines_dir(), name <> ".pipeline")
+    @storage.fetch_pipeline(realm, name)
+  end
 
-    with {:ok, source} <- File.read(pipeline_file) do
-      pipeline = %Pipeline{
-        name: name,
-        source: source
-      }
+  def create_pipeline(realm, params) when is_binary(realm) and is_map(params) do
+    changeset = Pipeline.changeset(%Pipeline{}, params)
 
+    with {:ok, %Pipeline{} = pipeline} <- Ecto.Changeset.apply_action(changeset, :insert),
+         :ok <- @storage.insert_pipeline(realm, pipeline) do
       {:ok, pipeline}
-    else
-      _ ->
-        _ = Logger.warn("Cannot read pipeline file #{pipeline_file}")
-        {:error, :not_found}
     end
   end
 
-  defp pipelines_dir do
-    default = Application.app_dir(:astarte_flow, ["priv", "pipelines"])
-
-    Application.get_env(:astarte_flow, :pipelines_dir, default)
+  def delete_pipeline(realm, name) when is_binary(realm) and is_binary(name) do
+    @storage.delete_pipeline(realm, name)
   end
 end
