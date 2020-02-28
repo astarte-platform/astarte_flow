@@ -38,6 +38,7 @@ defmodule Astarte.Flow.Blocks.RandomProducer do
   @type option() ::
           {:key, String.t()}
           | {:type, supported_types()}
+          | {:delay_ms, integer()}
           | integer_option()
           | real_option()
           | boolean_option()
@@ -63,7 +64,8 @@ defmodule Astarte.Flow.Blocks.RandomProducer do
             type: Astarte.Flow.Blocks.RandomProducer.supported_types(),
             min: number() | nil,
             max: number() | nil,
-            p: float() | nil
+            p: float() | nil,
+            delay_ms: integer() | nil
           }
 
     defstruct [
@@ -71,7 +73,8 @@ defmodule Astarte.Flow.Blocks.RandomProducer do
       :type,
       :min,
       :max,
-      :p
+      :p,
+      :delay_ms
     ]
   end
 
@@ -85,6 +88,7 @@ defmodule Astarte.Flow.Blocks.RandomProducer do
     * `:min` - Used with `:integer` and `:real` types to define a min value.
     * `:max` - Used with `:integer` and `:real` types to define a max value.
     * `:p` - Used with `:boolean` type to define the probability of the generator returning `true`. The value must be `>= 0` and `<= 1`.
+    * `:delay_ms` - If not `nil`, the block will wait `delay_ms` before emitting a new sample
   """
   @spec start_link(options()) :: GenServer.on_start()
   def start_link(opts) when is_list(opts) do
@@ -100,7 +104,8 @@ defmodule Astarte.Flow.Blocks.RandomProducer do
 
     with {:ok, type} <- validate_type(type),
          {:ok, state} <- init_state(key, type, opts) do
-      {:producer, state}
+      delay_ms = Keyword.get(opts, :delay_ms)
+      {:producer, %Config{state | delay_ms: delay_ms}}
     else
       {:error, reason} ->
         {:stop, reason}
@@ -158,8 +163,10 @@ defmodule Astarte.Flow.Blocks.RandomProducer do
     end
   end
 
-  defp generate_message(%Config{key: key, type: type} = state) do
+  defp generate_message(%Config{key: key, type: type, delay_ms: delay_ms} = state) do
     data = generate_data(state)
+
+    maybe_sleep(delay_ms)
 
     %Message{
       key: key,
@@ -168,6 +175,9 @@ defmodule Astarte.Flow.Blocks.RandomProducer do
       timestamp: DateTime.utc_now() |> DateTime.to_unix(:microsecond)
     }
   end
+
+  defp maybe_sleep(nil), do: :ok
+  defp maybe_sleep(delay_ms) when is_integer(delay_ms), do: :timer.sleep(delay_ms)
 
   defp generate_data(%Config{type: :integer, min: min, max: max}) do
     Enum.random(min..max)

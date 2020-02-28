@@ -114,8 +114,16 @@ defmodule Astarte.Flow.PipelineBuilder do
       "max" => max
     } = opts
 
+    delay_ms = Map.get(opts, "delay_ms")
+
     {RandomProducer,
-     [key: eval(key, config), type: :real, min: eval(min, config), max: eval(max, config)]}
+     [
+       key: eval(key, config),
+       type: :real,
+       min: eval(min, config),
+       max: eval(max, config),
+       delay_ms: eval(delay_ms, config)
+     ]}
   end
 
   defp setup_block("filter", opts, config) do
