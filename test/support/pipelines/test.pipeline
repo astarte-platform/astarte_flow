@@ -1,4 +1,0 @@
-random_source
-    .key(${$.config.key})
-    .min(0)
-    .max(100)

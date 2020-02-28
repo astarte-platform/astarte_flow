@@ -21,8 +21,10 @@ defmodule Astarte.Flow.FlowsTest do
 
   alias Astarte.Flow.Flows
 
+  import Mox
+
   describe "flows" do
-    setup [:cleanup_flows]
+    setup [:cleanup_flows, :populate_pipelines]
 
     alias Astarte.Flow.Flows.Flow
     alias Astarte.Flow.Flows.Supervisor, as: FlowsSupervisor
@@ -50,6 +52,34 @@ defmodule Astarte.Flow.FlowsTest do
         # Wait a moment to ensure they all go down
         :timer.sleep(100)
       end)
+    end
+
+    defp populate_pipelines(context) do
+      set_mox_global(context)
+
+      PipelinesStorageMock
+      |> stub(:fetch_pipeline, fn
+        @realm, "test" ->
+          alias Astarte.Flow.Pipelines.Pipeline
+
+          source = "random_source.key(${$.config.key}).min(0).max(100)"
+          pipeline = %Pipeline{name: "test", source: source, description: ""}
+
+          {:ok, pipeline}
+
+        "otherrealm", "test" ->
+          alias Astarte.Flow.Pipelines.Pipeline
+
+          source = "random_source.key(${$.config.key}).min(0).max(100)"
+          pipeline = %Pipeline{name: "test", source: source, description: ""}
+
+          {:ok, pipeline}
+
+        @realm, "nonexisting" ->
+          {:error, :not_found}
+      end)
+
+      :ok
     end
 
     test "list_flows/1 returns all flows" do

@@ -19,34 +19,195 @@
 defmodule Astarte.FlowWeb.PipelineControllerTest do
   use Astarte.FlowWeb.ConnCase
 
+  alias Astarte.Flow.Pipelines.Pipeline
+
+  import Mox
+
   @realm "test"
+
+  @name "my-pipeline"
+  @source ~s'random_source | http_sink.url("http://example.com/my_url")'
+  @description "My super useful pipeline"
+
+  @pipeline %Pipeline{name: @name, source: @source, description: @description}
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
   describe "index" do
+    setup [:set_mox_from_context, :verify_on_exit!]
+
     test "lists all pipelines", %{conn: conn} do
+      PipelinesStorageMock
+      |> expect(:list_pipelines, fn realm ->
+        assert realm == @realm
+
+        [@pipeline]
+      end)
+
       conn = get(conn, Routes.pipeline_path(conn, :index, @realm))
-      assert json_response(conn, 200)["data"] == ["test"]
+      assert json_response(conn, 200)["data"] == [@name]
     end
   end
 
   describe "show" do
+    setup [:set_mox_from_context, :verify_on_exit!]
+
     test "renders pipeline", %{conn: conn} do
-      conn = get(conn, Routes.pipeline_path(conn, :show, @realm, "test"))
+      PipelinesStorageMock
+      |> expect(:fetch_pipeline, fn realm, name ->
+        assert realm == @realm
+        assert name == @name
+
+        {:ok, @pipeline}
+      end)
+
+      conn = get(conn, Routes.pipeline_path(conn, :show, @realm, @name))
 
       assert %{
-               "name" => name,
-               "source" => source
-             } = json_response(conn, 200)["data"]
-
-      assert source =~ "random_source"
+               "name" => @name,
+               "source" => @source,
+               "description" => @description
+             } == json_response(conn, 200)["data"]
     end
 
     test "renders 404 when not found", %{conn: conn} do
-      conn = get(conn, Routes.pipeline_path(conn, :show, @realm, "notexising"))
+      PipelinesStorageMock
+      |> expect(:fetch_pipeline, fn _realm, _name ->
+        {:error, :not_found}
+      end)
+
+      conn = get(conn, Routes.pipeline_path(conn, :show, @realm, "notexisting"))
       assert json_response(conn, 404)["errors"]["detail"] == "Not Found"
+    end
+  end
+
+  describe "create" do
+    setup [:set_mox_from_context, :verify_on_exit!]
+
+    test "fails with invalid name", %{conn: conn} do
+      params = %{
+        name: "an)=invalid_name",
+        description: @description,
+        source: @source
+      }
+
+      conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+
+      assert json_response(conn, 422)["errors"]["name"] != nil
+    end
+
+    test "fails with invalid source", %{conn: conn} do
+      params = %{
+        name: @name,
+        description: @description,
+        source: "invalid_source .."
+      }
+
+      conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+
+      assert json_response(conn, 422)["errors"]["source"] != nil
+    end
+
+    test "creates and renders a valid pipeline", %{conn: conn} do
+      PipelinesStorageMock
+      |> expect(:insert_pipeline, fn realm, %Pipeline{} = pipeline ->
+        assert realm == @realm
+        assert pipeline.name == @name
+        assert pipeline.description == @description
+        assert pipeline.source == @source
+
+        :ok
+      end)
+      |> expect(:fetch_pipeline, fn realm, name ->
+        assert realm == @realm
+        assert name == @name
+
+        {:ok, @pipeline}
+      end)
+
+      params = %{
+        name: @name,
+        description: @description,
+        source: @source
+      }
+
+      create_conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+
+      assert %{
+               "name" => @name,
+               "source" => @source,
+               "description" => @description
+             } == json_response(create_conn, 201)["data"]
+
+      show_conn = get(conn, Routes.pipeline_path(conn, :show, @realm, @name))
+
+      assert %{
+               "name" => @name,
+               "source" => @source,
+               "description" => @description
+             } == json_response(show_conn, 200)["data"]
+    end
+
+    test "fails on already existing pipeline", %{conn: conn} do
+      PipelinesStorageMock
+      |> expect(:insert_pipeline, fn realm, %Pipeline{} = pipeline ->
+        assert realm == @realm
+        assert pipeline.name == "existing"
+        assert pipeline.description == @description
+        assert pipeline.source == @source
+
+        {:error, :already_existing_pipeline}
+      end)
+
+      params = %{
+        name: "existing",
+        description: @description,
+        source: @source
+      }
+
+      create_conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+
+      assert json_response(create_conn, 409)["errors"]["detail"] == "Pipeline already exists"
+    end
+  end
+
+  describe "delete" do
+    test "renders 404 when not found", %{conn: conn} do
+      PipelinesStorageMock
+      |> expect(:fetch_pipeline, fn _realm, _name ->
+        {:error, :not_found}
+      end)
+
+      conn = delete(conn, Routes.pipeline_path(conn, :delete, @realm, "notexisting"))
+      assert json_response(conn, 404)["errors"]["detail"] == "Not Found"
+    end
+
+    test "deletes an existing pipeline", %{conn: conn} do
+      PipelinesStorageMock
+      |> expect(:fetch_pipeline, fn realm, name ->
+        assert realm == @realm
+        assert name == @name
+
+        {:ok, @pipeline}
+      end)
+      |> expect(:delete_pipeline, fn realm, name ->
+        assert realm == @realm
+        assert name == @name
+
+        :ok
+      end)
+      |> expect(:fetch_pipeline, fn _realm, _name ->
+        {:error, :not_found}
+      end)
+
+      delete_conn = delete(conn, Routes.pipeline_path(conn, :delete, @realm, @name))
+      assert response(delete_conn, 204)
+
+      show_conn = get(conn, Routes.pipeline_path(conn, :show, @realm, @name))
+
+      assert json_response(show_conn, 404)
     end
   end
 end
