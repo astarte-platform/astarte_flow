@@ -37,4 +37,11 @@ defmodule Astarte.FlowWeb.FallbackController do
     |> put_view(Astarte.FlowWeb.ErrorView)
     |> render(:"404")
   end
+
+  def call(conn, {:error, :already_existing_pipeline}) do
+    conn
+    |> put_status(:conflict)
+    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> render(:"409_existing_pipeline")
+  end
 end

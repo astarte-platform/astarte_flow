@@ -25,3 +25,4 @@ Mox.defmock(CredentialsStorageMock,
 
 Mox.defmock(ConnectionMock, for: Astarte.Device.Connection)
 Mox.defmock(InterfaceProviderMock, for: Astarte.Device.InterfaceProvider)
+Mox.defmock(PipelinesStorageMock, for: Astarte.Flow.Pipelines.Storage)

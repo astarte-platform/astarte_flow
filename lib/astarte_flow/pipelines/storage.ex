@@ -16,20 +16,15 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.Router do
-  use Astarte.FlowWeb, :router
+defmodule Astarte.Flow.Pipelines.Storage do
+  @callback list_pipelines(realm :: String.t()) :: [Astarte.Flow.Pipelines.Pipeline.t()]
 
-  pipeline :api do
-    plug :accepts, ["json"]
-  end
+  @callback fetch_pipeline(realm :: String.t(), name :: String.t()) ::
+              {:ok, Astarte.Flow.Pipelines.Pipeline.t()} | {:error, reason :: term()}
 
-  scope "/v1/:realm", Astarte.FlowWeb do
-    pipe_through :api
+  @callback insert_pipeline(realm :: String.t(), pipeline :: Astarte.Flow.Pipelines.Pipeline.t()) ::
+              :ok | {:error, reason :: term()}
 
-    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
-
-    resources "/pipelines", PipelineController, param: "name", except: [:new, :edit, :update]
-  end
-
-  get "/health", Astarte.FlowWeb.HealthController, :show
+  @callback delete_pipeline(realm :: String.t(), name :: String.t()) ::
+              :ok | {:error, reason :: term()}
 end

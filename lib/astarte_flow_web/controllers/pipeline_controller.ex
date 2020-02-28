@@ -33,4 +33,20 @@ defmodule Astarte.FlowWeb.PipelineController do
       render(conn, "show.json", pipeline: pipeline)
     end
   end
+
+  def create(conn, %{"realm" => realm, "data" => params}) do
+    with {:ok, pipeline} <- Pipelines.create_pipeline(realm, params) do
+      conn
+      |> put_status(:created)
+      |> put_resp_header("location", Routes.pipeline_path(conn, :show, realm, pipeline))
+      |> render("show.json", pipeline: pipeline)
+    end
+  end
+
+  def delete(conn, %{"realm" => realm, "name" => name}) do
+    with {:ok, _pipeline} <- Pipelines.get_pipeline(realm, name),
+         :ok <- Pipelines.delete_pipeline(realm, name) do
+      send_resp(conn, :no_content, "")
+    end
+  end
 end

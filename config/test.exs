@@ -33,7 +33,7 @@ config :astarte_flow, Astarte.FlowWeb.Endpoint,
   http: [port: 4002],
   server: false
 
-config :astarte_flow, :pipelines_dir, "test/support/pipelines"
+config :astarte_flow, :pipelines_storage_mod, PipelinesStorageMock
 
 # Print only warnings and errors during test
 config :logger, level: :warn
