@@ -28,6 +28,7 @@ defmodule Astarte.Flow.MixProject do
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      dialyzer_cache_directory: dialyzer_cache_directory(Mix.env()),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
@@ -48,6 +49,14 @@ defmodule Astarte.Flow.MixProject do
   defp elixirc_paths(:test), do: ["test/support", "lib"]
   defp elixirc_paths(_), do: ["lib"]
 
+  defp dialyzer_cache_directory(:ci) do
+    "dialyzer_cache"
+  end
+
+  defp dialyzer_cache_directory(_) do
+    nil
+  end
+
   defp deps do
     [
       {:astarte_device, github: "astarte-platform/astarte-device-sdk-elixir"},
@@ -62,7 +71,7 @@ defmodule Astarte.Flow.MixProject do
       {:gen_stage, "~> 0.14"},
       {:hackney, "~> 1.15"},
       {:tesla, "~> 1.2"},
-      {:dialyzex, "~> 1.2", only: :dev},
+      {:dialyzex, github: "Comcast/dialyzex", only: [:dev, :ci]},
       {:mox, "~> 0.5", only: :test},
       {:jason, "~> 1.1"},
       {:k8s, "~> 0.5-rc.1"},

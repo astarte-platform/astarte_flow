@@ -12,7 +12,7 @@
   "currying": {:hex, :currying, "1.0.3", "6d036c86c38663a795858c9e744e406a62d7e5a66243a7da15326e731cdcd672", [:mix], [], "hexpm", "7b9b8cd644ecac635f0abf6267ca46d497e73144a5882449a843461a014f1154"},
   "cyanide": {:git, "https://github.com/ispirata/cyanide.git", "b29af008ba93181df3d2cb352261900acd17e3f7", []},
   "decimal": {:hex, :decimal, "1.8.1", "a4ef3f5f3428bdbc0d35374029ffcf4ede8533536fa79896dd450168d9acdf3c", [:mix], [], "hexpm", "3cb154b00225ac687f6cbd4acc4b7960027c757a5152b369923ead9ddbca7aec"},
-  "dialyzex": {:hex, :dialyzex, "1.2.1", "6a4f28f755882aba7b9aa53f874f636f1aa764d8b0424d74e22827a842a06f94", [:mix], [], "hexpm", "6efe5e8612c2e6940d57fc243a99b465c933743cc0ceea1b925b66b4f44d229d"},
+  "dialyzex": {:git, "https://github.com/Comcast/dialyzex.git", "cdc7cf71fe6df0ce4cf59e3f497579697a05c989", []},
   "ecto": {:hex, :ecto, "3.3.1", "82ab74298065bf0c64ca299f6c6785e68ea5d6b980883ee80b044499df35aba1", [:mix], [{:decimal, "~> 1.6", [hex: :decimal, repo: "hexpm", optional: false]}, {:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: true]}], "hexpm", "e6c614dfe3bcff2d575ce16d815dbd43f4ee1844599a83de1eea81976a31c174"},
   "elixir_uuid": {:hex, :elixir_uuid, "1.2.0", "ff26e938f95830b1db152cb6e594d711c10c02c6391236900ddd070a6b01271d", [:mix], [], "hexpm", "e4d6e26434471761ed45a3545239da87af7b70904dd4442a55f87d06b137c56b"},
   "excoveralls": {:hex, :excoveralls, "0.11.1", "dd677fbdd49114fdbdbf445540ec735808250d56b011077798316505064edb2c", [:mix], [{:hackney, "~> 1.0", [hex: :hackney, repo: "hexpm", optional: false]}, {:jason, "~> 1.0", [hex: :jason, repo: "hexpm", optional: false]}], "hexpm", "493daf5a2dd92d022a1c29e7edcc30f1bce1ffe10fb3690fac63889346d3af2f"},
