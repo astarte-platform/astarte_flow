@@ -30,7 +30,7 @@ defmodule Astarte.FlowWeb.PipelineView do
   end
 
   def render("pipeline.json", %{pipeline: pipeline}) do
-    %{name: pipeline.name, source: pipeline.source}
+    %{name: pipeline.name, source: pipeline.source, description: pipeline.description}
   end
 
   def render("pipeline_name.json", %{pipeline: pipeline}) do

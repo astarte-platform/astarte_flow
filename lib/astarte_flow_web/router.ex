@@ -28,7 +28,7 @@ defmodule Astarte.FlowWeb.Router do
 
     resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
 
-    resources "/pipelines", PipelineController, param: "name", only: [:index, :show]
+    resources "/pipelines", PipelineController, param: "name", except: [:new, :edit, :update]
   end
 
   get "/health", Astarte.FlowWeb.HealthController, :show
