@@ -141,9 +141,8 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
     with {:ok, {realm, device_id, interface, path}} <- parse_key(key),
          {:ok, pid} <- fetch_device(realm, device_id),
          {:ok, timestamp} <- DateTime.from_unix(timestamp_micros, :microsecond),
-         normalized_data = normalize_data(data),
          :ok <-
-           Device.send_datastream(pid, interface, path, normalized_data, timestamp: timestamp) do
+           Device.send_datastream(pid, interface, path, data, timestamp: timestamp) do
       :ok
     else
       {:error, reason} ->
@@ -172,12 +171,4 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
         {:error, :device_not_found}
     end
   end
-
-  defp normalize_data(data) when is_map(data) do
-    for {key, {_type, _subtype, value}} <- data, into: %{} do
-      {key, value}
-    end
-  end
-
-  defp normalize_data(data), do: data
 end
