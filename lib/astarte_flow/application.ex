@@ -29,9 +29,11 @@ defmodule Astarte.Flow.Application do
       {Registry, keys: :unique, name: Astarte.Flow.Flows.Registry},
       {Registry, keys: :duplicate, name: Astarte.Flow.Flows.RealmRegistry},
       Astarte.Flow.Pipelines.DETSStorage,
+      Astarte.Flow.Flows.DETSStorage,
       {DynamicSupervisor, strategy: :one_for_one, name: Astarte.Flow.Flows.Supervisor},
       Astarte.Flow.Blocks.DynamicVirtualDevicePool.DETSCredentialsStorage,
       {DynamicSupervisor, strategy: :one_for_one, name: Astarte.Flow.VirtualDevicesSupervisor},
+      Astarte.Flow.RestoreFlowsTask,
       Astarte.FlowWeb.Endpoint
     ]
 

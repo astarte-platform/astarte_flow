@@ -35,5 +35,7 @@ config :astarte_flow, Astarte.FlowWeb.Endpoint,
 
 config :astarte_flow, :pipelines_storage_mod, PipelinesStorageMock
 
+config :astarte_flow, :flows_storage_mod, FlowsStorageMock
+
 # Print only warnings and errors during test
 config :logger, level: :warn

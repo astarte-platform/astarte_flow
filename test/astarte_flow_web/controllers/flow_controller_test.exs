@@ -20,7 +20,6 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
   use Astarte.FlowWeb.ConnCase
 
   alias Astarte.Flow.Flows
-  alias Astarte.Flow.Flows.Flow
   alias Astarte.Flow.Flows.Supervisor, as: FlowsSupervisor
   import Mox
 
@@ -29,6 +28,11 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
   @invalid_attrs %{"name" => 42, "pipeline" => "test", "config" => %{"key" => "test"}}
 
   def fixture(:flow) do
+    FlowsStorageMock
+    |> expect(:insert_flow, fn @realm, _flow ->
+      :ok
+    end)
+
     {:ok, flow} = Flows.create_flow(@realm, @create_attrs)
     flow
   end
@@ -48,6 +52,14 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
     setup [:cleanup_flows, :populate_pipelines]
 
     test "renders flow when data is valid", %{conn: conn} do
+      FlowsStorageMock
+      |> expect(:insert_flow, fn realm, flow ->
+        assert realm == @realm
+        assert flow.name == @create_attrs["name"]
+
+        :ok
+      end)
+
       conn = post(conn, Routes.flow_path(conn, :create, @realm), data: @create_attrs)
       assert %{"name" => name} = json_response(conn, 201)["data"]
 
@@ -68,6 +80,14 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
     setup [:cleanup_flows, :populate_pipelines, :create_flow]
 
     test "deletes chosen flow", %{conn: conn, flow: flow} do
+      FlowsStorageMock
+      |> expect(:delete_flow, fn realm, name ->
+        assert realm == @realm
+        assert name == flow.name
+
+        :ok
+      end)
+
       conn = delete(conn, Routes.flow_path(conn, :delete, @realm, flow))
       assert response(conn, 204)
 
