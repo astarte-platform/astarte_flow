@@ -19,9 +19,6 @@
 defmodule Astarte.FlowWeb.HealthController do
   use Astarte.FlowWeb, :controller
 
-  alias Astarte.Flow.Flows
-  alias Astarte.Flow.Flows.Flow
-
   action_fallback Astarte.FlowWeb.FallbackController
 
   def show(conn, _params) do
