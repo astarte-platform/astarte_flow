@@ -33,11 +33,19 @@ defmodule Astarte.Flow.FlowsTest do
     @valid_attrs %{"name" => "test", "pipeline" => "test", "config" => %{"key" => "test"}}
 
     def flow_fixture(realm, attrs \\ %{}) do
+      FlowsStorageMock
+      |> expect(:insert_flow, fn ^realm, _flow ->
+        :ok
+      end)
+
       attrs =
         attrs
         |> Enum.into(@valid_attrs)
 
       {:ok, flow} = Flows.create_flow(realm, attrs)
+
+      # Make sure it's created, since it's an async operation
+      :timer.sleep(100)
 
       flow
     end
@@ -97,6 +105,15 @@ defmodule Astarte.Flow.FlowsTest do
     end
 
     test "create_flow/2 with valid data creates a flow" do
+      FlowsStorageMock
+      |> expect(:insert_flow, fn @realm, flow ->
+        assert flow.name == @valid_attrs["name"]
+        assert flow.pipeline == @valid_attrs["pipeline"]
+        assert flow.config == @valid_attrs["config"]
+
+        :ok
+      end)
+
       assert {:ok, %Flow{} = flow} = Flows.create_flow(@realm, @valid_attrs)
 
       [msg] = Flow.tap(@realm, flow.name) |> Enum.take(1)
@@ -105,6 +122,15 @@ defmodule Astarte.Flow.FlowsTest do
     end
 
     test "create_flow/2 creates flows with different config" do
+      FlowsStorageMock
+      |> expect(:insert_flow, fn @realm, flow ->
+        assert flow.name == @valid_attrs["name"]
+        assert flow.pipeline == @valid_attrs["pipeline"]
+        assert flow.config == @valid_attrs["config"]
+
+        :ok
+      end)
+
       assert {:ok, %Flow{} = flow} = Flows.create_flow(@realm, @valid_attrs)
 
       [msg] = Flow.tap(@realm, flow.name) |> Enum.take(1)
@@ -116,6 +142,14 @@ defmodule Astarte.Flow.FlowsTest do
         |> Map.put("config", %{"key" => "another"})
         |> Map.put("name", "other-flow")
 
+      FlowsStorageMock
+      |> expect(:insert_flow, fn @realm, flow ->
+        assert flow.name == "other-flow"
+        assert flow.config["key"] == "another"
+
+        :ok
+      end)
+
       assert {:ok, %Flow{} = other_flow} = Flows.create_flow(@realm, attrs_other_key)
 
       [other_msg] = Flow.tap(@realm, other_flow.name) |> Enum.take(1)
@@ -125,6 +159,22 @@ defmodule Astarte.Flow.FlowsTest do
     end
 
     test "create_flow/2 allows a flow with the same config in two different realms" do
+      FlowsStorageMock
+      |> expect(:insert_flow, fn @realm, flow ->
+        assert flow.name == @valid_attrs["name"]
+        assert flow.pipeline == @valid_attrs["pipeline"]
+        assert flow.config == @valid_attrs["config"]
+
+        :ok
+      end)
+      |> expect(:insert_flow, fn "otherrealm", flow ->
+        assert flow.name == @valid_attrs["name"]
+        assert flow.pipeline == @valid_attrs["pipeline"]
+        assert flow.config == @valid_attrs["config"]
+
+        :ok
+      end)
+
       assert {:ok, %Flow{} = flow} = Flows.create_flow(@realm, @valid_attrs)
 
       assert {:ok, %Flow{} = flow2} = Flows.create_flow("otherrealm", @valid_attrs)
@@ -133,6 +183,15 @@ defmodule Astarte.Flow.FlowsTest do
     end
 
     test "create_flow/2 doesn't allow two flows with the same name in the same realm" do
+      FlowsStorageMock
+      |> expect(:insert_flow, fn @realm, flow ->
+        assert flow.name == @valid_attrs["name"]
+        assert flow.pipeline == @valid_attrs["pipeline"]
+        assert flow.config == @valid_attrs["config"]
+
+        :ok
+      end)
+
       assert {:ok, %Flow{} = flow} = Flows.create_flow(@realm, @valid_attrs)
       assert {:error, %Ecto.Changeset{} = cs} = Flows.create_flow(@realm, @valid_attrs)
       assert cs.errors[:name] != nil
@@ -160,11 +219,25 @@ defmodule Astarte.Flow.FlowsTest do
 
     test "delete_flow/2 deletes the flow" do
       flow = flow_fixture(@realm)
+
+      FlowsStorageMock
+      |> expect(:delete_flow, fn realm, name ->
+        assert realm == @realm
+        assert flow.name == name
+
+        :ok
+      end)
+
       assert :ok = Flows.delete_flow(@realm, flow)
       assert {:error, :not_found} = Flows.get_flow(@realm, flow.name)
     end
 
     test "delete_flow/2 returns an error for an unexisting flow" do
+      FlowsStorageMock
+      |> stub(:delete_flow, fn @realm, _name ->
+        :ok
+      end)
+
       assert {:error, :not_found} = Flows.delete_flow(@realm, %Flow{name: "nonexisting"})
     end
   end

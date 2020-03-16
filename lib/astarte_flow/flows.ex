@@ -22,10 +22,13 @@ defmodule Astarte.Flow.Flows do
   """
 
   alias Astarte.Flow.Flows.Flow
+  alias Astarte.Flow.Flows.DETSStorage
   alias Astarte.Flow.Flows.Registry, as: FlowsRegistry
   alias Astarte.Flow.Flows.RealmRegistry
   alias Astarte.Flow.Flows.Supervisor, as: FlowsSupervisor
   require Logger
+
+  @storage Application.get_env(:astarte_flow, :flows_storage_mod, DETSStorage)
 
   @doc """
   Returns the list of flows for a realm.
@@ -67,7 +70,8 @@ defmodule Astarte.Flow.Flows do
 
     with {:ok, %Flow{} = flow} <- Ecto.Changeset.apply_action(changeset, :insert),
          args = [realm: realm, flow: flow],
-         {:ok, _pid} <- DynamicSupervisor.start_child(FlowsSupervisor, {Flow, args}) do
+         {:ok, _pid} <- DynamicSupervisor.start_child(FlowsSupervisor, {Flow, args}),
+         :ok <- @storage.insert_flow(realm, flow) do
       {:ok, flow}
     else
       {:error, {:already_started, _pid}} ->
@@ -91,7 +95,8 @@ defmodule Astarte.Flow.Flows do
 
   """
   def delete_flow(realm, %Flow{name: name}) do
-    with [{pid, nil}] <- Registry.lookup(FlowsRegistry, {realm, name}) do
+    with :ok <- @storage.delete_flow(realm, name),
+         [{pid, nil}] <- Registry.lookup(FlowsRegistry, {realm, name}) do
       DynamicSupervisor.terminate_child(FlowsSupervisor, pid)
     else
       [] ->

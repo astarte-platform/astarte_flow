@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2020 Ispirata Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +16,12 @@
 # limitations under the License.
 #
 
-Mox.defmock(PairingAgentMock, for: Astarte.API.Pairing.Agent.Behaviour)
-Mox.defmock(PairingMock, for: Astarte.API.Pairing.Devices.Behaviour)
+defmodule Astarte.Flow.Flows.Storage do
+  @callback get_all_flows :: [{realm :: String.t(), Astarte.Flow.Flows.Flow.t()}]
 
-Mox.defmock(CredentialsStorageMock,
-  for: Astarte.Flow.Blocks.DynamicVirtualDevicePool.CredentialsStorage
-)
+  @callback insert_flow(realm :: String.t(), flow :: Astarte.Flow.Flows.Flow.t()) ::
+              :ok | {:error, reason :: term()}
 
-Mox.defmock(ConnectionMock, for: Astarte.Device.Connection)
-Mox.defmock(InterfaceProviderMock, for: Astarte.Device.InterfaceProvider)
-Mox.defmock(PipelinesStorageMock, for: Astarte.Flow.Pipelines.Storage)
-Mox.defmock(FlowsStorageMock, for: Astarte.Flow.Flows.Storage)
+  @callback delete_flow(realm :: String.t(), name :: String.t()) ::
+              :ok | {:error, reason :: term()}
+end
