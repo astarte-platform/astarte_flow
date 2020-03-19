@@ -67,7 +67,7 @@ defmodule Astarte.Flow.MixProject do
       {:tortoise, "~> 0.9"},
       {:elixir_uuid, "~> 1.2"},
       {:excoveralls, "~> 0.10", only: :test},
-      {:exjsonpath, github: "ispirata/exjsonpath"},
+      {:exjsonpath, "== 0.1.0"},
       {:gen_stage, "~> 0.14"},
       {:hackney, "~> 1.15"},
       {:tesla, "~> 1.2"},
