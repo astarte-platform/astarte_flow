@@ -18,28 +18,5 @@
 
 import Config
 
-config :astarte_flow,
-       :astarte_instance,
-       System.get_env("ASTARTE_FLOW_ASTARTE_INSTANCE", "astarte")
-
-config :astarte_flow,
-       :target_namespace,
-       System.get_env("ASTARTE_FLOW_TARGET_NAMESPACE", "astarte")
-
 config :astarte_flow, Astarte.FlowWeb.Endpoint,
-  http: [port: System.get_env("ASTARTE_FLOW_PORT", "4010") |> String.to_integer()]
-
-config :astarte_flow,
-       :pipelines_dir,
-       System.get_env("ASTARTE_FLOW_PIPELINES_DIR", "/pipelines")
-
-config :astarte_flow,
-       :persistency_dir,
-       System.get_env("ASTARTE_FLOW_PERSISTENCY_DIR", "/datastore")
-
-config :astarte_flow, :default_amqp_connection,
-  host: System.get_env("ASTARTE_FLOW_DEFAULT_AMQP_CONNECTION_HOST", "localhost"),
-  username: System.get_env("ASTARTE_FLOW_DEFAULT_AMQP_CONNECTION_USERNAME", "guest"),
-  password: System.get_env("ASTARTE_FLOW_DEFAULT_AMQP_CONNECTION_PASSWORD", "guest"),
-  virtual_host: System.get_env("ASTARTE_FLOW_DEFAULT_AMQP_CONNECTION_VIRTUAL_HOST", "/"),
-  port: System.get_env("ASTARTE_FLOW_DEFAULT_AMQP_CONNECTION_PORT", "5672") |> String.to_integer()
+  http: [port: System.get_env("FLOW_PORT", "4010") |> String.to_integer()]

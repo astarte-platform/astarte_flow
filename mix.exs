@@ -82,7 +82,8 @@ defmodule Astarte.Flow.MixProject do
       {:phoenix_pubsub, "~> 1.1"},
       {:phoenix_ecto, "~> 4.0"},
       {:gettext, "~> 0.11"},
-      {:plug_cowboy, "~> 2.0"}
+      {:plug_cowboy, "~> 2.0"},
+      {:skogsra, "~> 2.0"}
     ]
   end
 end
