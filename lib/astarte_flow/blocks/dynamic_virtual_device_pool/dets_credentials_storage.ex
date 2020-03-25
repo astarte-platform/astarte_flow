@@ -18,6 +18,9 @@
 
 defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool.DETSCredentialsStorage do
   use GenServer
+
+  alias Astarte.Flow.Config
+
   @behaviour Astarte.Flow.Blocks.DynamicVirtualDevicePool.CredentialsStorage
 
   def start_link(args) do
@@ -37,7 +40,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool.DETSCredentialsStorage do
   @impl true
   def init(_args) do
     file =
-      Application.get_env(:astarte_flow, :persistency_dir, "")
+      Config.persistency_dir!()
       |> Path.expand()
       |> Path.join("credentials_secret")
       |> to_charlist()

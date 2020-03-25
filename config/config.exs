@@ -41,11 +41,10 @@ config :phoenix, :json_library, Jason
 config :astarte_flow, :astarte_instance, "astarte"
 config :astarte_flow, :target_namespace, "astarte"
 
-config :astarte_flow, :default_amqp_connection,
-  host: "localhost",
-  username: "guest",
-  password: "guest",
-  virtual_host: "/",
-  port: 5672
+config :astarte_flow, :default_amqp_connection_host, "localhost"
+config :astarte_flow, :default_amqp_connection_username, "guest"
+config :astarte_flow, :default_amqp_connection_password, "guest"
+config :astarte_flow, :default_amqp_connection_virtual_host, "/"
+config :astarte_flow, :default_amqp_connection_port, 5672
 
 import_config "#{Mix.env()}.exs"

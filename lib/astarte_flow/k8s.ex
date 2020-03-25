@@ -21,6 +21,7 @@ defmodule Astarte.Flow.K8s do
 
   alias K8s.Client
   alias K8s.Conn
+  alias Astarte.Flow.Config
 
   @api_version "api.astarte-platform.org/v1alpha1"
   @flow_kind "Flow"
@@ -66,7 +67,7 @@ defmodule Astarte.Flow.K8s do
   @spec delete_flow(String.t()) :: {:ok, reference() | map()} | {:error, atom() | binary()}
   def delete_flow(flow_name) do
     with {:ok, conn} <- Conn.lookup(:default) do
-      namespace = Application.fetch_env!(:astarte_flow, :target_namespace)
+      namespace = Config.target_namespace!()
 
       Client.delete(@api_version, @flow_kind, namespace: namespace, name: flow_name)
       |> Client.run(conn)
@@ -95,7 +96,7 @@ defmodule Astarte.Flow.K8s do
   end
 
   def flow_status(flow_name) do
-    namespace = Application.fetch_env!(:astarte_flow, :target_namespace)
+    namespace = Config.target_namespace!()
     op = K8s.Client.get(@api_version, @flow_kind, namespace: namespace, name: flow_name)
 
     with {:ok, conn} <- Conn.lookup(:default),
@@ -176,8 +177,8 @@ defmodule Astarte.Flow.K8s do
 
   @spec flow_custom_resource(String.t(), String.t(), list(ContainerBlock.t())) :: map()
   def flow_custom_resource(realm, flow_name, blocks) do
-    namespace = Application.fetch_env!(:astarte_flow, :target_namespace)
-    astarte_name = Application.fetch_env!(:astarte_flow, :astarte_instance)
+    namespace = Config.target_namespace!()
+    astarte_name = Config.astarte_instance!()
 
     %{
       "apiVersion" => @api_version,

@@ -23,7 +23,11 @@ defmodule Astarte.Flow.Application do
 
   use Application
 
+  alias Astarte.Flow.Config
+
   def start(_type, _args) do
+    Config.validate!()
+
     # List all child processes to be supervised
     children = [
       {Registry, keys: :unique, name: Astarte.Flow.Flows.Registry},

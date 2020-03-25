@@ -19,6 +19,8 @@
 defmodule Astarte.Flow.Flows.DETSStorage do
   use GenServer
 
+  alias Astarte.Flow.Config
+
   @behaviour Astarte.Flow.Flows.Storage
 
   @table_name :flows
@@ -58,7 +60,7 @@ defmodule Astarte.Flow.Flows.DETSStorage do
   @impl true
   def init(_args) do
     file =
-      Application.get_env(:astarte_flow, :persistency_dir, "")
+      Config.persistency_dir!()
       |> Path.expand()
       |> Path.join("flows")
       |> to_charlist()

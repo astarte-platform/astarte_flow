@@ -35,6 +35,8 @@ defmodule Astarte.Flow.PipelineBuilder do
     VirtualDevicePool
   }
 
+  alias Astarte.Flow.Config
+
   def parse(pipeline_desc) do
     with pipeline_charlist = String.to_charlist(pipeline_desc),
          {:ok, l, _} <- :pipelinelexer.string(pipeline_charlist) do
@@ -64,7 +66,7 @@ defmodule Astarte.Flow.PipelineBuilder do
        routing_key: "trigger_engine",
        realm: eval(realm, config),
        target_devices: eval(target_devices, config),
-       connection: Application.fetch_env!(:astarte_flow, :default_amqp_connection)
+       connection: Config.default_amqp_connection!()
      ]}
   end
 
@@ -86,7 +88,7 @@ defmodule Astarte.Flow.PipelineBuilder do
      [
        image: eval(image, config),
        type: type,
-       connection: Application.fetch_env!(:astarte_flow, :default_amqp_connection)
+       connection: Config.default_amqp_connection!()
      ]}
   end
 
