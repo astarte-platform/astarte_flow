@@ -25,21 +25,26 @@ defmodule Astarte.Flow.Application do
 
   alias Astarte.Flow.Config
 
+  alias Astarte.Flow.Auth.AstartePublicKeyProvider
+  alias Astarte.Flow.Auth.FilesystemPublicKeyProvider
+
   def start(_type, _args) do
     Config.validate!()
 
     # List all child processes to be supervised
-    children = [
-      {Registry, keys: :unique, name: Astarte.Flow.Flows.Registry},
-      {Registry, keys: :duplicate, name: Astarte.Flow.Flows.RealmRegistry},
-      Astarte.Flow.Pipelines.DETSStorage,
-      Astarte.Flow.Flows.DETSStorage,
-      {DynamicSupervisor, strategy: :one_for_one, name: Astarte.Flow.Flows.Supervisor},
-      Astarte.Flow.Blocks.DynamicVirtualDevicePool.DETSCredentialsStorage,
-      {DynamicSupervisor, strategy: :one_for_one, name: Astarte.Flow.VirtualDevicesSupervisor},
-      Astarte.Flow.RestoreFlowsTask,
-      Astarte.FlowWeb.Endpoint
-    ]
+    children =
+      [
+        {Registry, keys: :unique, name: Astarte.Flow.Flows.Registry},
+        {Registry, keys: :duplicate, name: Astarte.Flow.Flows.RealmRegistry},
+        Astarte.Flow.Pipelines.DETSStorage,
+        Astarte.Flow.Flows.DETSStorage,
+        {DynamicSupervisor, strategy: :one_for_one, name: Astarte.Flow.Flows.Supervisor},
+        Astarte.Flow.Blocks.DynamicVirtualDevicePool.DETSCredentialsStorage,
+        {DynamicSupervisor, strategy: :one_for_one, name: Astarte.Flow.VirtualDevicesSupervisor},
+        Astarte.Flow.RestoreFlowsTask,
+        Astarte.FlowWeb.Endpoint
+      ]
+      |> setup_public_key_provider()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -52,5 +57,40 @@ defmodule Astarte.Flow.Application do
   def config_change(changed, _new, removed) do
     Astarte.FlowWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp setup_public_key_provider(children) do
+    if Config.disable_authentication!() do
+      children
+    else
+      case Config.realm_public_key_provider() do
+        {:ok, AstartePublicKeyProvider} ->
+          # We have to connect to Astarte, so we need Xandra
+          nodes = Config.xandra_nodes!()
+
+          if nodes == nil do
+            raise "CASSANDRA_NODES is mandatory with astarte provider"
+          end
+
+          # Add Xandra to the started children
+          [{Xandra.Cluster, nodes: nodes, name: :xandra} | children]
+
+        {:ok, FilesystemPublicKeyProvider} ->
+          # Validate that the directory is set
+          dir = Config.realm_public_keys_dir!()
+
+          if dir == nil do
+            raise "FLOW_REALM_PUBLIC_KEYS_DIR is mandatory with filesystem provider"
+          end
+
+          children
+
+        {:ok, nil} ->
+          raise "FLOW_REALM_PUBLIC_KEY_PROVIDER must be one of: astarte, filesystem"
+
+        {:ok, _other} ->
+          children
+      end
+    end
   end
 end

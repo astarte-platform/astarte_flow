@@ -16,21 +16,15 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.Router do
-  use Astarte.FlowWeb, :router
+defmodule Astarte.Flow.Auth.User do
+  @type t :: %__MODULE__{
+          id: String.t(),
+          authorizations: [String.t()]
+        }
 
-  pipeline :api do
-    plug :accepts, ["json"]
-    plug Astarte.FlowWeb.Plug.AuthorizePath
-  end
-
-  scope "/v1/:realm", Astarte.FlowWeb do
-    pipe_through :api
-
-    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
-
-    resources "/pipelines", PipelineController, param: "name", except: [:new, :edit, :update]
-  end
-
-  get "/health", Astarte.FlowWeb.HealthController, :show
+  @enforce_keys [:id]
+  defstruct [
+    :id,
+    :authorizations
+  ]
 end

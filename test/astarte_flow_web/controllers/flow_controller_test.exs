@@ -19,6 +19,8 @@
 defmodule Astarte.FlowWeb.FlowControllerTest do
   use Astarte.FlowWeb.ConnCase
 
+  alias Astarte.Flow.AuthTestHelper
+
   alias Astarte.Flow.Flows
   alias Astarte.Flow.Flows.Supervisor, as: FlowsSupervisor
   import Mox
@@ -38,10 +40,19 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
   end
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    jwt = AuthTestHelper.gen_jwt_all_access_token()
+
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", "Bearer " <> jwt)
+
+    {:ok, conn: conn}
   end
 
   describe "index" do
+    setup [:set_mox_from_context, :setup_public_key_provider, :verify_on_exit!]
+
     test "lists all flows", %{conn: conn} do
       conn = get(conn, Routes.flow_path(conn, :index, @realm))
       assert json_response(conn, 200)["data"] == []
@@ -49,7 +60,13 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
   end
 
   describe "create flow" do
-    setup [:cleanup_flows, :populate_pipelines]
+    setup [
+      :set_mox_from_context,
+      :setup_public_key_provider,
+      :cleanup_flows,
+      :populate_pipelines,
+      :verify_on_exit!
+    ]
 
     test "renders flow when data is valid", %{conn: conn} do
       FlowsStorageMock
@@ -77,7 +94,14 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
   end
 
   describe "delete flow" do
-    setup [:cleanup_flows, :populate_pipelines, :create_flow]
+    setup [
+      :set_mox_from_context,
+      :setup_public_key_provider,
+      :cleanup_flows,
+      :populate_pipelines,
+      :create_flow,
+      :verify_on_exit!
+    ]
 
     test "deletes chosen flow", %{conn: conn, flow: flow} do
       FlowsStorageMock
@@ -129,6 +153,12 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
       @realm, "nonexisting" ->
         {:error, :not_found}
     end)
+
+    :ok
+  end
+
+  defp setup_public_key_provider(_context) do
+    stub_with(PublicKeyProviderMock, Astarte.Flow.AuthTestHelper)
 
     :ok
   end

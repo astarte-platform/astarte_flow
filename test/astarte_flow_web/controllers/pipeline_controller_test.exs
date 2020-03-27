@@ -19,6 +19,8 @@
 defmodule Astarte.FlowWeb.PipelineControllerTest do
   use Astarte.FlowWeb.ConnCase
 
+  alias Astarte.Flow.AuthTestHelper
+
   alias Astarte.Flow.Pipelines.Pipeline
 
   import Mox
@@ -32,11 +34,18 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
   @pipeline %Pipeline{name: @name, source: @source, description: @description}
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    jwt = AuthTestHelper.gen_jwt_all_access_token()
+
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", "Bearer " <> jwt)
+
+    {:ok, conn: conn}
   end
 
   describe "index" do
-    setup [:set_mox_from_context, :verify_on_exit!]
+    setup [:set_mox_from_context, :setup_public_key_provider, :verify_on_exit!]
 
     test "lists all pipelines", %{conn: conn} do
       PipelinesStorageMock
@@ -52,7 +61,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
   end
 
   describe "show" do
-    setup [:set_mox_from_context, :verify_on_exit!]
+    setup [:set_mox_from_context, :setup_public_key_provider, :verify_on_exit!]
 
     test "renders pipeline", %{conn: conn} do
       PipelinesStorageMock
@@ -84,7 +93,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
   end
 
   describe "create" do
-    setup [:set_mox_from_context, :verify_on_exit!]
+    setup [:set_mox_from_context, :setup_public_key_provider, :verify_on_exit!]
 
     test "fails with invalid name", %{conn: conn} do
       params = %{
@@ -174,6 +183,8 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
   end
 
   describe "delete" do
+    setup [:setup_public_key_provider]
+
     test "renders 404 when not found", %{conn: conn} do
       PipelinesStorageMock
       |> expect(:fetch_pipeline, fn _realm, _name ->
@@ -209,5 +220,11 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
 
       assert json_response(show_conn, 404)
     end
+  end
+
+  defp setup_public_key_provider(_context) do
+    stub_with(PublicKeyProviderMock, Astarte.Flow.AuthTestHelper)
+
+    :ok
   end
 end

@@ -16,21 +16,22 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.Router do
-  use Astarte.FlowWeb, :router
+defmodule Astarte.Flow.Auth.Guardian do
+  use Guardian, otp_app: :astarte_flow
 
-  pipeline :api do
-    plug :accepts, ["json"]
-    plug Astarte.FlowWeb.Plug.AuthorizePath
+  alias Astarte.Flow.Auth.User
+
+  @spec subject_for_token(User.t(), claims :: term) :: {:ok, id :: String.t()}
+  def subject_for_token(%User{id: id}, _claims) do
+    {:ok, to_string(id)}
   end
 
-  scope "/v1/:realm", Astarte.FlowWeb do
-    pipe_through :api
-
-    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
-
-    resources "/pipelines", PipelineController, param: "name", except: [:new, :edit, :update]
+  @spec resource_from_claims(claims :: %{optional(String.t()) => term()}) :: {:ok, User.t()}
+  def resource_from_claims(claims) do
+    {:ok,
+     %User{
+       id: claims["sub"],
+       authorizations: Map.get(claims, "a_f", [])
+     }}
   end
-
-  get "/health", Astarte.FlowWeb.HealthController, :show
 end

@@ -37,5 +37,7 @@ config :astarte_flow, :pipelines_storage_mod, PipelinesStorageMock
 
 config :astarte_flow, :flows_storage_mod, FlowsStorageMock
 
+config :astarte_flow, :realm_public_key_provider, PublicKeyProviderMock
+
 # Print only warnings and errors during test
 config :logger, level: :warn
