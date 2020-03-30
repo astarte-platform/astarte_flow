@@ -31,7 +31,7 @@ defmodule Astarte.Flow.Flows.DETSStorage do
 
   @impl true
   @doc "Return a list of all saved Flows in the form `{realm, %Flow{}}`"
-  @spec get_all_flows :: [{realm :: String, Astarte.Flow.Flows.Flow.t()}]
+  @spec get_all_flows :: [{realm :: String.t(), Astarte.Flow.Flows.Flow.t()}]
   def get_all_flows do
     match_pattern = {{:"$1", :_}, :"$2"}
 

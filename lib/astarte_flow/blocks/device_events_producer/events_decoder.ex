@@ -57,7 +57,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.EventsDecoder do
         timestamp_ms * 1000
       else
         DateTime.utc_now()
-        |> DateTime.from_unix(:microsecond)
+        |> DateTime.to_unix(:microsecond)
       end
 
     event_to_message(realm, device_id, event, timestamp_us)
