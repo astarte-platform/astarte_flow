@@ -17,6 +17,7 @@
 #
 
 defmodule Astarte.Flow.PipelineBuilder do
+  require Logger
   @moduledoc false
 
   alias Astarte.Flow.Blocks.{
@@ -296,7 +297,18 @@ defmodule Astarte.Flow.PipelineBuilder do
   end
 
   defp eval({:json_path, path}, config) do
-    ExJsonPath.eval(config, path)
+    case ExJSONPath.eval(config, path) do
+      {:ok, [value]} ->
+        value
+
+      {:ok, values} when is_list(values) ->
+        Logger.error("JSONPath doesn't evaluate to a single value.", tag: :json_path_error)
+        raise "JSONPath error"
+
+      {:error, reason} ->
+        Logger.error("JSONPath error: #{inspect(reason)}.", tag: :json_path_error)
+        raise "JSONPath error"
+    end
   end
 
   defp eval(any, _config) do
