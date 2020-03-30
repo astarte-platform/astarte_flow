@@ -20,6 +20,7 @@ defmodule Astarte.Flow.FlowsTest do
   use ExUnit.Case
 
   alias Astarte.Flow.Flows
+  alias Astarte.Flow.Flows.Registry, as: FlowsRegistry
 
   import Mox
 
@@ -77,6 +78,36 @@ defmodule Astarte.Flow.FlowsTest do
             |> DateTime.to_unix(:millisecond)
 
           wait_for_flow_creation(realm, name, start, now)
+      end
+    end
+
+    # Waits up to 5_000 ms for flow deletion
+    defp wait_for_flow_deletion(realm, name) do
+      start =
+        DateTime.utc_now()
+        |> DateTime.to_unix(:millisecond)
+
+      wait_for_flow_deletion(realm, name, start, start)
+    end
+
+    defp wait_for_flow_deletion(_realm, _name, start, now) when now > start + 5_000 do
+      {:error, :timeout}
+    end
+
+    defp wait_for_flow_deletion(realm, name, start, _now) do
+      case Registry.lookup(FlowsRegistry, {realm, name}) do
+        [] ->
+          :ok
+
+        [_pid] ->
+          # Sleep a little to avoid busy waiting
+          :timer.sleep(100)
+
+          now =
+            DateTime.utc_now()
+            |> DateTime.to_unix(:millisecond)
+
+          wait_for_flow_deletion(realm, name, start, now)
       end
     end
 
@@ -259,6 +290,7 @@ defmodule Astarte.Flow.FlowsTest do
       end)
 
       assert :ok = Flows.delete_flow(@realm, flow)
+      :ok = wait_for_flow_deletion(@realm, flow.name)
       assert {:error, :not_found} = Flows.get_flow(@realm, flow.name)
     end
 
