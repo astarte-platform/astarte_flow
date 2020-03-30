@@ -142,6 +142,8 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
 
       data = 42.0
 
+      test_process = self()
+
       ConnectionMock
       |> expect(:publish_sync, fn "#{@realm}/#{@already_started_device_id}",
                                   ^full_path,
@@ -149,6 +151,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
                                   _opts ->
         assert %{"v" => ^data, "t" => t} = Cyanide.decode!(bson_payload)
         assert t == DateTime.truncate(timestamp, :millisecond)
+        send(test_process, :published)
         :ok
       end)
 
@@ -161,8 +164,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
 
       :ok = TestProducer.push(producer, message)
 
-      # Wait a little to ensure the message goes through
-      :timer.sleep(100)
+      assert_receive :published, 5_000
     end
 
     test "drops invalid realm", %{producer: producer} do
@@ -175,8 +177,11 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
       full_path_1 =
         "#{@realm}/#{@already_started_device_id}/org.astarteplatform.test.DeviceDatastream/realValue"
 
+      test_process = self()
+
       CredentialsStorageMock
       |> expect(:fetch_credentials_secret, fn "unhandled", @already_started_device_id ->
+        send(test_process, :published)
         :error
       end)
 
@@ -205,8 +210,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
 
       :ok = TestProducer.push(producer, messages)
 
-      # Wait a little to ensure the message goes through
-      :timer.sleep(100)
+      assert_receive :published, 5_000
     end
   end
 
@@ -228,6 +232,8 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
 
       data = 42.0
 
+      test_process = self()
+
       CredentialsStorageMock
       |> expect(:fetch_credentials_secret, fn @realm, @already_registered_device_id ->
         {:ok, @known_credentials_secret}
@@ -240,6 +246,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
                                   _opts ->
         assert %{"v" => ^data, "t" => t} = Cyanide.decode!(bson_payload)
         assert t == DateTime.truncate(timestamp, :millisecond)
+        send(test_process, :published)
         :ok
       end)
 
@@ -252,8 +259,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
 
       :ok = TestProducer.push(producer, message)
 
-      # Wait a little to ensure the message goes through
-      :timer.sleep(1000)
+      assert_receive :published, 5_000
     end
   end
 
@@ -274,6 +280,8 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
         "#{@realm}/#{@unknown_device_id}/org.astarteplatform.test.DeviceDatastream/realValue"
 
       data = 42.0
+
+      test_process = self()
 
       CredentialsStorageMock
       |> expect(:fetch_credentials_secret, fn @realm, @unknown_device_id ->
@@ -298,6 +306,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
                                   _opts ->
         assert %{"v" => ^data, "t" => t} = Cyanide.decode!(bson_payload)
         assert t == DateTime.truncate(timestamp, :millisecond)
+        send(test_process, :published)
         :ok
       end)
 
@@ -310,8 +319,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePoolTest do
 
       :ok = TestProducer.push(producer, message)
 
-      # Wait a little to ensure the message goes through
-      :timer.sleep(1000)
+      assert_receive :published, 5_000
     end
   end
 

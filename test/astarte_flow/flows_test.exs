@@ -45,9 +45,39 @@ defmodule Astarte.Flow.FlowsTest do
       {:ok, flow} = Flows.create_flow(realm, attrs)
 
       # Make sure it's created, since it's an async operation
-      :timer.sleep(100)
+      :ok = wait_for_flow_creation(realm, flow.name)
 
       flow
+    end
+
+    # Waits up to 5_000 ms for flow creation
+    defp wait_for_flow_creation(realm, name) do
+      start =
+        DateTime.utc_now()
+        |> DateTime.to_unix(:millisecond)
+
+      wait_for_flow_creation(realm, name, start, start)
+    end
+
+    defp wait_for_flow_creation(_realm, _name, start, now) when now > start + 5_000 do
+      {:error, :timeout}
+    end
+
+    defp wait_for_flow_creation(realm, name, start, _now) do
+      case Flows.get_flow(realm, name) do
+        {:ok, _pid} ->
+          :ok
+
+        {:error, :not_found} ->
+          # Sleep a little to avoid busy waiting
+          :timer.sleep(100)
+
+          now =
+            DateTime.utc_now()
+            |> DateTime.to_unix(:millisecond)
+
+          wait_for_flow_creation(realm, name, start, now)
+      end
     end
 
     defp cleanup_flows(_context) do

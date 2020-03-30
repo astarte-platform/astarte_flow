@@ -125,10 +125,13 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePoolTest do
     full_path = "#{@realm}/#{@device_id_1}/org.astarteplatform.test.DeviceDatastream/realValue"
     data = 42.0
 
+    test_process = self()
+
     ConnectionMock
     |> expect(:publish_sync, fn "#{@realm}/#{@device_id_1}", ^full_path, bson_payload, _opts ->
       assert %{"v" => ^data, "t" => t} = Cyanide.decode!(bson_payload)
       assert t == DateTime.truncate(timestamp, :millisecond)
+      send(test_process, :published)
       :ok
     end)
 
@@ -141,8 +144,7 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePoolTest do
 
     :ok = TestProducer.push(producer, message)
 
-    # Wait a little to ensure the message goes through
-    :timer.sleep(100)
+    assert_receive :published, 5_000
   end
 
   test "both devices publish with valid keys, invalid device is dropped", %{producer: producer} do
@@ -155,7 +157,7 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePoolTest do
     full_path_2 = "#{@realm}/#{@device_id_2}/org.astarteplatform.test.DeviceDatastream/realValue"
 
     messages =
-      for device_id <- [@device_id_1, @device_id_2, unhandled_id] do
+      for device_id <- [@device_id_1, unhandled_id, @device_id_2] do
         key = "#{@realm}/#{device_id}/org.astarteplatform.test.DeviceDatastream/realValue"
 
         %Message{
@@ -166,6 +168,8 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePoolTest do
         }
       end
 
+    test_process = self()
+
     ConnectionMock
     |> expect(:publish_sync, fn "#{@realm}/#{@device_id_1}", ^full_path_1, bson_payload, _opts ->
       assert %{"v" => ^data, "t" => t} = Cyanide.decode!(bson_payload)
@@ -175,13 +179,13 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePoolTest do
     |> expect(:publish_sync, fn "#{@realm}/#{@device_id_2}", ^full_path_2, bson_payload, _opts ->
       assert %{"v" => ^data, "t" => t} = Cyanide.decode!(bson_payload)
       assert t == DateTime.truncate(timestamp, :millisecond)
+      send(test_process, :published)
       :ok
     end)
 
     :ok = TestProducer.push(producer, messages)
 
-    # Wait a little to ensure the message goes through
-    :timer.sleep(100)
+    assert_receive :published, 5_000
   end
 
   defp subscribe_to_test_producer(%{pool: pool}) do
