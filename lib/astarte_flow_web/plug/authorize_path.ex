@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2018 Ispirata Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,21 +16,21 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.Router do
-  use Astarte.FlowWeb, :router
+defmodule Astarte.FlowWeb.Plug.AuthorizePath do
+  alias Astarte.Flow.Config
+  alias Astarte.FlowWeb.Plug.GuardianAuthorizePath
 
-  pipeline :api do
-    plug :accepts, ["json"]
-    plug Astarte.FlowWeb.Plug.AuthorizePath
+  @spec init(opts :: term) :: term
+  def init(opts) do
+    GuardianAuthorizePath.init(opts)
   end
 
-  scope "/v1/:realm", Astarte.FlowWeb do
-    pipe_through :api
-
-    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
-
-    resources "/pipelines", PipelineController, param: "name", except: [:new, :edit, :update]
+  @spec call(conn :: Plug.Conn.t(), opts :: term) :: Plug.Conn.t()
+  def call(conn, opts) do
+    unless Config.disable_authentication!() do
+      GuardianAuthorizePath.call(conn, opts)
+    else
+      conn
+    end
   end
-
-  get "/health", Astarte.FlowWeb.HealthController, :show
 end

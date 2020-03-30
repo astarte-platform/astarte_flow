@@ -16,21 +16,14 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.Router do
-  use Astarte.FlowWeb, :router
+defmodule Astarte.Flow.Auth do
+  alias Astarte.Flow.Config
 
-  pipeline :api do
-    plug :accepts, ["json"]
-    plug Astarte.FlowWeb.Plug.AuthorizePath
+  @spec fetch_public_key(realm :: String.t()) ::
+          {:ok, public_key_pem :: String.t()} | {:error, reason :: term()}
+  def fetch_public_key(realm) do
+    with {:ok, provider} <- Config.realm_public_key_provider() do
+      provider.fetch_public_key(realm)
+    end
   end
-
-  scope "/v1/:realm", Astarte.FlowWeb do
-    pipe_through :api
-
-    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
-
-    resources "/pipelines", PipelineController, param: "name", except: [:new, :edit, :update]
-  end
-
-  get "/health", Astarte.FlowWeb.HealthController, :show
 end

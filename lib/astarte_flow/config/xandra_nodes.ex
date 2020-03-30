@@ -16,21 +16,24 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.Router do
-  use Astarte.FlowWeb, :router
+defmodule Astarte.DataAccess.Config.XandraNodes do
+  use Skogsra.Type
 
-  pipeline :api do
-    plug :accepts, ["json"]
-    plug Astarte.FlowWeb.Plug.AuthorizePath
+  @impl Skogsra.Type
+  @spec cast(String.t()) :: {:ok, [String.t()]} | :error
+  def cast(value)
+
+  def cast(""), do: :error
+
+  def cast(value) when is_binary(value) do
+    nodes =
+      String.split(value, ",", trim: true)
+      |> Enum.map(&String.trim/1)
+
+    {:ok, nodes}
   end
 
-  scope "/v1/:realm", Astarte.FlowWeb do
-    pipe_through :api
-
-    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
-
-    resources "/pipelines", PipelineController, param: "name", except: [:new, :edit, :update]
+  def cast(_) do
+    :error
   end
-
-  get "/health", Astarte.FlowWeb.HealthController, :show
 end

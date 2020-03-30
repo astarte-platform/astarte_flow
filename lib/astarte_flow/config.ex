@@ -19,6 +19,9 @@
 defmodule Astarte.Flow.Config do
   use Skogsra
 
+  alias Astarte.Flow.Auth.RealmPublicKeyProvider
+  alias Astarte.Flow.Config.XandraNodes
+
   @envdoc "Name of the Kubernetes instance of astarte which Flow will connect to"
   app_env :astarte_instance, :astarte_flow, :astarte_instance,
     os_env: "FLOW_ASTARTE_INSTANCE",
@@ -61,6 +64,26 @@ defmodule Astarte.Flow.Config do
           :default_amqp_connection_virtual_host,
           os_env: "FLOW_DEFAULT_AMQP_CONNECTION_HOST",
           default: "astarte"
+
+  @envdoc """
+  Disables the authentication. CHANGING IT TO TRUE IS GENERALLY A REALLY BAD IDEA
+  IN A PRODUCTION ENVIRONMENT, IF YOU DON'T KNOW WHAT YOU ARE DOING."
+  """
+  app_env :disable_authentication, :astarte_flow, :disable_authentication,
+    os_env: "FLOW_DISABLE_AUTHENTICATION",
+    type: :boolean,
+    default: false
+
+  app_env :realm_public_key_provider, :astarte_flow, :realm_public_key_provider,
+    os_env: "FLOW_REALM_PUBLIC_KEY_PROVIDER",
+    type: RealmPublicKeyProvider
+
+  app_env :realm_public_keys_dir, :astarte_flow, :realm_public_keys_dir,
+    os_env: "FLOW_REALM_PUBLIC_KEYS_DIR"
+
+  app_env :xandra_nodes, :astarte_flow, :xandra_nodes,
+    os_env: "CASSANDRA_NODES",
+    type: XandraNodes
 
   @doc "Returns the default amqp connection parameters"
   def default_amqp_connection! do

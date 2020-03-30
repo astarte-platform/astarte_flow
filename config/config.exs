@@ -47,4 +47,7 @@ config :astarte_flow, :default_amqp_connection_password, "guest"
 config :astarte_flow, :default_amqp_connection_virtual_host, "/"
 config :astarte_flow, :default_amqp_connection_port, 5672
 
+config :astarte_flow, Astarte.Flow.Auth.Guardian,
+  allowed_algos: ["ES256", "ES384", "ES512", "PS256", "PS384", "PS512", "RS256", "RS384", "RS512"]
+
 import_config "#{Mix.env()}.exs"

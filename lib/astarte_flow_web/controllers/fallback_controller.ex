@@ -44,4 +44,27 @@ defmodule Astarte.FlowWeb.FallbackController do
     |> put_view(Astarte.FlowWeb.ErrorView)
     |> render(:"409_existing_pipeline")
   end
+
+  def call(conn, {:error, :unauthorized}) do
+    conn
+    |> put_status(:unauthorized)
+    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> render(:"401")
+  end
+
+  # This is called when no JWT token is present
+  def auth_error(conn, {:unauthenticated, _reason}, _opts) do
+    conn
+    |> put_status(:unauthorized)
+    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> render(:"401")
+  end
+
+  # In all other cases, we reply with 403
+  def auth_error(conn, _reason, _opts) do
+    conn
+    |> put_status(:forbidden)
+    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> render(:"403")
+  end
 end
