@@ -70,7 +70,7 @@ defmodule Astarte.Flow.Blocks.JsonPathMapper.JsonTemplate do
     if String.slice(rest, -2, 2) == "}}" do
       path_string = String.slice(rest, 0..-3)
 
-      with {:ok, json_path} <- ExJsonPath.compile(path_string) do
+      with {:ok, json_path} <- ExJSONPath.compile(path_string) do
         {:ok, {:json_path, json_path}}
       end
     else
@@ -164,9 +164,9 @@ defmodule Astarte.Flow.Blocks.JsonPathMapper.JsonTemplate do
   end
 
   def render({:json_path, path}, input) do
-    case ExJsonPath.eval(input, path) do
-      [result] -> {:ok, result}
-      result when not is_tuple(result) -> {:ok, result}
+    case ExJSONPath.eval(input, path) do
+      {:ok, [result]} -> {:ok, result}
+      {:ok, result} -> {:ok, result}
       _any -> {:error, :cannot_render_template}
     end
   end
