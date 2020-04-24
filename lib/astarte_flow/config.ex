@@ -63,7 +63,7 @@ defmodule Astarte.Flow.Config do
           :astarte_flow,
           :default_amqp_connection_virtual_host,
           os_env: "FLOW_DEFAULT_AMQP_CONNECTION_HOST",
-          default: "astarte"
+          default: "/"
 
   @envdoc """
   Disables the authentication. CHANGING IT TO TRUE IS GENERALLY A REALLY BAD IDEA
