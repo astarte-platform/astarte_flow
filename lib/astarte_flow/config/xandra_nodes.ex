@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-defmodule Astarte.DataAccess.Config.XandraNodes do
+defmodule Astarte.Flow.Config.XandraNodes do
   use Skogsra.Type
 
   @impl Skogsra.Type
