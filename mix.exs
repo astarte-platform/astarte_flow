@@ -85,7 +85,8 @@ defmodule Astarte.Flow.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:guardian, "~> 2.0"},
       {:xandra, "~> 0.12"},
-      {:skogsra, "~> 2.0"}
+      {:skogsra, "~> 2.0"},
+      {:castore, "~> 0.1.0"}
     ]
   end
 end
