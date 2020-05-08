@@ -65,6 +65,45 @@ defmodule Astarte.Flow.Config do
           os_env: "FLOW_DEFAULT_AMQP_CONNECTION_HOST",
           default: "/"
 
+  @envdoc "Enable SSL. If not specified SSL is disabled."
+  app_env :default_amqp_connection_ssl_enabled,
+          :astarte_flow,
+          :default_amqp_connection_ssl_enabled,
+          os_env: "FLOW_DEFAULT_AMQP_CONNECTION_SSL_ENABLED",
+          type: :boolean,
+          default: false
+
+  @envdoc """
+  Specifies the certificates of the root Certificate Authorities
+  to be trusted. When not specified, the bundled cURL certificate
+  bundle will be used.
+  """
+
+  app_env :default_amqp_connection_ssl_ca_file,
+          :astarte_flow,
+          :default_amqp_connection_ssl_ca_file,
+          os_env: "FLOW_DEFAULT_AMQP_CONNECTION_SSL_CA_FILE",
+          type: :binary
+
+  @envdoc "Disable Server Name Indication. Defaults to false."
+  app_env :default_amqp_connection_ssl_disable_sni,
+          :astarte_flow,
+          :default_amqp_connection_ssl_disable_sni,
+          os_env: "FLOW_DEFAULT_AMQP_CONNECTION_SSL_DISABLE_SNI",
+          type: :boolean,
+          default: false
+
+  @envdoc """
+  Specify the hostname to be used in TLS Server Name Indication extension.
+  If not specified, the amqp host will be used. This value is used only if
+  Server Name Indication is enabled.
+  """
+  app_env :default_amqp_connection_ssl_custom_sni,
+          :astarte_flow,
+          :default_amqp_connection_ssl_custom_sni,
+          os_env: "FLOW_DEFAULT_AMQP_CONNECTION_SSL_CUSTOM_SNI",
+          type: :binary
+
   @envdoc """
   Disables the authentication. CHANGING IT TO TRUE IS GENERALLY A REALLY BAD IDEA
   IN A PRODUCTION ENVIRONMENT, IF YOU DON'T KNOW WHAT YOU ARE DOING."
@@ -86,6 +125,19 @@ defmodule Astarte.Flow.Config do
     type: XandraNodes
 
   @doc "Returns the default amqp connection parameters"
+  @type ssl_option ::
+          {:cacertfile, String.t()}
+          | {:verify, :verify_peer}
+          | {:server_name_indication, :disable | charlist()}
+  @type ssl_options :: :none | [ssl_option]
+  @type options ::
+          {:username, String.t()}
+          | {:password, String.t()}
+          | {:virtual_host, String.t()}
+          | {:host, String.t()}
+          | {:port, integer()}
+          | {:ssl_options, ssl_options}
+  @spec default_amqp_connection!() :: [options]
   def default_amqp_connection! do
     [
       host: default_amqp_connection_host!(),
@@ -94,5 +146,32 @@ defmodule Astarte.Flow.Config do
       password: default_amqp_connection_password!(),
       virtual_host: default_amqp_connection_virtual_host!()
     ]
+    |> populate_ssl_options()
+  end
+
+  defp populate_ssl_options(options) do
+    if default_amqp_connection_ssl_enabled!() do
+      ssl_options = build_ssl_options()
+      Keyword.put(options, :ssl_options, ssl_options)
+    else
+      options
+    end
+  end
+
+  defp build_ssl_options do
+    [
+      cacertfile: default_amqp_connection_ssl_ca_file!() || CAStore.file_path(),
+      verify: :verify_peer
+    ]
+    |> populate_sni()
+  end
+
+  defp populate_sni(ssl_options) do
+    if default_amqp_connection_ssl_disable_sni!() do
+      Keyword.put(ssl_options, :server_name_indication, :disable)
+    else
+      server_name = default_amqp_connection_ssl_custom_sni!() || default_amqp_connection_host!()
+      Keyword.put(ssl_options, :server_name_indication, to_charlist(server_name))
+    end
   end
 end

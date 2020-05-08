@@ -3,6 +3,7 @@
   "amqp_client": {:hex, :amqp_client, "3.8.2", "b50ac381c3c016a697d6ab8f08367043a08358cfeb8ee97832ccc7d101e59cef", [:make, :rebar3], [{:rabbit_common, "3.8.2", [hex: :rabbit_common, repo: "hexpm", optional: false]}], "hexpm", "f453386e02a7ae77e0aa88bf4cf071aa31cce54e1b8511ca805961b0d83f164e"},
   "astarte_core": {:git, "https://github.com/astarte-platform/astarte_core.git", "dd37ddd2b1bdcef0b1474be9c81d9a0efa4cda81", []},
   "astarte_device": {:git, "https://github.com/astarte-platform/astarte-device-sdk-elixir.git", "747dd1beffd787a0bbd836438f4f5107ca445771", []},
+  "castore": {:hex, :castore, "0.1.5", "591c763a637af2cc468a72f006878584bc6c306f8d111ef8ba1d4c10e0684010", [:mix], [], "hexpm", "6db356b2bc6cc22561e051ff545c20ad064af57647e436650aa24d7d06cd941a"},
   "certifi": {:hex, :certifi, "2.5.1", "867ce347f7c7d78563450a18a6a28a8090331e77fa02380b4a21962a65d36ee5", [:rebar3], [{:parse_trans, "~>3.3", [hex: :parse_trans, repo: "hexpm", optional: false]}], "hexpm", "805abd97539caf89ec6d4732c91e62ba9da0cda51ac462380bbd28ee697a8c42"},
   "coerce": {:hex, :coerce, "1.0.1", "211c27386315dc2894ac11bc1f413a0e38505d808153367bd5c6e75a4003d096", [:mix], [], "hexpm", "b44a691700f7a1a15b4b7e2ff1fa30bebd669929ac8aa43cffe9e2f8bf051cf1"},
   "connection": {:hex, :connection, "1.0.4", "a1cae72211f0eef17705aaededacac3eb30e6625b04a6117c1b2db6ace7d5976", [:mix], [], "hexpm", "4a0850c9be22a43af9920a71ab17c051f5f7d45c209e40269a1938832510e4d9"},
