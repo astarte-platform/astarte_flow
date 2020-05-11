@@ -62,7 +62,7 @@ defmodule Astarte.Flow.Config do
   app_env :default_amqp_connection_virtual_host,
           :astarte_flow,
           :default_amqp_connection_virtual_host,
-          os_env: "FLOW_DEFAULT_AMQP_CONNECTION_HOST",
+          os_env: "FLOW_DEFAULT_AMQP_CONNECTION_VIRTUAL_HOST",
           default: "/"
 
   @envdoc "Enable SSL. If not specified SSL is disabled."
