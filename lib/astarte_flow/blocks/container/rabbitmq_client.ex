@@ -37,8 +37,9 @@ defmodule Astarte.Flow.Blocks.Container.RabbitMQClient do
 
     queue_prefix = Keyword.fetch!(opts, :queue_prefix)
     connection = Keyword.get(opts, :connection, [])
+    prefetch_count = Keyword.get(opts, :prefetch_count, 100)
 
-    config = %{connection: connection, queue_prefix: queue_prefix}
+    config = %{connection: connection, queue_prefix: queue_prefix, prefetch_count: prefetch_count}
 
     {:ok, config}
   end
@@ -56,6 +57,7 @@ defmodule Astarte.Flow.Blocks.Container.RabbitMQClient do
 
     with {:ok, conn} <- Connection.open(conn_opts),
          {:ok, chan} <- Channel.open(conn),
+         :ok <- Basic.qos(chan, prefetch_count: config.prefetch_count),
          {:ok, queues_info} <- queues_setup(chan, queue_prefix, type) do
       {:ok, Map.put(queues_info, :channel, chan)}
     end
