@@ -38,8 +38,15 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.RabbitMQClient do
     queue = Keyword.get(opts, :queue, "")
     connection = Keyword.get(opts, :connection, [])
     exchange = Keyword.get(opts, :exchange, "astarte_events")
+    prefetch_count = Keyword.get(opts, :prefetch_count, 100)
 
-    config = %{connection: connection, queue: queue, routing_key: routing_key, exchange: exchange}
+    config = %{
+      connection: connection,
+      queue: queue,
+      routing_key: routing_key,
+      exchange: exchange,
+      prefetch_count: prefetch_count
+    }
 
     {:ok, config}
   end
@@ -53,6 +60,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.RabbitMQClient do
   def setup_channel(config) do
     with {:ok, conn} <- Connection.open(config.connection),
          {:ok, chan} <- Channel.open(conn),
+         :ok <- Basic.qos(chan, prefetch_count: config.prefetch_count),
          {:ok, _queue} <- Queue.declare(chan, config.queue, auto_delete: true),
          :ok <- Queue.bind(chan, config.queue, config.exchange, routing_key: config.routing_key) do
       {:ok, chan}

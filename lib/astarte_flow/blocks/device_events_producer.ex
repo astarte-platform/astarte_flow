@@ -81,6 +81,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer do
     `AMQP.Connection.open/1`. Defaults to `[]`.
   * `:exchange` - The name of the exchange the queue will be bound to. Defaults to
     `"astarte_events"`
+  * `:prefetch_count` - The prefetch count of the AMQP channel. Defaults to 100.
   * `:client` - A module that implements the
     `Astarte.Flow.Blocks.DeviceEventsProducer.AMQPClient` behaviour and that will
     be used to connect to AMQP. Defaults to
@@ -95,6 +96,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer do
                | {:queue, String.t()}
                | {:connection, keyword()}
                | {:exchange, String.t()}
+               | {:prefetch_count, non_neg_integer()}
                | {:client, module()}
   def start_link(opts) do
     GenStage.start_link(__MODULE__, opts)

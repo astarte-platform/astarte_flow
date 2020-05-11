@@ -66,6 +66,7 @@ defmodule Astarte.Flow.Blocks.Container do
   * `:config` - The Flow configuration that will be passed to the container.
   * `:connection` - A keyword list containing the options that will be passed to
     `AMQP.Connection.open/1`. Defaults to `[]`.
+  * `:prefetch_count` - The prefetch count of the AMQP channel. Defaults to 100.
   * `:amqp_client` - A module that implements the
     `Astarte.Flow.Blocks.Container.AMQPClient` behaviour and that will
     be used to connect to AMQP. Defaults to
@@ -78,6 +79,7 @@ defmodule Astarte.Flow.Blocks.Container do
                | {:image, String.t()}
                | {:type, :producer | :consumer | :producer_consumer}
                | {:config, map()}
+               | {:prefetch_count, non_neg_integer()}
                | {:connection, keyword()}
                | {:amqp_client, module()}
   def start_link(opts) do

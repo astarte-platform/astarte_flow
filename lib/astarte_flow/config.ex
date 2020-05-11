@@ -104,6 +104,12 @@ defmodule Astarte.Flow.Config do
           os_env: "FLOW_DEFAULT_AMQP_CONNECTION_SSL_CUSTOM_SNI",
           type: :binary
 
+  @envdoc "Default RabbitMQ prefetch count for each channel"
+  app_env :default_amqp_prefetch_count, :astarte_flow, :default_amqp_prefetch_count,
+    os_env: "FLOW_DEFAULT_AMQP_PREFETCH_COUNT",
+    type: :integer,
+    default: 100
+
   @envdoc """
   Disables the authentication. CHANGING IT TO TRUE IS GENERALLY A REALLY BAD IDEA
   IN A PRODUCTION ENVIRONMENT, IF YOU DON'T KNOW WHAT YOU ARE DOING."

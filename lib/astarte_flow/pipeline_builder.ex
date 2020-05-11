@@ -67,7 +67,8 @@ defmodule Astarte.Flow.PipelineBuilder do
        routing_key: "trigger_engine",
        realm: eval(realm, config),
        target_devices: eval(target_devices, config),
-       connection: Config.default_amqp_connection!()
+       connection: Config.default_amqp_connection!(),
+       prefetch_count: Config.default_amqp_prefetch_count!()
      ]}
   end
 
@@ -89,7 +90,8 @@ defmodule Astarte.Flow.PipelineBuilder do
      [
        image: eval(image, config),
        type: type,
-       connection: Config.default_amqp_connection!()
+       connection: Config.default_amqp_connection!(),
+       prefetch_count: Config.default_amqp_prefetch_count!()
      ]}
   end
 
