@@ -182,7 +182,8 @@ defmodule Astarte.Flow.Blocks.MqttSource do
           host: host,
           port: port || 8883,
           cacertfile: :certifi.cacertfile(),
-          verify: verify
+          verify: verify,
+          depth: 10
         ]
 
         {:ok, {Tortoise.Transport.SSL, opts}}
