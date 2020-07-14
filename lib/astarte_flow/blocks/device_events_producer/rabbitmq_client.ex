@@ -37,7 +37,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.RabbitMQClient do
     routing_key = Keyword.fetch!(opts, :routing_key)
     queue = Keyword.get(opts, :queue, "")
     connection = Keyword.get(opts, :connection, [])
-    exchange = Keyword.get(opts, :exchange, "astarte_events")
+    exchange = Keyword.fetch!(opts, :exchange)
     prefetch_count = Keyword.get(opts, :prefetch_count, 100)
 
     config = %{

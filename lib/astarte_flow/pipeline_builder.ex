@@ -57,14 +57,22 @@ defmodule Astarte.Flow.PipelineBuilder do
 
   defp setup_block("astarte_devices_source", opts, config) do
     %{
-      "realm" => realm
+      "realm" => realm,
+      "amqp_exchange" => amqp_exchange
     } = opts
 
+    amqp_routing_key = Map.get(opts, "amqp_routing_key", "")
     target_devices = Map.get(opts, "target_devices")
+
+    # TODO: we should go for a proper validation system
+    unless amqp_exchange =~ ~r"^astarte_events_#{realm}_[a-zA-Z0-9_\.\:]+$" do
+      raise "exchange name not allowed"
+    end
 
     {DeviceEventsProducer,
      [
-       routing_key: "trigger_engine",
+       exchange: amqp_exchange,
+       routing_key: amqp_routing_key,
        realm: eval(realm, config),
        target_devices: eval(target_devices, config),
        connection: Config.default_amqp_connection!(),
