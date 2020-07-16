@@ -35,6 +35,7 @@ defmodule Astarte.Flow.PipelineBuilder do
     VirtualDevicePool
   }
 
+  alias ExJsonSchema.Validator
   alias Astarte.Flow.Config
 
   def parse(pipeline_desc) do
@@ -63,14 +64,16 @@ defmodule Astarte.Flow.PipelineBuilder do
     if all_ok do
       {:ok, Enum.map(maybe_blocks, fn {:ok, block_module, opts} -> {block_module, opts} end)}
     else
-      errors =
-        Enum.reject(maybe_blocks, fn
-          {:ok, _b, _o} -> true
-          _ -> false
-        end)
-
-      {:error, errors}
+      {:error, extract_errors(maybe_blocks)}
     end
+  end
+
+  defp extract_errors(maybe_blocks) do
+    Enum.reject(maybe_blocks, fn
+      {:ok, _b, _o} -> true
+      _ -> false
+    end)
+    |> Enum.map(fn {:error, {reason, blockname, details}} -> {blockname, {reason, details}} end)
   end
 
   defp setup_block("astarte_devices_source", opts, config) do
@@ -91,8 +94,8 @@ defmodule Astarte.Flow.PipelineBuilder do
      [
        exchange: amqp_exchange,
        routing_key: amqp_routing_key,
-       realm: eval(realm, config),
-       target_devices: eval(target_devices, config),
+       realm: eval!(realm, config),
+       target_devices: eval!(target_devices, config),
        connection: Config.default_amqp_connection!(),
        prefetch_count: Config.default_amqp_prefetch_count!()
      ]}
@@ -114,7 +117,7 @@ defmodule Astarte.Flow.PipelineBuilder do
 
     {:ok, Container,
      [
-       image: eval(image, config),
+       image: eval!(image, config),
        type: type,
        connection: Config.default_amqp_connection!(),
        prefetch_count: Config.default_amqp_prefetch_count!()
@@ -131,10 +134,10 @@ defmodule Astarte.Flow.PipelineBuilder do
 
     {:ok, HttpSource,
      [
-       base_url: eval(base_url, config),
-       target_paths: eval(target_paths, config),
-       polling_interval_ms: eval(polling_interval_ms, config),
-       headers: [{"Authorization", eval(authorization_header, config)}]
+       base_url: eval!(base_url, config),
+       target_paths: eval!(target_paths, config),
+       polling_interval_ms: eval!(polling_interval_ms, config),
+       headers: [{"Authorization", eval!(authorization_header, config)}]
      ]}
   end
 
@@ -143,7 +146,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       "script" => script
     } = opts
 
-    {:ok, Filter, [filter_config: %{operator: :luerl_script, script: eval(script, config)}]}
+    {:ok, Filter, [filter_config: %{operator: :luerl_script, script: eval!(script, config)}]}
   end
 
   defp setup_block("http_sink", opts, config) do
@@ -151,7 +154,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       "url" => url
     } = opts
 
-    {:ok, HttpSink, [url: eval(url, config)]}
+    {:ok, HttpSink, [url: eval!(url, config)]}
   end
 
   defp setup_block("lua_map", opts, config) do
@@ -161,7 +164,7 @@ defmodule Astarte.Flow.PipelineBuilder do
 
     lua_config = Map.get(opts, "config", [])
 
-    {:ok, LuaMapper, [script: eval(script, config), config: eval(lua_config, config)]}
+    {:ok, LuaMapper, [script: eval!(script, config), config: eval!(lua_config, config)]}
   end
 
   defp setup_block("json_path_map", opts, config) do
@@ -169,7 +172,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       "template" => template
     } = opts
 
-    {:ok, JsonPathMapper, [template: eval(template, config)]}
+    {:ok, JsonPathMapper, [template: eval!(template, config)]}
   end
 
   defp setup_block("sort", opts, config) do
@@ -180,14 +183,14 @@ defmodule Astarte.Flow.PipelineBuilder do
     deduplicate = Map.get(opts, "deduplicate", false)
 
     {:ok, Sorter,
-     [delay_ms: eval(window_size_ms, config), deduplicate: eval(deduplicate, config)]}
+     [delay_ms: eval!(window_size_ms, config), deduplicate: eval!(deduplicate, config)]}
   end
 
   defp setup_block("split_map", opts, config) do
-    key_action = eval(Map.get(opts, "key_action", "replace"), config)
-    delimiter = eval(Map.get(opts, "delimiter", ""), config)
-    fallback_action = eval(Map.get(opts, "fallback_action", "pass_through"), config)
-    fallback_key = eval(Map.get(opts, "fallback_key", "fallback_key"), config)
+    key_action = eval!(Map.get(opts, "key_action", "replace"), config)
+    delimiter = eval!(Map.get(opts, "delimiter", ""), config)
+    fallback_action = eval!(Map.get(opts, "fallback_action", "pass_through"), config)
+    fallback_key = eval!(Map.get(opts, "fallback_key", "fallback_key"), config)
 
     key_action_opt =
       case key_action do
@@ -220,7 +223,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       "target_devices" => target_devices
     } = opts
 
-    devices_array = eval(target_devices, config)
+    devices_array = eval!(target_devices, config)
 
     devices =
       for device_obj <- devices_array do
@@ -232,27 +235,27 @@ defmodule Astarte.Flow.PipelineBuilder do
         } = device_obj
 
         [
-          device_id: eval(device_id, config),
-          realm: eval(realm, config),
-          credentials_secret: eval(credentials_secret, config),
-          interface_provider: {SimpleInterfaceProvider, interfaces: eval(interfaces, config)}
+          device_id: eval!(device_id, config),
+          realm: eval!(realm, config),
+          credentials_secret: eval!(credentials_secret, config),
+          interface_provider: {SimpleInterfaceProvider, interfaces: eval!(interfaces, config)}
         ]
       end
 
-    {:ok, VirtualDevicePool, [pairing_url: eval(pairing_url, config), devices: devices]}
+    {:ok, VirtualDevicePool, [pairing_url: eval!(pairing_url, config), devices: devices]}
   end
 
   # If it has interfaces in the top level, it's a DynamicVirtualDevicePool
   defp setup_block("virtual_device_pool", %{"interfaces" => _} = opts, config) do
     alias Astarte.Device.SimpleInterfaceProvider
 
-    pairing_url = Map.fetch!(opts, "pairing_url") |> eval(config)
-    realms = Map.fetch!(opts, "realms") |> eval(config)
-    interfaces = Map.fetch!(opts, "interfaces") |> eval(config)
+    pairing_url = Map.fetch!(opts, "pairing_url") |> eval!(config)
+    realms = Map.fetch!(opts, "realms") |> eval!(config)
+    interfaces = Map.fetch!(opts, "interfaces") |> eval!(config)
 
     pairing_jwt_map =
       Enum.into(realms, %{}, fn %{"realm" => realm, "jwt" => jwt} ->
-        {eval(realm, config), eval(jwt, config)}
+        {eval!(realm, config), eval!(jwt, config)}
       end)
 
     opts = [
@@ -269,27 +272,51 @@ defmodule Astarte.Flow.PipelineBuilder do
 
     with {:ok, json} <- File.read(block_manifest),
          {:ok, block_manifest} <- Jason.decode(json),
-         %{"schema" => schema, "beam_module" => beam_module} <- block_manifest,
+         {:manifest, %{"schema" => schema, "beam_module" => beam_module}} <-
+           {:manifest, block_manifest},
          resolved_schema = ExJsonSchema.Schema.resolve(schema),
          module_atom = String.to_existing_atom(beam_module),
          {:ok, evaluated_opts} <- evaluate_opts(opts, config),
-         :ok <- ExJsonSchema.Validator.validate(resolved_schema, evaluated_opts) do
-      opts_kwl =
-        Enum.map(evaluated_opts, fn {k, v} ->
-          {String.to_existing_atom(k), v}
-        end)
+         {:jsonschema, :ok} <- {:jsonschema, Validator.validate(resolved_schema, evaluated_opts)} do
+      {:ok, module_atom, opts_to_keyword_list(evaluated_opts)}
+    else
+      {:error, :enoent} ->
+        {:error, {:unknown_block, block_name, "block is not supported or not installed."}}
 
-      {:ok, module_atom, opts_kwl}
+      {:error, %Jason.DecodeError{}} ->
+        {:error, {:invalid_manifest, block_name, "invalid JSON block manifest."}}
+
+      {:manifest, _} ->
+        {:error, {:invalid_manifest, block_name, "invalid block manifest."}}
+
+      {:jsonschema, {:error, errors}} ->
+        {:error, {:invalid_block_options, block_name, errors}}
+
+      {:error, {:json_path_multiple_values, path}} ->
+        {:error,
+         {:invalid_json_path, block_name, ~s{JSONPath "#{path}" evaluates to multiple values.}}}
+
+      {:error, %ExJSONPath.ParsingError{message: message}} ->
+        {:error, {:invalid_json_path, block_name, message}}
     end
   end
 
-  defp evaluate_opts(opts, config) do
-    evaluated_opts =
-      Enum.reduce(opts, %{}, fn {k, v}, acc ->
-        Map.put(acc, k, eval(v, config))
-      end)
+  defp opts_to_keyword_list(opts) do
+    Enum.map(opts, fn {k, v} ->
+      {String.to_existing_atom(k), v}
+    end)
+  end
 
-    {:ok, evaluated_opts}
+  defp evaluate_opts(opts, config) do
+    Enum.reduce_while(opts, {:ok, %{}}, fn {k, v}, {:ok, acc} ->
+      case eval(v, config) do
+        {:error, reason} ->
+          {:halt, {:error, reason}}
+
+        {:ok, evaluated} ->
+          {:cont, {:ok, Map.put(acc, k, evaluated)}}
+      end
+    end)
   end
 
   def start_all(pipeline) do
@@ -337,22 +364,24 @@ defmodule Astarte.Flow.PipelineBuilder do
   defp eval({:json_path, path}, config) do
     case ExJSONPath.eval(config, path) do
       {:ok, [value]} ->
-        value
+        {:ok, value}
 
       {:ok, values} when is_list(values) ->
-        Logger.error("JSONPath doesn't evaluate to a single value: #{inspect(values)}.",
-          tag: :json_path_error
-        )
-
-        raise "JSONPath error"
+        {:error, {:json_path_multiple_values, path}}
 
       {:error, reason} ->
-        Logger.error("JSONPath error: #{inspect(reason)}.", tag: :json_path_error)
-        raise "JSONPath error"
+        {:error, reason}
     end
   end
 
   defp eval(any, _config) do
-    any
+    {:ok, any}
+  end
+
+  defp eval!(any, config) do
+    case eval(any, config) do
+      {:ok, result} -> result
+      _ -> raise "Invalid JSONPath."
+    end
   end
 end
