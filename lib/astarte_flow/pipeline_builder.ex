@@ -25,7 +25,6 @@ defmodule Astarte.Flow.PipelineBuilder do
     DeviceEventsProducer,
     DynamicVirtualDevicePool,
     Filter,
-    RandomProducer,
     JsonMapper,
     LuaMapper,
     MapSplitter,
@@ -117,25 +116,6 @@ defmodule Astarte.Flow.PipelineBuilder do
        target_paths: eval(target_paths, config),
        polling_interval_ms: eval(polling_interval_ms, config),
        headers: [{"Authorization", eval(authorization_header, config)}]
-     ]}
-  end
-
-  defp setup_block("random_source", opts, config) do
-    %{
-      "key" => key,
-      "min" => min,
-      "max" => max
-    } = opts
-
-    delay_ms = Map.get(opts, "delay_ms")
-
-    {RandomProducer,
-     [
-       key: eval(key, config),
-       type: :real,
-       min: eval(min, config),
-       max: eval(max, config),
-       delay_ms: eval(delay_ms, config)
      ]}
   end
 
@@ -264,6 +244,35 @@ defmodule Astarte.Flow.PipelineBuilder do
     {DynamicVirtualDevicePool, opts}
   end
 
+  defp setup_block(block_name, opts, config) do
+    block_manifest =
+      File.read!("#{:code.priv_dir(:astarte_flow)}/blocks/#{block_name}.json")
+      |> Jason.decode!()
+
+    schema =
+      block_manifest
+      |> Map.fetch!("schema")
+      |> ExJsonSchema.Schema.resolve()
+
+    beam_module =
+      Map.fetch!(block_manifest, "beam_module")
+      |> String.to_existing_atom()
+
+    evaluated_opts =
+      Enum.reduce(opts, %{}, fn {k, v}, acc ->
+        Map.put(acc, k, eval(v, config))
+      end)
+
+    :ok = ExJsonSchema.Validator.validate(schema, evaluated_opts)
+
+    opts_kwl =
+      Enum.map(evaluated_opts, fn {k, v} ->
+        {String.to_existing_atom(k), v}
+      end)
+
+    {beam_module, opts_kwl}
+  end
+
   def start_all(pipeline) do
     with {:ok, pids} <- start_link_all(pipeline) do
       pids
@@ -312,7 +321,10 @@ defmodule Astarte.Flow.PipelineBuilder do
         value
 
       {:ok, values} when is_list(values) ->
-        Logger.error("JSONPath doesn't evaluate to a single value.", tag: :json_path_error)
+        Logger.error("JSONPath doesn't evaluate to a single value: #{inspect(values)}.",
+          tag: :json_path_error
+        )
+
         raise "JSONPath error"
 
       {:error, reason} ->
