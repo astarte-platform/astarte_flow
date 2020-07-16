@@ -45,12 +45,31 @@ defmodule Astarte.Flow.PipelineBuilder do
   end
 
   def build(pipeline_desc, config \\ %{}) do
-    with {:ok, parsed} <- parse(pipeline_desc) do
-      Enum.map(parsed, fn {block, opts_list} ->
-        opts = Enum.into(opts_list, %{})
+    maybe_blocks =
+      with {:ok, parsed} <- parse(pipeline_desc) do
+        Enum.map(parsed, fn {block, opts_list} ->
+          opts = Enum.into(opts_list, %{})
 
-        setup_block(block, opts, config)
+          setup_block(block, opts, config)
+        end)
+      end
+
+    all_ok =
+      Enum.all?(maybe_blocks, fn
+        {:ok, _b, _o} -> true
+        _ -> false
       end)
+
+    if all_ok do
+      {:ok, Enum.map(maybe_blocks, fn {:ok, block_module, opts} -> {block_module, opts} end)}
+    else
+      errors =
+        Enum.reject(maybe_blocks, fn
+          {:ok, _b, _o} -> true
+          _ -> false
+        end)
+
+      {:error, errors}
     end
   end
 
@@ -68,7 +87,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       raise "exchange name not allowed"
     end
 
-    {DeviceEventsProducer,
+    {:ok, DeviceEventsProducer,
      [
        exchange: amqp_exchange,
        routing_key: amqp_routing_key,
@@ -93,7 +112,7 @@ defmodule Astarte.Flow.PipelineBuilder do
         other -> raise "Invalid type in container block: #{inspect(other)}"
       end
 
-    {Container,
+    {:ok, Container,
      [
        image: eval(image, config),
        type: type,
@@ -110,7 +129,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       "authorization" => authorization_header
     } = opts
 
-    {HttpSource,
+    {:ok, HttpSource,
      [
        base_url: eval(base_url, config),
        target_paths: eval(target_paths, config),
@@ -124,7 +143,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       "script" => script
     } = opts
 
-    {Filter, [filter_config: %{operator: :luerl_script, script: eval(script, config)}]}
+    {:ok, Filter, [filter_config: %{operator: :luerl_script, script: eval(script, config)}]}
   end
 
   defp setup_block("http_sink", opts, config) do
@@ -132,7 +151,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       "url" => url
     } = opts
 
-    {HttpSink, [url: eval(url, config)]}
+    {:ok, HttpSink, [url: eval(url, config)]}
   end
 
   defp setup_block("lua_map", opts, config) do
@@ -142,7 +161,7 @@ defmodule Astarte.Flow.PipelineBuilder do
 
     lua_config = Map.get(opts, "config", [])
 
-    {LuaMapper, [script: eval(script, config), config: eval(lua_config, config)]}
+    {:ok, LuaMapper, [script: eval(script, config), config: eval(lua_config, config)]}
   end
 
   defp setup_block("json_path_map", opts, config) do
@@ -150,7 +169,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       "template" => template
     } = opts
 
-    {JsonPathMapper, [template: eval(template, config)]}
+    {:ok, JsonPathMapper, [template: eval(template, config)]}
   end
 
   defp setup_block("sort", opts, config) do
@@ -160,7 +179,8 @@ defmodule Astarte.Flow.PipelineBuilder do
 
     deduplicate = Map.get(opts, "deduplicate", false)
 
-    {Sorter, [delay_ms: eval(window_size_ms, config), deduplicate: eval(deduplicate, config)]}
+    {:ok, Sorter,
+     [delay_ms: eval(window_size_ms, config), deduplicate: eval(deduplicate, config)]}
   end
 
   defp setup_block("split_map", opts, config) do
@@ -184,11 +204,11 @@ defmodule Astarte.Flow.PipelineBuilder do
         "pass_through" -> :pass_through
       end
 
-    {MapSplitter, [key_action: key_action_opt, fallback_action: fallback_action_opt]}
+    {:ok, MapSplitter, [key_action: key_action_opt, fallback_action: fallback_action_opt]}
   end
 
   defp setup_block("to_json", _opts, _config) do
-    {JsonMapper, []}
+    {:ok, JsonMapper, []}
   end
 
   # If it has target_devices, it's a normal VirtualDevicePool
@@ -219,7 +239,7 @@ defmodule Astarte.Flow.PipelineBuilder do
         ]
       end
 
-    {VirtualDevicePool, [pairing_url: eval(pairing_url, config), devices: devices]}
+    {:ok, VirtualDevicePool, [pairing_url: eval(pairing_url, config), devices: devices]}
   end
 
   # If it has interfaces in the top level, it's a DynamicVirtualDevicePool
@@ -241,36 +261,35 @@ defmodule Astarte.Flow.PipelineBuilder do
       interface_provider: {SimpleInterfaceProvider, interfaces: interfaces}
     ]
 
-    {DynamicVirtualDevicePool, opts}
+    {:ok, DynamicVirtualDevicePool, opts}
   end
 
   defp setup_block(block_name, opts, config) do
-    block_manifest =
-      File.read!("#{:code.priv_dir(:astarte_flow)}/blocks/#{block_name}.json")
-      |> Jason.decode!()
+    block_manifest = "#{:code.priv_dir(:astarte_flow)}/blocks/#{block_name}.json"
 
-    schema =
-      block_manifest
-      |> Map.fetch!("schema")
-      |> ExJsonSchema.Schema.resolve()
+    with {:ok, json} <- File.read(block_manifest),
+         {:ok, block_manifest} <- Jason.decode(json),
+         %{"schema" => schema, "beam_module" => beam_module} <- block_manifest,
+         resolved_schema = ExJsonSchema.Schema.resolve(schema),
+         module_atom = String.to_existing_atom(beam_module),
+         {:ok, evaluated_opts} <- evaluate_opts(opts, config),
+         :ok <- ExJsonSchema.Validator.validate(resolved_schema, evaluated_opts) do
+      opts_kwl =
+        Enum.map(evaluated_opts, fn {k, v} ->
+          {String.to_existing_atom(k), v}
+        end)
 
-    beam_module =
-      Map.fetch!(block_manifest, "beam_module")
-      |> String.to_existing_atom()
+      {:ok, module_atom, opts_kwl}
+    end
+  end
 
+  defp evaluate_opts(opts, config) do
     evaluated_opts =
       Enum.reduce(opts, %{}, fn {k, v}, acc ->
         Map.put(acc, k, eval(v, config))
       end)
 
-    :ok = ExJsonSchema.Validator.validate(schema, evaluated_opts)
-
-    opts_kwl =
-      Enum.map(evaluated_opts, fn {k, v} ->
-        {String.to_existing_atom(k), v}
-      end)
-
-    {beam_module, opts_kwl}
+    {:ok, evaluated_opts}
   end
 
   def start_all(pipeline) do
@@ -306,7 +325,7 @@ defmodule Astarte.Flow.PipelineBuilder do
   end
 
   def stream(pipeline_string, config \\ %{}) do
-    with pipeline = build(pipeline_string, config),
+    with {:ok, pipeline} <- build(pipeline_string, config),
          {:ok, pids} <- start_all(pipeline) do
       pids
       |> List.first()
