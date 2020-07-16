@@ -1,0 +1,43 @@
+{
+  "name": "random_source",
+
+  "beam_module": "Elixir.Astarte.Flow.Blocks.RandomProducer",
+
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/random_source.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "RandomSourceOptions",
+    "type": "object",
+
+    "additionalProperties": false,
+    "required": ["key"],
+
+    "properties": {
+      "key": {
+        "type": "string",
+        "description": "Message key."
+      },
+      "type": {
+        "type": "string",
+        "description": "Value type.",
+        "enum": ["integer", "real", "boolean"],
+        "default": "real"
+      },
+      "min":{
+        "type": "number",
+        "description": "Random number minimum value.",
+        "default": 0
+      },
+      "max":{
+        "type": "number",
+        "description": "Random number maximum value.",
+        "default": 1
+      },
+      "delay_ms": {
+        "type": "integer",
+        "description": "Delay between 2 consecutive messages.",
+        "default": 1000
+      }
+    }
+  }
+}
