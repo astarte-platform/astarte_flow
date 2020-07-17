@@ -68,6 +68,7 @@ defmodule Astarte.Flow.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:excoveralls, "~> 0.10", only: :test},
       {:exjsonpath, "~> 0.9.0"},
+      {:ex_json_schema, "~> 0.7"},
       {:gen_stage, "~> 0.14"},
       {:hackney, "~> 1.15"},
       {:tesla, "~> 1.2"},

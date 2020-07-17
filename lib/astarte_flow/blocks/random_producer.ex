@@ -100,7 +100,7 @@ defmodule Astarte.Flow.Blocks.RandomProducer do
   @impl true
   def init(opts) do
     key = Keyword.fetch!(opts, :key)
-    type = Keyword.fetch!(opts, :type)
+    type = Keyword.get(opts, :type, "real") |> String.to_existing_atom()
 
     with {:ok, type} <- validate_type(type),
          {:ok, state} <- init_state(key, type, opts) do

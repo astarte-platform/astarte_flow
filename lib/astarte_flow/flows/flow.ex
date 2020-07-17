@@ -115,7 +115,7 @@ defmodule Astarte.Flow.Flows.Flow do
     _ = Logger.info("Starting Flow #{flow.name}.", flow: flow.name, tag: "flow_start")
 
     with {:ok, %Pipeline{source: source}} <- Pipelines.get_pipeline(realm, flow.pipeline),
-         pipeline = PipelineBuilder.build(source, %{"config" => flow.config}),
+         {:ok, pipeline} = PipelineBuilder.build(source, %{"config" => flow.config}),
          state = %State{realm: realm, flow: flow, pipeline: pipeline},
          {:ok, state} <- start_flow(realm, flow, pipeline, state) do
       _ = Registry.register(RealmRegistry, realm, flow)

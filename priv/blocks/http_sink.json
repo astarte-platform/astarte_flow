@@ -1,0 +1,23 @@
+{
+  "name": "http_sink",
+
+  "beam_module": "Elixir.Astarte.Flow.Blocks.HttpSink",
+  "type": "consumer",
+
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/http_sink.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "HttpSinkOptions",
+    "type": "object",
+
+    "additionalProperties": false,
+    "required": ["url"],
+
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "Target URL."
+      }
+    }
+  }
+}

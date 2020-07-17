@@ -24,18 +24,11 @@ defmodule Astarte.Flow.PipelineBuilder do
     Container,
     DeviceEventsProducer,
     DynamicVirtualDevicePool,
-    Filter,
-    RandomProducer,
-    JsonMapper,
-    LuaMapper,
     MapSplitter,
-    JsonPathMapper,
-    HttpSource,
-    HttpSink,
-    Sorter,
     VirtualDevicePool
   }
 
+  alias ExJsonSchema.Validator
   alias Astarte.Flow.Config
 
   def parse(pipeline_desc) do
@@ -46,13 +39,34 @@ defmodule Astarte.Flow.PipelineBuilder do
   end
 
   def build(pipeline_desc, config \\ %{}) do
-    with {:ok, parsed} <- parse(pipeline_desc) do
-      Enum.map(parsed, fn {block, opts_list} ->
-        opts = Enum.into(opts_list, %{})
+    maybe_blocks =
+      with {:ok, parsed} <- parse(pipeline_desc) do
+        Enum.map(parsed, fn {block, opts_list} ->
+          opts = Enum.into(opts_list, %{})
 
-        setup_block(block, opts, config)
+          setup_block(block, opts, config)
+        end)
+      end
+
+    all_ok =
+      Enum.all?(maybe_blocks, fn
+        {:ok, _b, _o} -> true
+        _ -> false
       end)
+
+    if all_ok do
+      {:ok, Enum.map(maybe_blocks, fn {:ok, block_module, opts} -> {block_module, opts} end)}
+    else
+      {:error, extract_errors(maybe_blocks)}
     end
+  end
+
+  defp extract_errors(maybe_blocks) do
+    Enum.reject(maybe_blocks, fn
+      {:ok, _b, _o} -> true
+      _ -> false
+    end)
+    |> Enum.map(fn {:error, {reason, blockname, details}} -> {blockname, {reason, details}} end)
   end
 
   defp setup_block("astarte_devices_source", opts, config) do
@@ -69,12 +83,12 @@ defmodule Astarte.Flow.PipelineBuilder do
       raise "exchange name not allowed"
     end
 
-    {DeviceEventsProducer,
+    {:ok, DeviceEventsProducer,
      [
        exchange: amqp_exchange,
        routing_key: amqp_routing_key,
-       realm: eval(realm, config),
-       target_devices: eval(target_devices, config),
+       realm: eval!(realm, config),
+       target_devices: eval!(target_devices, config),
        connection: Config.default_amqp_connection!(),
        prefetch_count: Config.default_amqp_prefetch_count!()
      ]}
@@ -94,100 +108,20 @@ defmodule Astarte.Flow.PipelineBuilder do
         other -> raise "Invalid type in container block: #{inspect(other)}"
       end
 
-    {Container,
+    {:ok, Container,
      [
-       image: eval(image, config),
+       image: eval!(image, config),
        type: type,
        connection: Config.default_amqp_connection!(),
        prefetch_count: Config.default_amqp_prefetch_count!()
      ]}
   end
 
-  defp setup_block("http_source", opts, config) do
-    %{
-      "base_url" => base_url,
-      "target_paths" => target_paths,
-      "polling_interval_ms" => polling_interval_ms,
-      "authorization" => authorization_header
-    } = opts
-
-    {HttpSource,
-     [
-       base_url: eval(base_url, config),
-       target_paths: eval(target_paths, config),
-       polling_interval_ms: eval(polling_interval_ms, config),
-       headers: [{"Authorization", eval(authorization_header, config)}]
-     ]}
-  end
-
-  defp setup_block("random_source", opts, config) do
-    %{
-      "key" => key,
-      "min" => min,
-      "max" => max
-    } = opts
-
-    delay_ms = Map.get(opts, "delay_ms")
-
-    {RandomProducer,
-     [
-       key: eval(key, config),
-       type: :real,
-       min: eval(min, config),
-       max: eval(max, config),
-       delay_ms: eval(delay_ms, config)
-     ]}
-  end
-
-  defp setup_block("filter", opts, config) do
-    %{
-      "script" => script
-    } = opts
-
-    {Filter, [filter_config: %{operator: :luerl_script, script: eval(script, config)}]}
-  end
-
-  defp setup_block("http_sink", opts, config) do
-    %{
-      "url" => url
-    } = opts
-
-    {HttpSink, [url: eval(url, config)]}
-  end
-
-  defp setup_block("lua_map", opts, config) do
-    %{
-      "script" => script
-    } = opts
-
-    lua_config = Map.get(opts, "config", [])
-
-    {LuaMapper, [script: eval(script, config), config: eval(lua_config, config)]}
-  end
-
-  defp setup_block("json_path_map", opts, config) do
-    %{
-      "template" => template
-    } = opts
-
-    {JsonPathMapper, [template: eval(template, config)]}
-  end
-
-  defp setup_block("sort", opts, config) do
-    %{
-      "window_size_ms" => window_size_ms
-    } = opts
-
-    deduplicate = Map.get(opts, "deduplicate", false)
-
-    {Sorter, [delay_ms: eval(window_size_ms, config), deduplicate: eval(deduplicate, config)]}
-  end
-
   defp setup_block("split_map", opts, config) do
-    key_action = eval(Map.get(opts, "key_action", "replace"), config)
-    delimiter = eval(Map.get(opts, "delimiter", ""), config)
-    fallback_action = eval(Map.get(opts, "fallback_action", "pass_through"), config)
-    fallback_key = eval(Map.get(opts, "fallback_key", "fallback_key"), config)
+    key_action = eval!(Map.get(opts, "key_action", "replace"), config)
+    delimiter = eval!(Map.get(opts, "delimiter", ""), config)
+    fallback_action = eval!(Map.get(opts, "fallback_action", "pass_through"), config)
+    fallback_key = eval!(Map.get(opts, "fallback_key", "fallback_key"), config)
 
     key_action_opt =
       case key_action do
@@ -204,11 +138,7 @@ defmodule Astarte.Flow.PipelineBuilder do
         "pass_through" -> :pass_through
       end
 
-    {MapSplitter, [key_action: key_action_opt, fallback_action: fallback_action_opt]}
-  end
-
-  defp setup_block("to_json", _opts, _config) do
-    {JsonMapper, []}
+    {:ok, MapSplitter, [key_action: key_action_opt, fallback_action: fallback_action_opt]}
   end
 
   # If it has target_devices, it's a normal VirtualDevicePool
@@ -220,7 +150,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       "target_devices" => target_devices
     } = opts
 
-    devices_array = eval(target_devices, config)
+    devices_array = eval!(target_devices, config)
 
     devices =
       for device_obj <- devices_array do
@@ -232,27 +162,27 @@ defmodule Astarte.Flow.PipelineBuilder do
         } = device_obj
 
         [
-          device_id: eval(device_id, config),
-          realm: eval(realm, config),
-          credentials_secret: eval(credentials_secret, config),
-          interface_provider: {SimpleInterfaceProvider, interfaces: eval(interfaces, config)}
+          device_id: eval!(device_id, config),
+          realm: eval!(realm, config),
+          credentials_secret: eval!(credentials_secret, config),
+          interface_provider: {SimpleInterfaceProvider, interfaces: eval!(interfaces, config)}
         ]
       end
 
-    {VirtualDevicePool, [pairing_url: eval(pairing_url, config), devices: devices]}
+    {:ok, VirtualDevicePool, [pairing_url: eval!(pairing_url, config), devices: devices]}
   end
 
   # If it has interfaces in the top level, it's a DynamicVirtualDevicePool
   defp setup_block("virtual_device_pool", %{"interfaces" => _} = opts, config) do
     alias Astarte.Device.SimpleInterfaceProvider
 
-    pairing_url = Map.fetch!(opts, "pairing_url") |> eval(config)
-    realms = Map.fetch!(opts, "realms") |> eval(config)
-    interfaces = Map.fetch!(opts, "interfaces") |> eval(config)
+    pairing_url = Map.fetch!(opts, "pairing_url") |> eval!(config)
+    realms = Map.fetch!(opts, "realms") |> eval!(config)
+    interfaces = Map.fetch!(opts, "interfaces") |> eval!(config)
 
     pairing_jwt_map =
       Enum.into(realms, %{}, fn %{"realm" => realm, "jwt" => jwt} ->
-        {eval(realm, config), eval(jwt, config)}
+        {eval!(realm, config), eval!(jwt, config)}
       end)
 
     opts = [
@@ -261,7 +191,59 @@ defmodule Astarte.Flow.PipelineBuilder do
       interface_provider: {SimpleInterfaceProvider, interfaces: interfaces}
     ]
 
-    {DynamicVirtualDevicePool, opts}
+    {:ok, DynamicVirtualDevicePool, opts}
+  end
+
+  defp setup_block(block_name, opts, config) do
+    block_manifest = "#{:code.priv_dir(:astarte_flow)}/blocks/#{block_name}.json"
+
+    with {:ok, json} <- File.read(block_manifest),
+         {:ok, block_manifest} <- Jason.decode(json),
+         {:manifest, %{"schema" => schema, "beam_module" => beam_module}} <-
+           {:manifest, block_manifest},
+         resolved_schema = ExJsonSchema.Schema.resolve(schema),
+         module_atom = String.to_existing_atom(beam_module),
+         {:ok, evaluated_opts} <- evaluate_opts(opts, config),
+         {:jsonschema, :ok} <- {:jsonschema, Validator.validate(resolved_schema, evaluated_opts)} do
+      {:ok, module_atom, opts_to_keyword_list(evaluated_opts)}
+    else
+      {:error, :enoent} ->
+        {:error, {:unknown_block, block_name, "block is not supported or not installed."}}
+
+      {:error, %Jason.DecodeError{}} ->
+        {:error, {:invalid_manifest, block_name, "invalid JSON block manifest."}}
+
+      {:manifest, _} ->
+        {:error, {:invalid_manifest, block_name, "invalid block manifest."}}
+
+      {:jsonschema, {:error, errors}} ->
+        {:error, {:invalid_block_options, block_name, errors}}
+
+      {:error, {:json_path_multiple_values, path}} ->
+        {:error,
+         {:invalid_json_path, block_name, ~s{JSONPath "#{path}" evaluates to multiple values.}}}
+
+      {:error, %ExJSONPath.ParsingError{message: message}} ->
+        {:error, {:invalid_json_path, block_name, message}}
+    end
+  end
+
+  defp opts_to_keyword_list(opts) do
+    Enum.map(opts, fn {k, v} ->
+      {String.to_existing_atom(k), v}
+    end)
+  end
+
+  defp evaluate_opts(opts, config) do
+    Enum.reduce_while(opts, {:ok, %{}}, fn {k, v}, {:ok, acc} ->
+      case eval(v, config) do
+        {:error, reason} ->
+          {:halt, {:error, reason}}
+
+        {:ok, evaluated} ->
+          {:cont, {:ok, Map.put(acc, k, evaluated)}}
+      end
+    end)
   end
 
   def start_all(pipeline) do
@@ -297,7 +279,7 @@ defmodule Astarte.Flow.PipelineBuilder do
   end
 
   def stream(pipeline_string, config \\ %{}) do
-    with pipeline = build(pipeline_string, config),
+    with {:ok, pipeline} <- build(pipeline_string, config),
          {:ok, pids} <- start_all(pipeline) do
       pids
       |> List.first()
@@ -309,19 +291,24 @@ defmodule Astarte.Flow.PipelineBuilder do
   defp eval({:json_path, path}, config) do
     case ExJSONPath.eval(config, path) do
       {:ok, [value]} ->
-        value
+        {:ok, value}
 
       {:ok, values} when is_list(values) ->
-        Logger.error("JSONPath doesn't evaluate to a single value.", tag: :json_path_error)
-        raise "JSONPath error"
+        {:error, {:json_path_multiple_values, path}}
 
       {:error, reason} ->
-        Logger.error("JSONPath error: #{inspect(reason)}.", tag: :json_path_error)
-        raise "JSONPath error"
+        {:error, reason}
     end
   end
 
   defp eval(any, _config) do
-    any
+    {:ok, any}
+  end
+
+  defp eval!(any, config) do
+    case eval(any, config) do
+      {:ok, result} -> result
+      _ -> raise "Invalid JSONPath."
+    end
   end
 end

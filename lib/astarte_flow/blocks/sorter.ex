@@ -46,7 +46,7 @@ defmodule Astarte.Flow.Blocks.Sorter do
 
     def from_keyword(kl) do
       deduplicate = Keyword.get(kl, :deduplicate, false)
-      delay_ms = Keyword.get(kl, :delay_ms, 1000)
+      delay_ms = Keyword.get(kl, :window_size_ms, 1000)
 
       policy =
         if deduplicate do

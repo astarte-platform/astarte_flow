@@ -1,0 +1,23 @@
+{
+  "name": "json_path_map",
+
+  "beam_module": "Elixir.Astarte.Flow.Blocks.JsonPathMapper",
+  "type": "producer_consumer",
+
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/json_path_map.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "JSONPathMapOptions",
+    "type": "object",
+
+    "additionalProperties": false,
+    "required": ["template"],
+
+    "properties": {
+      "template": {
+        "type": "string",
+        "description": "JSONPath template."
+      }
+    }
+  }
+}

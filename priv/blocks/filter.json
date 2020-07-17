@@ -1,0 +1,23 @@
+{
+  "name": "filter",
+
+  "beam_module": "Elixir.Astarte.Flow.Blocks.JsonMapper",
+  "type": "producer_consumer",
+
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/filter.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "FilterOptions",
+    "type": "object",
+
+    "additionalProperties": false,
+    "required": ["script"],
+
+    "properties": {
+      "script": {
+        "type": "string",
+        "description": "Lua script filter."
+      }
+    }
+  }
+}
