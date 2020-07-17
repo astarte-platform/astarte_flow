@@ -21,6 +21,8 @@ defmodule Astarte.Flow.Pipelines.Pipeline do
   import Ecto.Changeset
   alias Astarte.Flow.PipelineBuilder
   alias Astarte.Flow.Pipelines.Pipeline
+  alias ExJsonSchema.Validator
+  alias ExJsonSchema.Schema.Draft4
 
   @pipeline_name_format ~r/^[a-zA-Z][a-zA-Z0-9-]*$/
 
@@ -30,15 +32,17 @@ defmodule Astarte.Flow.Pipelines.Pipeline do
     field :name, :string
     field :source, :string
     field :description, :string, default: ""
+    field :schema, :map
   end
 
   @doc false
   def changeset(%Pipeline{} = pipeline, attrs) do
     pipeline
-    |> cast(attrs, [:name, :description, :source])
+    |> cast(attrs, [:name, :description, :source, :schema])
     |> validate_required([:name, :source])
     |> validate_format(:name, @pipeline_name_format)
     |> validate_pipeline_source(:source)
+    |> validate_schema(:schema)
   end
 
   def validate_pipeline_source(changeset, field) do
@@ -46,6 +50,18 @@ defmodule Astarte.Flow.Pipelines.Pipeline do
       case PipelineBuilder.parse(source) do
         {:ok, _} -> []
         {:error, _} -> [{field, "is not a valid pipeline"}]
+      end
+    end)
+  end
+
+  def validate_schema(changeset, field) do
+    validate_change(changeset, field, fn field, schema ->
+      case Validator.validate(Draft4.schema(), schema) do
+        :ok ->
+          []
+
+        {:error, errors} ->
+          [{field, {"is not a valid JSON Schema", validator_errors: errors}}]
       end
     end)
   end

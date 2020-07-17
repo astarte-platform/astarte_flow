@@ -119,6 +119,19 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
       assert json_response(conn, 422)["errors"]["source"] != nil
     end
 
+    test "fails with invalid schema", %{conn: conn} do
+      params = %{
+        name: @name,
+        description: @description,
+        source: @source,
+        schema: %{required: 42}
+      }
+
+      conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+
+      assert json_response(conn, 422)["errors"]["schema"] != nil
+    end
+
     test "creates and renders a valid pipeline", %{conn: conn} do
       PipelinesStorageMock
       |> expect(:insert_pipeline, fn realm, %Pipeline{} = pipeline ->
