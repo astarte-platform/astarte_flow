@@ -24,14 +24,7 @@ defmodule Astarte.Flow.PipelineBuilder do
     Container,
     DeviceEventsProducer,
     DynamicVirtualDevicePool,
-    Filter,
-    JsonMapper,
-    LuaMapper,
     MapSplitter,
-    JsonPathMapper,
-    HttpSource,
-    HttpSink,
-    Sorter,
     VirtualDevicePool
   }
 
@@ -124,68 +117,6 @@ defmodule Astarte.Flow.PipelineBuilder do
      ]}
   end
 
-  defp setup_block("http_source", opts, config) do
-    %{
-      "base_url" => base_url,
-      "target_paths" => target_paths,
-      "polling_interval_ms" => polling_interval_ms,
-      "authorization" => authorization_header
-    } = opts
-
-    {:ok, HttpSource,
-     [
-       base_url: eval!(base_url, config),
-       target_paths: eval!(target_paths, config),
-       polling_interval_ms: eval!(polling_interval_ms, config),
-       headers: [{"Authorization", eval!(authorization_header, config)}]
-     ]}
-  end
-
-  defp setup_block("filter", opts, config) do
-    %{
-      "script" => script
-    } = opts
-
-    {:ok, Filter, [filter_config: %{operator: :luerl_script, script: eval!(script, config)}]}
-  end
-
-  defp setup_block("http_sink", opts, config) do
-    %{
-      "url" => url
-    } = opts
-
-    {:ok, HttpSink, [url: eval!(url, config)]}
-  end
-
-  defp setup_block("lua_map", opts, config) do
-    %{
-      "script" => script
-    } = opts
-
-    lua_config = Map.get(opts, "config", [])
-
-    {:ok, LuaMapper, [script: eval!(script, config), config: eval!(lua_config, config)]}
-  end
-
-  defp setup_block("json_path_map", opts, config) do
-    %{
-      "template" => template
-    } = opts
-
-    {:ok, JsonPathMapper, [template: eval!(template, config)]}
-  end
-
-  defp setup_block("sort", opts, config) do
-    %{
-      "window_size_ms" => window_size_ms
-    } = opts
-
-    deduplicate = Map.get(opts, "deduplicate", false)
-
-    {:ok, Sorter,
-     [delay_ms: eval!(window_size_ms, config), deduplicate: eval!(deduplicate, config)]}
-  end
-
   defp setup_block("split_map", opts, config) do
     key_action = eval!(Map.get(opts, "key_action", "replace"), config)
     delimiter = eval!(Map.get(opts, "delimiter", ""), config)
@@ -208,10 +139,6 @@ defmodule Astarte.Flow.PipelineBuilder do
       end
 
     {:ok, MapSplitter, [key_action: key_action_opt, fallback_action: fallback_action_opt]}
-  end
-
-  defp setup_block("to_json", _opts, _config) do
-    {:ok, JsonMapper, []}
   end
 
   # If it has target_devices, it's a normal VirtualDevicePool

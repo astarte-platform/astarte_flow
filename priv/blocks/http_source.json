@@ -1,0 +1,39 @@
+{
+  "name": "http_source",
+
+  "beam_module": "Elixir.Astarte.Flow.Blocks.HttpSource",
+  "type": "producer",
+
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/http_source.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "HttpSourceOptions",
+    "type": "object",
+
+    "additionalProperties": false,
+    "required": ["base_url", "target_paths", "polling_interval_ms"],
+
+    "properties": {
+      "base_url": {
+        "type": "string",
+        "description": "Target base URL."
+      },
+      "target_paths": {
+        "type": "array",
+        "items": {
+            "type": "string"
+        },
+        "description": "Relative paths."
+      },
+      "polling_interval_ms": {
+        "type": "integer",
+        "description": "Polling interval."
+      },
+      "headers": {
+        "type": "object",
+        "additionalProperties": { "type": "string" },
+        "description": "Http request headers."
+      }
+    }
+  }
+}

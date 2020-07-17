@@ -270,7 +270,7 @@ defmodule Astarte.Flow.Blocks.SorterTest do
 
     in_messages = [msg1, msg2, msg3, msg4]
 
-    {:ok, config} = Config.from_keyword(deduplicate: false, delay_ms: 10)
+    {:ok, config} = Config.from_keyword(deduplicate: false, window_size_ms: 10)
 
     initial_state = %State{
       last_timestamp: 20000

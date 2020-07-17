@@ -1,0 +1,28 @@
+{
+  "name": "lua_map",
+
+  "beam_module": "Elixir.Astarte.Flow.Blocks.LuaMapper",
+  "type": "producer_consumer",
+
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/lua_map.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "LuaMapOptions",
+    "type": "object",
+
+    "additionalProperties": false,
+    "required": ["script"],
+
+    "properties": {
+      "script": {
+        "type": "string",
+        "description": "Lua script."
+      },
+      "config": {
+        "type": "object",
+        "description": "Lua script configuration object.",
+        "default": {}
+      }
+    }
+  }
+}

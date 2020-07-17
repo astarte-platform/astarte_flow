@@ -2,9 +2,10 @@
   "name": "random_source",
 
   "beam_module": "Elixir.Astarte.Flow.Blocks.RandomProducer",
+  "type": "producer",
 
   "schema": {
-    "$id": "https://astarte-platform.org/specs/astarte_flow/random_source.json",
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/random_source.json",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "RandomSourceOptions",
     "type": "object",
