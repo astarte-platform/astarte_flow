@@ -97,6 +97,59 @@ defmodule Astarte.Flow.PipelinesTest do
                Pipelines.create_pipeline(@realm, params)
     end
 
+    test "creates a pipeline with a schema" do
+      schema = %{
+        "$id" => "https://astarte-platform.org/specs/astarte_flow/to_json.json",
+        "$schema" => "http://json-schema.org/draft-04/schema#",
+        "title" => "PipelineConfig",
+        "type" => "object",
+        "additionalProperties" => false,
+        "properties" => %{
+          "url" => %{
+            "type" => "string",
+            "description" => "The URL of the HTTP sink"
+          }
+        }
+      }
+
+      source = ~s'random_source | http_sink.url(${$.config.url})'
+
+      PipelinesStorageMock
+      |> expect(:insert_pipeline, fn realm, %Pipeline{} = pipeline ->
+        assert realm == @realm
+        assert pipeline.name == @name
+        assert pipeline.description == @description
+        assert pipeline.source == source
+        assert pipeline.schema == schema
+
+        :ok
+      end)
+
+      params = %{
+        "name" => @name,
+        "description" => @description,
+        "source" => source,
+        "schema" => schema
+      }
+
+      assert {:ok, %Pipeline{name: @name, source: ^source, description: @description}} =
+               Pipelines.create_pipeline(@realm, params)
+    end
+
+    test "fails with invalid schema" do
+      schema = %{"required" => 42}
+
+      params = %{
+        "name" => @name,
+        "description" => @description,
+        "source" => @source,
+        "schema" => schema
+      }
+
+      assert {:error, %Ecto.Changeset{} = changeset} = Pipelines.create_pipeline(@realm, params)
+      assert changeset.errors[:schema] != nil
+    end
+
     test "uses empty string as default description" do
       PipelinesStorageMock
       |> expect(:insert_pipeline, fn realm, %Pipeline{} = pipeline ->
