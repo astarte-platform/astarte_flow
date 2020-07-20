@@ -35,4 +35,8 @@ defmodule Astarte.FlowWeb.ErrorView do
   def render("409_existing_pipeline.json", _assigns) do
     %{errors: %{detail: "Pipeline already exists"}}
   end
+
+  def render("409_existing_block.json", _assigns) do
+    %{errors: %{detail: "Block already exists"}}
+  end
 end

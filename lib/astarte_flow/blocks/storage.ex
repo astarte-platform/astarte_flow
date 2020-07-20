@@ -16,23 +16,15 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.Router do
-  use Astarte.FlowWeb, :router
+defmodule Astarte.Flow.Blocks.Storage do
+  @callback list_blocks(realm :: String.t()) :: [Astarte.Flow.Blocks.Block.t()]
 
-  pipeline :api do
-    plug :accepts, ["json"]
-    plug Astarte.FlowWeb.Plug.AuthorizePath
-  end
+  @callback fetch_block(realm :: String.t(), name :: String.t()) ::
+              {:ok, Astarte.Flow.Blocks.Block.t()} | {:error, reason :: term()}
 
-  scope "/v1/:realm", Astarte.FlowWeb do
-    pipe_through :api
+  @callback insert_block(realm :: String.t(), pipeline :: Astarte.Flow.Blocks.Block.t()) ::
+              :ok | {:error, reason :: term()}
 
-    resources "/flows", FlowController, param: "name", except: [:new, :edit, :update]
-
-    resources "/pipelines", PipelineController, param: "name", except: [:new, :edit, :update]
-
-    resources "/blocks", BlockController, param: "name", except: [:new, :edit, :update]
-  end
-
-  get "/health", Astarte.FlowWeb.HealthController, :show
+  @callback delete_block(realm :: String.t(), name :: String.t()) ::
+              :ok | {:error, reason :: term()}
 end

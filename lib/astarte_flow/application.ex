@@ -36,6 +36,7 @@ defmodule Astarte.Flow.Application do
       [
         {Registry, keys: :unique, name: Astarte.Flow.Flows.Registry},
         {Registry, keys: :duplicate, name: Astarte.Flow.Flows.RealmRegistry},
+        Astarte.Flow.Blocks.DETSStorage,
         Astarte.Flow.Pipelines.DETSStorage,
         Astarte.Flow.Flows.DETSStorage,
         {DynamicSupervisor, strategy: :one_for_one, name: Astarte.Flow.Flows.Supervisor},
