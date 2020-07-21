@@ -25,6 +25,7 @@ Mox.defmock(CredentialsStorageMock,
 
 Mox.defmock(ConnectionMock, for: Astarte.Device.Connection)
 Mox.defmock(InterfaceProviderMock, for: Astarte.Device.InterfaceProvider)
+Mox.defmock(BlocksStorageMock, for: Astarte.Flow.Blocks.Storage)
 Mox.defmock(PipelinesStorageMock, for: Astarte.Flow.Pipelines.Storage)
 Mox.defmock(FlowsStorageMock, for: Astarte.Flow.Flows.Storage)
 Mox.defmock(PublicKeyProviderMock, for: Astarte.Flow.Auth.RealmPublicKeyProvider)
