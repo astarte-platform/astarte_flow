@@ -20,7 +20,10 @@ defmodule Astarte.Flow.PipelineBuilder do
   require Logger
   @moduledoc false
 
+  alias Astarte.Flow.Blocks
+
   alias Astarte.Flow.Blocks.{
+    Block,
     Container,
     DeviceEventsProducer,
     DynamicVirtualDevicePool,
@@ -38,13 +41,13 @@ defmodule Astarte.Flow.PipelineBuilder do
     end
   end
 
-  def build(pipeline_desc, config \\ %{}) do
+  def build(pipeline_desc, realm, config \\ %{}) do
     maybe_blocks =
       with {:ok, parsed} <- parse(pipeline_desc) do
         Enum.map(parsed, fn {block, opts_list} ->
           opts = Enum.into(opts_list, %{})
 
-          setup_block(block, opts, config)
+          setup_block(block, realm, opts, config)
         end)
       end
 
@@ -69,7 +72,7 @@ defmodule Astarte.Flow.PipelineBuilder do
     |> Enum.map(fn {:error, {reason, blockname, details}} -> {blockname, {reason, details}} end)
   end
 
-  defp setup_block("astarte_devices_source", opts, config) do
+  defp setup_block("astarte_devices_source", _realm, opts, config) do
     %{
       "realm" => realm,
       "amqp_exchange" => amqp_exchange
@@ -97,7 +100,7 @@ defmodule Astarte.Flow.PipelineBuilder do
      ]}
   end
 
-  defp setup_block("container", opts, config) do
+  defp setup_block("container", _realm, opts, config) do
     %{
       "image" => image
     } = opts
@@ -120,7 +123,7 @@ defmodule Astarte.Flow.PipelineBuilder do
      ]}
   end
 
-  defp setup_block("split_map", opts, config) do
+  defp setup_block("split_map", _realm, opts, config) do
     key_action = eval!(Map.get(opts, "key_action", "replace"), config)
     delimiter = eval!(Map.get(opts, "delimiter", ""), config)
     fallback_action = eval!(Map.get(opts, "fallback_action", "pass_through"), config)
@@ -145,7 +148,7 @@ defmodule Astarte.Flow.PipelineBuilder do
   end
 
   # If it has target_devices, it's a normal VirtualDevicePool
-  defp setup_block("virtual_device_pool", %{"target_devices" => _} = opts, config) do
+  defp setup_block("virtual_device_pool", _realm, %{"target_devices" => _} = opts, config) do
     alias Astarte.Device.SimpleInterfaceProvider
 
     %{
@@ -176,7 +179,7 @@ defmodule Astarte.Flow.PipelineBuilder do
   end
 
   # If it has interfaces in the top level, it's a DynamicVirtualDevicePool
-  defp setup_block("virtual_device_pool", %{"interfaces" => _} = opts, config) do
+  defp setup_block("virtual_device_pool", _realm, %{"interfaces" => _} = opts, config) do
     alias Astarte.Device.SimpleInterfaceProvider
 
     pairing_url = Map.fetch!(opts, "pairing_url") |> eval!(config)
@@ -197,27 +200,15 @@ defmodule Astarte.Flow.PipelineBuilder do
     {:ok, DynamicVirtualDevicePool, opts}
   end
 
-  defp setup_block(block_name, opts, config) do
-    block_manifest = "#{:code.priv_dir(:astarte_flow)}/blocks/#{block_name}.json"
-
-    with {:ok, json} <- File.read(block_manifest),
-         {:ok, block_manifest} <- Jason.decode(json),
-         {:manifest, %{"schema" => schema, "beam_module" => beam_module}} <-
-           {:manifest, block_manifest},
+  defp setup_block(block_name, realm, opts, config) do
+    with {:ok, %Block{schema: schema, beam_module: mod}} <- Blocks.get_block(realm, block_name),
          resolved_schema = ExJsonSchema.Schema.resolve(schema),
-         module_atom = String.to_existing_atom(beam_module),
          {:ok, evaluated_opts} <- evaluate_opts(opts, config),
          {:jsonschema, :ok} <- {:jsonschema, Validator.validate(resolved_schema, evaluated_opts)} do
-      {:ok, module_atom, opts_to_keyword_list(evaluated_opts)}
+      {:ok, mod, opts_to_keyword_list(evaluated_opts)}
     else
-      {:error, :enoent} ->
+      {:error, :not_found} ->
         {:error, {:unknown_block, block_name, "block is not supported or not installed."}}
-
-      {:error, %Jason.DecodeError{}} ->
-        {:error, {:invalid_manifest, block_name, "invalid JSON block manifest."}}
-
-      {:manifest, _} ->
-        {:error, {:invalid_manifest, block_name, "invalid block manifest."}}
 
       {:jsonschema, {:error, errors}} ->
         {:error, {:invalid_block_options, block_name, errors}}
