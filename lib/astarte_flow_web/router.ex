@@ -33,6 +33,4 @@ defmodule Astarte.FlowWeb.Router do
 
     resources "/blocks", BlockController, param: "name", except: [:new, :edit, :update]
   end
-
-  get "/health", Astarte.FlowWeb.HealthController, :show
 end
