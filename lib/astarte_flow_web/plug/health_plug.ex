@@ -16,13 +16,22 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.HealthController do
-  use Astarte.FlowWeb, :controller
+defmodule Astarte.FlowWeb.HealthPlug do
+  @behaviour Plug
+  import Plug.Conn
 
-  action_fallback Astarte.FlowWeb.FallbackController
+  def init(_opts) do
+    nil
+  end
 
-  def show(conn, _params) do
+  def call(%{request_path: "/health", method: "GET"} = conn, _opts) do
     # TODO: this just returns 200 for now
-    resp(conn, :ok, "")
+    conn
+    |> send_resp(:ok, "")
+    |> halt()
+  end
+
+  def call(conn, _opts) do
+    conn
   end
 end

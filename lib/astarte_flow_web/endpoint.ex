@@ -40,6 +40,7 @@ defmodule Astarte.FlowWeb.Endpoint do
   end
 
   plug Plug.RequestId
+  plug Astarte.FlowWeb.HealthPlug
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
   plug Plug.Parsers,
