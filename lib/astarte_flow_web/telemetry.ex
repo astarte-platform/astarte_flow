@@ -88,8 +88,7 @@ defmodule Astarte.FlowWeb.Telemetry do
       ),
       counter("phoenix.router_dispatch.stop.count",
         tags: [:route, :method],
-        tag_values: &extract_router_tags/1,
-        unit: {:native, :second}
+        tag_values: &extract_router_tags/1
       )
     ]
   end
