@@ -86,7 +86,7 @@ defmodule Astarte.Flow.MixProject do
       {:telemetry_metrics_prometheus_core, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},
       {:gettext, "~> 0.11"},
-      {:plug_cowboy, "~> 2.1"},
+      {:plug_cowboy, "~> 2.2"},
       {:guardian, "~> 2.0"},
       {:xandra, "~> 0.12"},
       {:skogsra, "~> 2.0"},
