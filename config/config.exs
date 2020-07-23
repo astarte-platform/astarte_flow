@@ -33,7 +33,7 @@ config :astarte_flow, Astarte.FlowWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "o/WvTw7d0OPFuYFKe9Wk0MtjJsUaiX+g+JkkZIfhg18frniYdbQnZ1DC0V2gZVY4",
   render_errors: [view: Astarte.FlowWeb.ErrorView, accepts: ~w(json)],
-  pubsub: [name: Astarte.Flow.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub_server: Astarte.Flow.PubSub
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
