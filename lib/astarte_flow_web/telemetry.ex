@@ -107,6 +107,11 @@ defmodule Astarte.FlowWeb.Telemetry do
     %{controller: controller, method: method}
   end
 
+  # This handles the cases where we don't have a :phoenix_controller key in conn.private
+  defp extract_phoenix_buckets_metadata(%{conn: %{method: method}}) do
+    %{controller: "unknown", method: method}
+  end
+
   defp extract_status(%{conn: %{status: status}}) do
     %{status: status}
   end
