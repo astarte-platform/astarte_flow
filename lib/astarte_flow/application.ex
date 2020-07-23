@@ -34,6 +34,7 @@ defmodule Astarte.Flow.Application do
     # List all child processes to be supervised
     children =
       [
+        Astarte.FlowWeb.Telemetry,
         {Phoenix.PubSub, name: Astarte.Flow.PubSub},
         {Registry, keys: :unique, name: Astarte.Flow.Flows.Registry},
         {Registry, keys: :duplicate, name: Astarte.Flow.Flows.RealmRegistry},
