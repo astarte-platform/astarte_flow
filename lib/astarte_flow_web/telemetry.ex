@@ -88,8 +88,7 @@ defmodule Astarte.FlowWeb.Telemetry do
       ),
       counter("phoenix.router_dispatch.stop.count",
         tags: [:route, :method],
-        tag_values: &extract_router_tags/1,
-        unit: {:native, :second}
+        tag_values: &extract_router_tags/1
       )
     ]
   end
@@ -106,6 +105,11 @@ defmodule Astarte.FlowWeb.Telemetry do
          conn: %{private: %{phoenix_controller: controller}, method: method}
        }) do
     %{controller: controller, method: method}
+  end
+
+  # This handles the cases where we don't have a :phoenix_controller key in conn.private
+  defp extract_phoenix_buckets_metadata(%{conn: %{method: method}}) do
+    %{controller: "unknown", method: method}
   end
 
   defp extract_status(%{conn: %{status: status}}) do
