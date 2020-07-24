@@ -60,6 +60,7 @@ defmodule Astarte.Flow.Flows.Flow do
       :pipeline,
       :status,
       container_block_pids: [],
+      native_block_pids: [],
       block_pids: []
     ]
   end
@@ -144,21 +145,23 @@ defmodule Astarte.Flow.Flows.Flow do
   defp start_flow(realm, flow, pipeline, state) do
     id_prefix = "#{realm}-#{flow.name}"
 
-    with {:ok, {block_pids, container_block_pids, _}} <-
+    with {:ok, {block_pids, container_block_pids, native_block_pids, _}} <-
            start_blocks(id_prefix, pipeline, flow.config) do
       {:ok,
        %{
          state
          | block_pids: block_pids,
+           native_block_pids: native_block_pids,
            container_block_pids: container_block_pids
        }}
     end
   end
 
   defp start_blocks(id_prefix, pipeline, flow_config) do
-    Enum.reduce_while(pipeline, {:ok, {[], [], 0}}, fn
+    Enum.reduce_while(pipeline, {:ok, {[], [], [], 0}}, fn
       # Special case: container block
-      {Container = block_module, block_opts}, {:ok, {block_pids, container_block_pids, block_idx}} ->
+      {Container = block_module, block_opts},
+      {:ok, {block_pids, container_block_pids, native_block_pids, block_idx}} ->
         # Pass a deterministic id
         id = id_prefix <> to_string(block_idx)
 
@@ -172,18 +175,22 @@ defmodule Astarte.Flow.Flows.Flow do
             new_block_pids = [pid | block_pids]
             new_container_block_pids = [pid | container_block_pids]
 
-            {:cont, {:ok, {new_block_pids, new_container_block_pids, block_idx + 1}}}
+            {:cont,
+             {:ok, {new_block_pids, new_container_block_pids, native_block_pids, block_idx + 1}}}
 
           {:error, reason} ->
             {:halt, {:error, reason}}
         end
 
-      {block_module, block_opts}, {:ok, {block_pids, container_block_pids, block_idx}} ->
+      {block_module, block_opts},
+      {:ok, {block_pids, container_block_pids, native_block_pids, block_idx}} ->
         case start_block(block_module, block_opts) do
           {:ok, pid} ->
             new_block_pids = [pid | block_pids]
+            new_native_block_pids = [pid | native_block_pids]
 
-            {:cont, {:ok, {new_block_pids, container_block_pids, block_idx + 1}}}
+            {:cont,
+             {:ok, {new_block_pids, container_block_pids, new_native_block_pids, block_idx + 1}}}
 
           {:error, reason} ->
             {:halt, {:error, reason}}
@@ -234,11 +241,13 @@ defmodule Astarte.Flow.Flows.Flow do
     %{
       realm: realm,
       flow: flow,
+      native_block_pids: native_block_pids,
       container_block_pids: container_block_pids
     } = state
 
     with {:ok, container_blocks} <- collect_container_blocks(container_block_pids),
-         :ok <- K8s.create_flow(realm, flow.name, container_blocks) do
+         # TODO: passing native_block_pids is ok here, since K8s just "counts" native blocks right now
+         :ok <- K8s.create_flow(realm, flow.name, container_blocks, native_block_pids) do
       Logger.debug("Flow #{flow.name} K8s containers created.")
       send(self(), :check_flow_status)
 
