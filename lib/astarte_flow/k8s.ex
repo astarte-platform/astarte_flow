@@ -83,11 +83,11 @@ defmodule Astarte.Flow.K8s do
     end
   end
 
-  @spec create_flow(String.t(), String.t(), list(ContainerBlock.t())) ::
+  @spec create_flow(String.t(), String.t(), list(ContainerBlock.t()), list(any)) ::
           :ok | {:error, atom() | binary()}
-  def create_flow(realm, flow_name, blocks) do
+  def create_flow(realm, flow_name, container_blocks, native_blocks) do
     with :ok <- try_delete_flow(flow_name),
-         resource = flow_custom_resource(realm, flow_name, blocks),
+         resource = flow_custom_resource(realm, flow_name, container_blocks, native_blocks),
          create_operation = Client.create(resource),
          {:ok, conn} <- Conn.lookup(:default),
          {:ok, _result} <- Client.run(create_operation, conn) do
@@ -105,8 +105,8 @@ defmodule Astarte.Flow.K8s do
     end
   end
 
-  @spec block_custom_resource(ContainerBlock.t()) :: map()
-  def block_custom_resource(block) do
+  @spec container_block_resource(ContainerBlock.t()) :: map()
+  def container_block_resource(block) do
     %ContainerBlock{
       block_id: block_id,
       config: config,
@@ -175,10 +175,12 @@ defmodule Astarte.Flow.K8s do
     }
   end
 
-  @spec flow_custom_resource(String.t(), String.t(), list(ContainerBlock.t())) :: map()
-  def flow_custom_resource(realm, flow_name, blocks) do
+  @spec flow_custom_resource(String.t(), String.t(), list(ContainerBlock.t()), list(any)) :: map()
+  def flow_custom_resource(realm, flow_name, container_blocks, native_blocks) do
     namespace = Config.target_namespace!()
     astarte_name = Config.astarte_instance!()
+
+    {native_blocks_cpu_millis, native_blocks_memory_mb} = native_blocks_resources(native_blocks)
 
     %{
       "apiVersion" => @api_version,
@@ -187,8 +189,20 @@ defmodule Astarte.Flow.K8s do
       "spec" => %{
         "astarte" => %{"name" => astarte_name},
         "astarteRealm" => realm,
-        "blocks" => Enum.map(blocks, &block_custom_resource/1)
+        "nativeBlocks" => length(native_blocks),
+        "nativeBlocksResources" => %{
+          "cpu" => "#{native_blocks_cpu_millis}m",
+          "memory" => "#{native_blocks_memory_mb}M"
+        },
+        "blocks" => Enum.map(container_blocks, &container_block_resource/1)
       }
     }
+  end
+
+  defp native_blocks_resources(native_blocks) do
+    Enum.reduce(native_blocks, {0, 0}, fn _block, {cpu_millis, mem_mb} ->
+      # TODO: for now we just add 5 millicpu and 1MB for each native block
+      {cpu_millis + 5, mem_mb + 1}
+    end)
   end
 end
