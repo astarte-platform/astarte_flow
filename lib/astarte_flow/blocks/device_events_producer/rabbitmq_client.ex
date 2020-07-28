@@ -21,6 +21,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.RabbitMQClient do
     Basic,
     Channel,
     Connection,
+    Exchange,
     Queue
   }
 
@@ -61,6 +62,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.RabbitMQClient do
     with {:ok, conn} <- Connection.open(config.connection),
          {:ok, chan} <- Channel.open(conn),
          :ok <- Basic.qos(chan, prefetch_count: config.prefetch_count),
+         :ok <- Exchange.declare(chan, config.exchange, :direct, durable: true),
          {:ok, _queue} <- Queue.declare(chan, config.queue, auto_delete: true),
          :ok <- Queue.bind(chan, config.queue, config.exchange, routing_key: config.routing_key) do
       {:ok, chan}
