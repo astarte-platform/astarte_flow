@@ -35,6 +35,9 @@ config :astarte_flow, Astarte.FlowWeb.Endpoint,
   render_errors: [view: Astarte.FlowWeb.ErrorView, accepts: ~w(json)],
   pubsub_server: Astarte.Flow.PubSub
 
+# Disable phoenix logger since we're using PlugLoggerWithMeta
+config :phoenix, :logger, false
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 

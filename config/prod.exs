@@ -32,7 +32,29 @@ config :astarte_flow, Astarte.FlowWeb.Endpoint,
   server: true
 
 # Do not print debug messages in production
-config :logger, level: :info
+config :logger,
+  compile_time_purge_matching: [
+    [level_lower_than: :info]
+  ]
+
+config :logger, :console,
+  format: {PrettyLog.LogfmtFormatter, :format},
+  metadata: [
+    :method,
+    :request_path,
+    :status_code,
+    :elapsed,
+    :realm,
+    :module,
+    :function,
+    :request_id,
+    :flow,
+    :message,
+    :data,
+    :status,
+    :body,
+    :tag
+  ]
 
 config :k8s,
   clusters: %{

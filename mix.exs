@@ -87,6 +87,8 @@ defmodule Astarte.Flow.MixProject do
       {:telemetry_poller, "~> 0.4"},
       {:gettext, "~> 0.11"},
       {:plug_cowboy, "~> 2.2"},
+      {:plug_logger_with_meta, "~> 0.1"},
+      {:pretty_log, "~> 0.1"},
       {:guardian, "~> 2.0"},
       {:xandra, "~> 0.12"},
       {:skogsra, "~> 2.0"},
