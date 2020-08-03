@@ -75,19 +75,22 @@ defmodule Astarte.Flow.PipelineBuilder do
       "amqp_exchange" => amqp_exchange
     } = opts
 
+    evaluated_exchange = eval!(amqp_exchange, config)
+    evaluated_realm = eval!(realm, config)
+
     amqp_routing_key = Map.get(opts, "amqp_routing_key", "")
     target_devices = Map.get(opts, "target_devices")
 
     # TODO: we should go for a proper validation system
-    unless amqp_exchange =~ ~r"^astarte_events_#{realm}_[a-zA-Z0-9_\.\:]+$" do
+    unless evaluated_exchange =~ ~r"^astarte_events_#{evaluated_realm}_[a-zA-Z0-9_\.\:]+$" do
       raise "exchange name not allowed"
     end
 
     {:ok, DeviceEventsProducer,
      [
-       exchange: amqp_exchange,
-       routing_key: amqp_routing_key,
-       realm: eval!(realm, config),
+       exchange: evaluated_exchange,
+       routing_key: eval!(amqp_routing_key, config),
+       realm: evaluated_realm,
        target_devices: eval!(target_devices, config),
        connection: Config.default_amqp_connection!(),
        prefetch_count: Config.default_amqp_prefetch_count!()
