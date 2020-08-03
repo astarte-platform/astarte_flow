@@ -41,5 +41,19 @@ config :astarte_flow, :blocks_storage_mod, BlocksStorageMock
 
 config :astarte_flow, :realm_public_key_provider, PublicKeyProviderMock
 
+config :logger, :console,
+  format: {PrettyLog.UserFriendlyFormatter, :format},
+  metadata: [
+    :method,
+    :request_path,
+    :status_code,
+    :elapsed,
+    :realm,
+    :module,
+    :function,
+    :request_id,
+    :tag
+  ]
+
 # Print only warnings and errors during test
 config :logger, level: :warn
