@@ -28,10 +28,23 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
   @realm "test"
 
   @name "my-pipeline"
-  @source ~s'random_source | http_sink.url("http://example.com/my_url")'
+  @source ~s'random_source | http_sink.url(${$.config.url})'
   @description "My super useful pipeline"
+  @schema %{
+    "$id" => "https://astarte-platform.org/specs/astarte_flow/to_json.json",
+    "$schema" => "http://json-schema.org/draft-04/schema#",
+    "title" => "PipelineConfig",
+    "type" => "object",
+    "additionalProperties" => false,
+    "properties" => %{
+      "url" => %{
+        "type" => "string",
+        "description" => "The URL of the HTTP sink"
+      }
+    }
+  }
 
-  @pipeline %Pipeline{name: @name, source: @source, description: @description}
+  @pipeline %Pipeline{name: @name, source: @source, description: @description, schema: @schema}
 
   setup %{conn: conn} do
     jwt = AuthTestHelper.gen_jwt_all_access_token()
@@ -77,7 +90,8 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
       assert %{
                "name" => @name,
                "source" => @source,
-               "description" => @description
+               "description" => @description,
+               "schema" => @schema
              } == json_response(conn, 200)["data"]
     end
 
@@ -139,6 +153,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         assert pipeline.name == @name
         assert pipeline.description == @description
         assert pipeline.source == @source
+        assert pipeline.schema == @schema
 
         :ok
       end)
@@ -152,7 +167,8 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
       params = %{
         name: @name,
         description: @description,
-        source: @source
+        source: @source,
+        schema: @schema
       }
 
       create_conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
@@ -160,7 +176,8 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
       assert %{
                "name" => @name,
                "source" => @source,
-               "description" => @description
+               "description" => @description,
+               "schema" => @schema
              } == json_response(create_conn, 201)["data"]
 
       show_conn = get(conn, Routes.pipeline_path(conn, :show, @realm, @name))
@@ -168,7 +185,8 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
       assert %{
                "name" => @name,
                "source" => @source,
-               "description" => @description
+               "description" => @description,
+               "schema" => @schema
              } == json_response(show_conn, 200)["data"]
     end
 
