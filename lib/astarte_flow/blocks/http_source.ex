@@ -73,6 +73,8 @@ defmodule Astarte.Flow.Blocks.HttpSource do
     * `:polling_interval_ms` - The interval between two consecutive GET requests, in milliseconds. Defaults to 1000 ms.
     * `:headers` - A list of `{key, value}` tuples where `key` and `value` are `String` and represent
     headers to be set in the GET request.
+    * `:ignore_ssl_errors` - If `true`, ignore SSL errors that happen while performing the request.
+    Defaults to `false`.
   """
   @spec start_link(options) :: GenServer.on_start()
         when options: [option],
@@ -95,7 +97,7 @@ defmodule Astarte.Flow.Blocks.HttpSource do
          headers = Keyword.get(opts, :headers, []),
          :ok <- validate_target_paths(target_paths),
          :ok <- validate_headers(headers) do
-      client = build_client(base_url, headers)
+      client = build_client(base_url, opts)
 
       state = %State{
         client: client,
@@ -253,7 +255,9 @@ defmodule Astarte.Flow.Blocks.HttpSource do
     {:error, :invalid_headers}
   end
 
-  defp build_client(base_url, headers) do
+  defp build_client(base_url, opts) do
+    headers = Keyword.get(opts, :headers, [])
+
     middleware = [
       Tesla.Middleware.FollowRedirects,
       Tesla.Middleware.DecompressResponse,
@@ -261,6 +265,15 @@ defmodule Astarte.Flow.Blocks.HttpSource do
       {Tesla.Middleware.Headers, headers}
     ]
 
-    Tesla.client(middleware)
+    if Keyword.get(opts, :ignore_ssl_errors) do
+      # Build adapter with insecure SSL to ignore SSL errors
+      adapter_opts = [insecure: true]
+      adapter = {Tesla.Adapter.Hackney, adapter_opts}
+
+      Tesla.client(middleware, adapter)
+    else
+      # Use default adapter
+      Tesla.client(middleware)
+    end
   end
 end

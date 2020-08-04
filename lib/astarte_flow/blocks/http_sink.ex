@@ -53,6 +53,8 @@ defmodule Astarte.Flow.Blocks.HttpSink do
     * `:url` (required) - The target URL for the POST request.
     * `:headers` - A list of `{key, value}` tuples where `key` and `value` are `String` and represent
     headers to be set in the POST request.
+    * `:ignore_ssl_errors` - If `true`, ignore SSL errors that happen while performing the request.
+    Defaults to `false`.
   """
   @spec start_link(options) :: GenServer.on_start()
         when options: [option],
@@ -71,7 +73,7 @@ defmodule Astarte.Flow.Blocks.HttpSink do
     headers = Keyword.get(opts, :headers, [])
 
     with :ok <- validate_headers(headers) do
-      client = build_client(url, headers)
+      client = build_client(url, opts)
 
       {:consumer, %Config{client: client}}
     else
@@ -128,12 +130,23 @@ defmodule Astarte.Flow.Blocks.HttpSink do
     {:error, :invalid_headers}
   end
 
-  defp build_client(url, headers) do
+  defp build_client(url, opts) do
+    headers = Keyword.get(opts, :headers, [])
+
     middleware = [
       {Tesla.Middleware.BaseUrl, url},
       {Tesla.Middleware.Headers, headers}
     ]
 
-    Tesla.client(middleware)
+    if Keyword.get(opts, :ignore_ssl_errors) do
+      # Build adapter with insecure SSL to ignore SSL errors
+      adapter_opts = [insecure: true]
+      adapter = {Tesla.Adapter.Hackney, adapter_opts}
+
+      Tesla.client(middleware, adapter)
+    else
+      # Use default adapter
+      Tesla.client(middleware)
+    end
   end
 end
