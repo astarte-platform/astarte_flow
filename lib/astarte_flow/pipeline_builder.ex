@@ -53,12 +53,13 @@ defmodule Astarte.Flow.PipelineBuilder do
 
     all_ok =
       Enum.all?(maybe_blocks, fn
-        {:ok, _b, _o} -> true
-        _ -> false
+        {:ok, _list} -> true
+        {:error, _list} -> false
       end)
 
     if all_ok do
-      {:ok, Enum.map(maybe_blocks, fn {:ok, block_module, opts} -> {block_module, opts} end)}
+      built_pipeline = Enum.flat_map(maybe_blocks, fn {:ok, sub_blocks} -> sub_blocks end)
+      {:ok, built_pipeline}
     else
       {:error, extract_errors(maybe_blocks)}
     end
@@ -66,7 +67,7 @@ defmodule Astarte.Flow.PipelineBuilder do
 
   defp extract_errors(maybe_blocks) do
     Enum.reject(maybe_blocks, fn
-      {:ok, _b, _o} -> true
+      {:ok, _sub_blocks} -> true
       _ -> false
     end)
     |> Enum.map(fn {:error, {reason, blockname, details}} -> {blockname, {reason, details}} end)
@@ -89,14 +90,17 @@ defmodule Astarte.Flow.PipelineBuilder do
       raise "exchange name not allowed"
     end
 
-    {:ok, DeviceEventsProducer,
+    {:ok,
      [
-       exchange: evaluated_exchange,
-       routing_key: eval!(amqp_routing_key, config),
-       realm: evaluated_realm,
-       target_devices: eval!(target_devices, config),
-       connection: Config.default_amqp_connection!(),
-       prefetch_count: Config.default_amqp_prefetch_count!()
+       {DeviceEventsProducer,
+        [
+          exchange: evaluated_exchange,
+          routing_key: eval!(amqp_routing_key, config),
+          realm: evaluated_realm,
+          target_devices: eval!(target_devices, config),
+          connection: Config.default_amqp_connection!(),
+          prefetch_count: Config.default_amqp_prefetch_count!()
+        ]}
      ]}
   end
 
@@ -114,12 +118,15 @@ defmodule Astarte.Flow.PipelineBuilder do
         other -> raise "Invalid type in container block: #{inspect(other)}"
       end
 
-    {:ok, Container,
+    {:ok,
      [
-       image: eval!(image, config),
-       type: type,
-       connection: Config.default_amqp_connection!(),
-       prefetch_count: Config.default_amqp_prefetch_count!()
+       {Container,
+        [
+          image: eval!(image, config),
+          type: type,
+          connection: Config.default_amqp_connection!(),
+          prefetch_count: Config.default_amqp_prefetch_count!()
+        ]}
      ]}
   end
 
@@ -144,7 +151,7 @@ defmodule Astarte.Flow.PipelineBuilder do
         "pass_through" -> :pass_through
       end
 
-    {:ok, MapSplitter, [key_action: key_action_opt, fallback_action: fallback_action_opt]}
+    {:ok, [{MapSplitter, [key_action: key_action_opt, fallback_action: fallback_action_opt]}]}
   end
 
   # If it has target_devices, it's a normal VirtualDevicePool
@@ -175,7 +182,7 @@ defmodule Astarte.Flow.PipelineBuilder do
         ]
       end
 
-    {:ok, VirtualDevicePool, [pairing_url: eval!(pairing_url, config), devices: devices]}
+    {:ok, [{VirtualDevicePool, [pairing_url: eval!(pairing_url, config), devices: devices]}]}
   end
 
   # If it has interfaces in the top level, it's a DynamicVirtualDevicePool
@@ -197,15 +204,18 @@ defmodule Astarte.Flow.PipelineBuilder do
       interface_provider: {SimpleInterfaceProvider, interfaces: interfaces}
     ]
 
-    {:ok, DynamicVirtualDevicePool, opts}
+    {:ok, [{DynamicVirtualDevicePool, opts}]}
   end
 
   defp setup_block(block_name, realm, opts, config) do
-    with {:ok, %Block{schema: schema, beam_module: mod}} <- Blocks.get_block(realm, block_name),
+    with {:ok, %Block{schema: schema} = block} <- Blocks.get_block(realm, block_name),
          resolved_schema = ExJsonSchema.Schema.resolve(schema),
          {:ok, evaluated_opts} <- evaluate_opts(opts, config),
          {:jsonschema, :ok} <- {:jsonschema, Validator.validate(resolved_schema, evaluated_opts)} do
-      {:ok, mod, opts_to_keyword_list(evaluated_opts)}
+      case block do
+        %Block{beam_module: mod} ->
+          {:ok, [{mod, opts_to_keyword_list(evaluated_opts)}]}
+      end
     else
       {:error, :not_found} ->
         {:error, {:unknown_block, block_name, "block is not supported or not installed."}}
@@ -215,7 +225,7 @@ defmodule Astarte.Flow.PipelineBuilder do
 
       {:error, {:json_path_multiple_values, path}} ->
         {:error,
-         {:invalid_json_path, block_name, ~s{JSONPath "#{path}" evaluates to multiple values.}}}
+         {:invalid_json_path, block_name, ~s[JSONPath "#{path}" evaluates to multiple values.]}}
 
       {:error, %ExJSONPath.ParsingError{message: message}} ->
         {:error, {:invalid_json_path, block_name, message}}
@@ -272,8 +282,8 @@ defmodule Astarte.Flow.PipelineBuilder do
     h
   end
 
-  def stream(pipeline_string, config \\ %{}) do
-    with {:ok, pipeline} <- build(pipeline_string, config),
+  def stream(pipeline_string, realm, config \\ %{}) do
+    with {:ok, pipeline} <- build(pipeline_string, realm, config),
          {:ok, pids} <- start_all(pipeline) do
       pids
       |> List.first()
