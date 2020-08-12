@@ -213,8 +213,14 @@ defmodule Astarte.Flow.PipelineBuilder do
          {:ok, evaluated_opts} <- evaluate_opts(opts, config),
          {:jsonschema, :ok} <- {:jsonschema, Validator.validate(resolved_schema, evaluated_opts)} do
       case block do
-        %Block{beam_module: mod} ->
+        %Block{beam_module: mod} when mod != nil ->
           {:ok, [{mod, opts_to_keyword_list(evaluated_opts)}]}
+
+        %Block{source: source} when source != nil ->
+          case build(source, realm, opts) do
+            {:ok, blocks} -> {:ok, blocks}
+            {:error, block_errors} -> {:error, {:internal_block_error, block_name, block_errors}}
+          end
       end
     else
       {:error, :not_found} ->
