@@ -34,14 +34,14 @@ defmodule Astarte.Flow.Blocks.Block do
     field :beam_module, :any, virtual: true
     field :source, :string
     field :type, :string
-    field :schema, :map
+    field :schema, :map, default: %{}
   end
 
   @doc false
   def changeset(%Block{} = block, attrs) do
     block
     |> cast(attrs, [:name, :source, :type, :schema])
-    |> validate_required([:name, :source, :type])
+    |> validate_required([:name, :source, :type, :schema])
     |> validate_format(:name, @block_name_format)
     |> validate_inclusion(:type, ~w(producer consumer producer_consumer))
     |> validate_source(:source)
