@@ -38,7 +38,7 @@ defmodule Astarte.FlowWeb.FlowView do
   end
 
   def render("error.json", %{error: %PipelineBuilder.Error{blocks: blocks}}) do
-    errors =
+    failures =
       Enum.map(blocks, fn
         {blockname, {:invalid_block_options, errors}} ->
           option_errors =
@@ -52,6 +52,6 @@ defmodule Astarte.FlowWeb.FlowView do
           %{block: blockname, error: error, message: message}
       end)
 
-    %{error: "pipeline_error", message: "Failed pipeline instantiation", errors: errors}
+    %{errors: %{detail: "Failed pipeline instantiation", failures: failures}}
   end
 end

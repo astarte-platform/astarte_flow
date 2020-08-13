@@ -41,6 +41,9 @@ defmodule Astarte.FlowWeb.FlowController do
         conn
         |> put_status(:unprocessable_entity)
         |> render("error.json", error: reason)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
