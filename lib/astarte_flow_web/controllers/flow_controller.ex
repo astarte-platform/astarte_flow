@@ -21,6 +21,7 @@ defmodule Astarte.FlowWeb.FlowController do
 
   alias Astarte.Flow.Flows
   alias Astarte.Flow.Flows.Flow
+  alias Astarte.Flow.PipelineBuilder.Error
 
   action_fallback Astarte.FlowWeb.FallbackController
 
@@ -35,6 +36,14 @@ defmodule Astarte.FlowWeb.FlowController do
       |> put_status(:created)
       |> put_resp_header("location", Routes.flow_path(conn, :show, realm, flow))
       |> render("show.json", flow: flow)
+    else
+      {:error, %Error{} = reason} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render("error.json", error: reason)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

@@ -19,6 +19,7 @@
 defmodule Astarte.FlowWeb.FlowView do
   use Astarte.FlowWeb, :view
   alias Astarte.FlowWeb.FlowView
+  alias Astarte.Flow.PipelineBuilder
 
   def render("index.json", %{flows: flows}) do
     %{data: render_many(flows, FlowView, "flow_name.json")}
@@ -34,5 +35,23 @@ defmodule Astarte.FlowWeb.FlowView do
 
   def render("flow_name.json", %{flow: flow}) do
     flow.name
+  end
+
+  def render("error.json", %{error: %PipelineBuilder.Error{blocks: blocks}}) do
+    failures =
+      Enum.map(blocks, fn
+        {blockname, {:invalid_block_options, errors}} ->
+          option_errors =
+            Enum.map(errors, fn {message, option} ->
+              %{option: option, message: message}
+            end)
+
+          %{block: blockname, error: "invalid_block_options", option_errors: option_errors}
+
+        {blockname, {error, message}} when is_binary(message) ->
+          %{block: blockname, error: error, message: message}
+      end)
+
+    %{errors: %{detail: "Failed pipeline instantiation", failures: failures}}
   end
 end
