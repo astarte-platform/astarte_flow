@@ -224,21 +224,41 @@ defmodule Astarte.Flow.PipelineBuilder do
               {:ok, blocks}
 
             {:error, %Error{blocks: block_errors}} ->
+              Logger.info("Failed to setup custom block due to nested block error.",
+                tag: "internal_block_error"
+              )
+
               {:error, {:internal_block_error, block_name, block_errors}}
           end
       end
     else
       {:error, :not_found} ->
+        _ = Logger.info("Failed to setup unknown block.", tag: "unknown_block_error")
         {:error, {:unknown_block, block_name, "block is not supported or not installed."}}
 
       {:jsonschema, {:error, errors}} ->
+        _ =
+          Logger.info("Failed to setup block due to options error.",
+            tag: "invalid_block_options_error"
+          )
+
         {:error, {:invalid_block_options, block_name, errors}}
 
       {:error, {:json_path_multiple_values, path}} ->
+        _ =
+          Logger.info("Failed to setup block due to JSONPath which evaluated to multiple values.",
+            tag: "json_path_multiple_values_error"
+          )
+
         {:error,
          {:invalid_json_path, block_name, ~s[JSONPath "#{path}" evaluates to multiple values.]}}
 
       {:error, %ExJSONPath.ParsingError{message: message}} ->
+        _ =
+          Logger.info("Failed to setup block due to invalid JSONPath.",
+            tag: "invalid_json_path_error"
+          )
+
         {:error, {:invalid_json_path, block_name, message}}
     end
   end
