@@ -41,13 +41,13 @@ defmodule Astarte.Flow.PipelineBuilder do
     end
   end
 
-  def build(pipeline_desc, realm, config \\ %{}) do
+  def build(realm, pipeline_desc, config \\ %{}) do
     maybe_blocks =
       with {:ok, parsed} <- parse(pipeline_desc) do
         Enum.map(parsed, fn {block, opts_list} ->
           opts = Enum.into(opts_list, %{})
 
-          setup_block(block, realm, opts, config)
+          setup_block(realm, block, opts, config)
         end)
       end
 
@@ -73,7 +73,7 @@ defmodule Astarte.Flow.PipelineBuilder do
     |> Enum.map(fn {:error, {reason, blockname, details}} -> {blockname, {reason, details}} end)
   end
 
-  defp setup_block("astarte_devices_source", _realm, opts, config) do
+  defp setup_block(_realm, "astarte_devices_source", opts, config) do
     %{
       "realm" => realm,
       "amqp_exchange" => amqp_exchange
@@ -104,7 +104,7 @@ defmodule Astarte.Flow.PipelineBuilder do
      ]}
   end
 
-  defp setup_block("container", _realm, opts, config) do
+  defp setup_block(_realm, "container", opts, config) do
     %{
       "image" => image
     } = opts
@@ -130,7 +130,7 @@ defmodule Astarte.Flow.PipelineBuilder do
      ]}
   end
 
-  defp setup_block("split_map", _realm, opts, config) do
+  defp setup_block(_realm, "split_map", opts, config) do
     key_action = eval!(Map.get(opts, "key_action", "replace"), config)
     delimiter = eval!(Map.get(opts, "delimiter", ""), config)
     fallback_action = eval!(Map.get(opts, "fallback_action", "pass_through"), config)
@@ -155,7 +155,7 @@ defmodule Astarte.Flow.PipelineBuilder do
   end
 
   # If it has target_devices, it's a normal VirtualDevicePool
-  defp setup_block("virtual_device_pool", _realm, %{"target_devices" => _} = opts, config) do
+  defp setup_block(_realm, "virtual_device_pool", %{"target_devices" => _} = opts, config) do
     alias Astarte.Device.SimpleInterfaceProvider
 
     %{
@@ -186,7 +186,7 @@ defmodule Astarte.Flow.PipelineBuilder do
   end
 
   # If it has interfaces in the top level, it's a DynamicVirtualDevicePool
-  defp setup_block("virtual_device_pool", _realm, %{"interfaces" => _} = opts, config) do
+  defp setup_block(_realm, "virtual_device_pool", %{"interfaces" => _} = opts, config) do
     alias Astarte.Device.SimpleInterfaceProvider
 
     pairing_url = Map.fetch!(opts, "pairing_url") |> eval!(config)
@@ -207,7 +207,7 @@ defmodule Astarte.Flow.PipelineBuilder do
     {:ok, [{DynamicVirtualDevicePool, opts}]}
   end
 
-  defp setup_block(block_name, realm, opts, config) do
+  defp setup_block(realm, block_name, opts, config) do
     with {:ok, %Block{schema: schema} = block} <- Blocks.get_block(realm, block_name),
          resolved_schema = ExJsonSchema.Schema.resolve(schema),
          {:ok, evaluated_opts} <- evaluate_opts(opts, config),
@@ -217,7 +217,7 @@ defmodule Astarte.Flow.PipelineBuilder do
           {:ok, [{mod, opts_to_keyword_list(evaluated_opts)}]}
 
         %Block{source: source} when source != nil ->
-          case build(source, realm, opts) do
+          case build(realm, source, opts) do
             {:ok, blocks} -> {:ok, blocks}
             {:error, block_errors} -> {:error, {:internal_block_error, block_name, block_errors}}
           end
@@ -288,8 +288,8 @@ defmodule Astarte.Flow.PipelineBuilder do
     h
   end
 
-  def stream(pipeline_string, realm, config \\ %{}) do
-    with {:ok, pipeline} <- build(pipeline_string, realm, config),
+  def stream(realm, pipeline_string, config \\ %{}) do
+    with {:ok, pipeline} <- build(realm, pipeline_string, config),
          {:ok, pids} <- start_all(pipeline) do
       pids
       |> List.first()
