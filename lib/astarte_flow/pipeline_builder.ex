@@ -31,6 +31,8 @@ defmodule Astarte.Flow.PipelineBuilder do
     VirtualDevicePool
   }
 
+  alias Astarte.Flow.PipelineBuilder.Error
+
   alias ExJsonSchema.Validator
   alias Astarte.Flow.Config
 
@@ -61,7 +63,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       built_pipeline = Enum.flat_map(maybe_blocks, fn {:ok, sub_blocks} -> sub_blocks end)
       {:ok, built_pipeline}
     else
-      {:error, extract_errors(maybe_blocks)}
+      {:error, %Error{blocks: extract_errors(maybe_blocks)}}
     end
   end
 
@@ -218,8 +220,11 @@ defmodule Astarte.Flow.PipelineBuilder do
 
         %Block{source: source} when source != nil ->
           case build(realm, source, opts) do
-            {:ok, blocks} -> {:ok, blocks}
-            {:error, block_errors} -> {:error, {:internal_block_error, block_name, block_errors}}
+            {:ok, blocks} ->
+              {:ok, blocks}
+
+            {:error, %Error{blocks: block_errors}} ->
+              {:error, {:internal_block_error, block_name, block_errors}}
           end
       end
     else
