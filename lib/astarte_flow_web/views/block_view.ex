@@ -22,7 +22,7 @@ defmodule Astarte.FlowWeb.BlockView do
   alias Astarte.FlowWeb.BlockView
 
   def render("index.json", %{blocks: blocks}) do
-    %{data: render_many(blocks, BlockView, "block_name.json")}
+    %{data: render_many(blocks, BlockView, "block.json")}
   end
 
   def render("show.json", %{block: block}) do

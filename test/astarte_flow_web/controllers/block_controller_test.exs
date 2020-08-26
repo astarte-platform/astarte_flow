@@ -76,7 +76,10 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
       conn = get(conn, Routes.block_path(conn, :index, @realm))
       blocks = json_response(conn, 200)["data"]
 
-      assert Enum.member?(blocks, @name)
+      user_block = Enum.find(blocks, &(&1["name"] == @name))
+      assert user_block["source"] == @source
+      assert user_block["type"] == @block_type
+      assert user_block["schema"] == @schema
     end
   end
 
