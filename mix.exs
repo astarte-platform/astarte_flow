@@ -62,7 +62,7 @@ defmodule Astarte.Flow.MixProject do
       {:astarte_device, github: "astarte-platform/astarte-device-sdk-elixir"},
       {:astarte_core, github: "astarte-platform/astarte_core"},
       {:cors_plug, "~> 2.0"},
-      {:cyanide, github: "ispirata/cyanide"},
+      {:cyanide, "~> 1.0"},
       {:certifi, "~> 2.5"},
       {:tortoise, "~> 0.9"},
       {:elixir_uuid, "~> 1.2"},
