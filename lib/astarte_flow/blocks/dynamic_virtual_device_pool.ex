@@ -31,6 +31,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool do
 
   alias Astarte.API.Pairing
   alias Astarte.Device
+  alias Astarte.Flow.Compat
   alias Astarte.Flow.Message
   alias Astarte.Flow.Blocks.DynamicVirtualDevicePool.DETSCredentialsStorage
   alias Astarte.Flow.VirtualDevicesSupervisor
@@ -52,7 +53,10 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool do
 
   ## Options
 
-    * `:pairing_url` (required) - URL of the Astarte Pairing API instance the devices will connect to, up to (and including) `/v1`.
+    * `:pairing_url` (required) - base URL of the Astarte Pairing API instance the devices will
+      connect to, e.g. `https://astarte.api.example.com/pairing` or `http://localhost:4003` for
+      a local installation. URL containing the API version suffix (i.e. `/v1`) are *deprecated*
+      and will be removed in a future release.
     * `:pairing_jwt_map` (required) - A map in the form `%{realm_name => jwt}` where jwt must be a JWT with the authorizations needed
       to register a device in that realm.
     * `:interface_provider` (required) - The `interface_provider` that will be used by the spawned devices.
@@ -77,7 +81,10 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool do
 
   @impl true
   def init(opts) do
-    pairing_url = Keyword.fetch!(opts, :pairing_url)
+    pairing_url =
+      Keyword.fetch!(opts, :pairing_url)
+      |> Compat.normalize_device_pairing_url()
+
     pairing_jwt_map = Keyword.fetch!(opts, :pairing_jwt_map)
     interface_provider = Keyword.fetch!(opts, :interface_provider)
     ignore_ssl_errors = Keyword.get(opts, :ignore_ssl_errors, false)
