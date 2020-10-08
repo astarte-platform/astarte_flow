@@ -29,6 +29,7 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
   require Logger
 
   alias Astarte.Device
+  alias Astarte.Flow.Compat
   alias Astarte.Flow.Message
   alias Astarte.Flow.VirtualDevicesSupervisor
 
@@ -37,7 +38,10 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
 
   ## Options
 
-    * `:pairing_url` (required) - URL of the Astarte Pairing API instance the devices will connect to, up to (and including) `/v1`.
+    * `:pairing_url` (required) - base URL of the Astarte Pairing API instance the devices will
+      connect to, e.g. `https://astarte.api.example.com/pairing` or `http://localhost:4003` for a
+      local installation. URL containing the API version suffix (i.e. `/v1`) are *deprecated* and
+      will be removed in a future release.
     * `:devices` (required) - A list of supported devices, each represented by its `device_options` (see "Device options" below).
     * `:ignore_ssl_errors` - A boolean to indicate wether devices have to ignore SSL errors when connecting to the broker. Defaults to `false`.
 
@@ -70,7 +74,10 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
 
   @impl true
   def init(opts) do
-    pairing_url = Keyword.fetch!(opts, :pairing_url)
+    pairing_url =
+      Keyword.fetch!(opts, :pairing_url)
+      |> Compat.normalize_device_pairing_url()
+
     devices = Keyword.fetch!(opts, :devices)
     ignore_ssl_errors = Keyword.get(opts, :ignore_ssl_errors, false)
 
