@@ -138,6 +138,13 @@ defmodule Astarte.Flow.Blocks.Container do
   end
 
   @impl true
+  def handle_demand(demand, state) when demand > 0 do
+    # TODO: for now we ignore the demand and just push
+    # events as they arrive from the container
+    {:noreply, [], state}
+  end
+
+  @impl true
   def handle_events(events, _from, state) do
     %State{
       amqp_client: amqp_client,
