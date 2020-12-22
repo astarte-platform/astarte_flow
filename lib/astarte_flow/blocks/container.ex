@@ -214,7 +214,7 @@ defmodule Astarte.Flow.Blocks.Container do
       image: image,
       config: config,
       inbound_routing_key: exchange_routing_key,
-      outbound_queues: [queue]
+      outbound_queues: outbound_queues
     } = state
 
     container_block = %ContainerBlock{
@@ -222,7 +222,7 @@ defmodule Astarte.Flow.Blocks.Container do
       image: image,
       config: config,
       exchange_routing_key: exchange_routing_key,
-      queue: queue,
+      queue: List.first(outbound_queues),
       # TODO: these are random values since we are currently forced to provide them to the struct
       cpu_limit: "1",
       memory_limit: "2048M",
