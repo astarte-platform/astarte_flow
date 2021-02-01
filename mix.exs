@@ -35,7 +35,8 @@ defmodule Astarte.Flow.MixProject do
         "coveralls.detail": :test,
         "coveralls.post": :test,
         "coveralls.html": :test
-      ]
+      ],
+      docs: docs()
     ]
   end
 
@@ -92,7 +93,15 @@ defmodule Astarte.Flow.MixProject do
       {:guardian, "~> 2.0"},
       {:xandra, "~> 0.12"},
       {:skogsra, "~> 2.0"},
-      {:castore, "~> 0.1.0"}
+      {:castore, "~> 0.1.0"},
+      {:ex_doc, "~> 0.22", only: :dev, runtime: false}
+    ]
+  end
+
+  # Add here additional documentation files
+  defp docs do
+    [
+      extras: Path.wildcard("guides/*.md")
     ]
   end
 end
