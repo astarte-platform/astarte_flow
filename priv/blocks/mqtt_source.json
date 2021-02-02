@@ -1,0 +1,62 @@
+{
+  "name": "mqtt_source",
+
+  "beam_module": "Elixir.Astarte.Flow.Blocks.MqttSource",
+  "type": "producer",
+
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/mqtt_source.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "MQTT Source options",
+    "description": "An Astarte Flow source that produces data from an MQTT connection.",
+    "type": "object",
+
+    "additionalProperties": false,
+    "required": ["broker_url", "subscriptions"],
+
+    "properties": {
+      "broker_url": {
+        "description": "The URL of the broker the source will connect to.",
+        "title": "Broker URL",
+        "type": "string"
+      },
+      "client_id": {
+        "description": "The client id used to connect. Defaults to a random string.",
+        "title": "Client ID",
+        "type": "string"
+      },
+      "ignore_ssl_errors": {
+        "default": false,
+        "description": "If true, accept invalid certificates (e.g. self-signed) when using SSL.",
+        "title": "Ignore SSL errors",
+        "type": "boolean"
+      },
+      "username": {
+        "description": "Username used to authenticate to the broker.",
+        "title": "Username",
+        "type": "string"
+      },
+      "password": {
+        "description": "Password used to authenticate to the broker.",
+        "title": "Password",
+        "type": "string"
+      },
+      "subscriptions": {
+        "description": "A non-empty list of topic filters to subscribe to.",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "title": "Subscriptions",
+        "type": "array",
+        "uniqueItems": true
+      },
+      "subtype": {
+        "default": "application/octet-stream",
+        "description": "A MIME type that will be put as `subtype` in the generated Messages. Defaults to `application/octet-stream`.",
+        "title": "Subtype",
+        "type": "string"
+      }
+    }
+  }
+}
