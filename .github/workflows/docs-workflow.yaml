@@ -22,8 +22,7 @@ jobs:
     steps:
     # Checkout the source
     - uses: actions/checkout@v2
-      with:
-        path: astarte
+        path: astarte_flow
     # Checkout the docs repository
     - uses: actions/checkout@v2
       with:
@@ -31,19 +30,22 @@ jobs:
         ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
         path: docs
     - uses: actions/setup-elixir@v1.5.0
+      working-directory: ./astarte_flow
       with:
         otp-version: 21.3
         elixir-version: 1.8.2
     - name: Install Dependencies
+      working-directory: ./astarte_flow
       run: mix deps.get
     - name: Build Docs
+      working-directory: ./astarte_flow
       run: mix docs
     - name: Copy Docs
       run: |
         export DOCS_DIRNAME="flow/$(echo ${{ github.ref }} | sed 's,refs/heads/,,' | sed 's/master/snapshot/g' | sed 's/release-//g')"
         rm -rf docs/$DOCS_DIRNAME
         mkdir -p docs/$DOCS_DIRNAME
-        cp -r doc/* docs/$DOCS_DIRNAME/
+        cp -r astarte_flow/doc/* docs/$DOCS_DIRNAME/
     - name: Checkout Swagger UI
       uses: actions/checkout@v2
       with:
@@ -56,7 +58,7 @@ jobs:
         mkdir docs/$DOCS_DIRNAME/api
         cp swagger-ui/dist/* docs/$DOCS_DIRNAME/api
         rm docs/$DOCS_DIRNAME/api/index.html
-        cp priv/static/swagger-ui-index.html docs/$DOCS_DIRNAME/api/index.html
+        cp astarte_flow/priv/static/swagger-ui-index.html docs/$DOCS_DIRNAME/api/index.html
     - name: Commit files
       working-directory: ./docs
       run: |
