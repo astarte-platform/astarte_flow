@@ -1,8 +1,9 @@
 # Overview
 
 Astarte Flow is a data processing framework which allows you to build reusable pipelines to process,
-classify and analyze your data. Flow integrates seamlessly with Astarte and Kubernetes, letting you
-focus on your algorithms while it handles data retrieval, routing and orchestration.
+classify and analyze your data. Flow integrates seamlessly with
+[Astarte](https://docs.astarte-platform.org/latest) and [Kubernetes](https://kubernetes.io), letting
+you focus on your algorithms while it handles data retrieval, routing and orchestration.
 
 One of Astarte Flow key features is the ability to provide your own container as a data
 processing block, without having to worry about all the low level details needed to deploy it inside
