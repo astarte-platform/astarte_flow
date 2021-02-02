@@ -31,7 +31,6 @@ jobs:
         ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
         path: docs
     - uses: actions/setup-elixir@v1.5.0
-      working-directory: ./astarte_flow
       with:
         otp-version: 21.3
         elixir-version: 1.8.2
