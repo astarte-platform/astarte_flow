@@ -101,6 +101,8 @@ defmodule Astarte.Flow.MixProject do
   # Add here additional documentation files
   defp docs do
     [
+      main: "0001-overview",
+      extra_section: "Guides",
       extras: Path.wildcard("guides/*/*.md"),
       groups_for_extras: [
         "Core Concepts": ~r"/core_concepts/",
