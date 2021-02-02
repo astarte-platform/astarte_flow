@@ -1,0 +1,563 @@
+openapi: 3.0.1
+servers:
+  - url: '{base_url}/v1'
+    variables:
+      base_url:
+        default: https://astarte.example.com/flow
+        description: >-
+          The base URL you're serving Astarte Flow from. This should point to the base
+          path from which Flow API is served. If you are using a standard Astarte 1.0
+          installation, with Flow deployed, it is most likely
+          `https://<your Astarte host>/flow`.
+info:
+  description: >-
+    This API allows interacting with Flow and all its resources (pipelines, blocks, flows).
+  version: 0.1.0
+  title: Flow API
+  contact:
+    email: info@ispirata.com
+tags:
+  - name: blocks
+    description: APIs for managing Blocks.
+  - name: pipelines
+    description: APIs for managing Pipelines.
+  - name: flows
+    description: APIs for managing Flows.
+paths:
+  /{realm_name}/blocks:
+    get:
+      tags:
+        - blocks
+      summary: Get all blocks
+      description: Returns a list of all existing blocks, both default and user-defined.
+      operationId: getBlocks
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: string
+                example:
+                  data:
+                    - my_custom_block
+                    - http_source
+                    - http_sink
+                    - lua_mapper
+    post:
+      tags:
+        - blocks
+      summary: Create a block
+      description: |
+        Creates a new user-defined block, using the provided source.
+
+        This block can be used as a normal block inside pipelines, and allows
+        the user to create small reusable pipelines usable as single block in
+        larger pipelines
+      operationId: createBlock
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserDefinedBlock'
+      requestBody:
+        $ref: '#/components/requestBodies/createBlockBody'
+  '/{realm_name}/blocks/{block_name}':
+    get:
+      tags:
+        - blocks
+      summary: Get block
+      description: Retrieves a blocks's JSON description.
+      operationId: getBlock
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+        - name: block_name
+          in: path
+          description: Block name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/DefaultBlock'
+                      - $ref: '#/components/schemas/UserDefinedBlock'
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - blocks
+      summary: Delete block
+      description: Deletes a user-defined block
+      operationId: deleteBlock
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+        - name: block_name
+          in: path
+          description: Block name
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+
+  '/{realm_name}/pipelines':
+    get:
+      tags:
+        - pipelines
+      summary: Get all pipelines
+      description: Returns a list of all existing pipelines
+      operationId: getPipelines
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: string
+                example:
+                  data:
+                    - my-first-pipeline
+                    - my-second-pipeline
+    post:
+      tags:
+        - pipelines
+      summary: Create a pipeline
+      description: |
+        Creates a new pipeline, using the provided source.
+
+        The source of the pipeline can contain parameters that will be defined
+        when instantiating a Flow using this pipeline. This makes it possible to
+        create reusable pipelines that can be specialized when instantiated in
+        a Flow.
+      operationId: createPipeline
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Pipeline'
+      requestBody:
+        $ref: '#/components/requestBodies/createPipelineBody'
+  '/{realm_name}/pipelines/{pipeline_name}':
+    get:
+      tags:
+        - pipelines
+      summary: Get pipeline
+      description: Retrieves an existing pipeline description in JSON format.
+      operationId: getPipeline
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+        - name: pipeline_name
+          in: path
+          description: Pipeline name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Pipeline'
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - pipelines
+      summary: Delete pipeline
+      description: |
+        Deletes a pipeline.
+
+        Note that deleting a pipeline will not delete the Flows that are
+        currently using this pipeline, this must be done manually.
+      operationId: deletePipeline
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+        - name: pipeline_name
+          in: path
+          description: Pipeline name
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+  '/{realm_name}/flows':
+    get:
+      tags:
+        - flows
+      summary: Get all flows
+      description: Returns a list of all existing flows
+      operationId: getFlows
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: string
+                example:
+                  data:
+                    - my-first-flow
+                    - my-second-flow
+    post:
+      tags:
+        - flows
+      summary: Create a flow
+      description: |
+        Creates a new flow, using the provided pipeline and configuration.
+
+        A Flow is a specialized instance of a pipeline, with concrete values
+        for all the parameters defined in the pipeline.
+      operationId: createFlow
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Flow'
+      requestBody:
+        $ref: '#/components/requestBodies/createFlowBody'
+  '/{realm_name}/flows/{flow_name}':
+    get:
+      tags:
+        - flows
+      summary: Get flow
+      description: Retrieves an existing Flow description in JSON format.
+      operationId: getFlow
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+        - name: flow_name
+          in: path
+          description: Flow name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Flow'
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - flows
+      summary: Delete flow
+      description: |
+        Deletes a flow, stopping its data processing.
+      operationId: deleteFlow
+      security:
+        - JWT: []
+      parameters:
+        - name: realm_name
+          in: path
+          description: Name of the target realm.
+          required: true
+          schema:
+            type: string
+        - name: flow_name
+          in: path
+          description: Flow name
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Success
+components:
+  securitySchemes:
+    JWT:
+      type: apiKey
+      name: Authorization
+      in: header
+      description: >
+        To access APIs a valid JWT token must be passed in all requests
+        in the `Authorization` header. This token should be signed with
+        the private key belonging to the target realm and should have
+        the appropriate `a_f` authorization claims to perform the
+        requested operation.
+
+        The following syntax must be used in the `Authorization` header :
+          `Bearer xxxxxx.yyyyyyy.zzzzzz`
+
+        Consult Astarte Flow documentation for more information about
+        the authentication and authorization mechanism.
+  requestBodies:
+    createBlockBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              data:
+                $ref: '#/components/schemas/UserDefinedBlock'
+      description: A Block object.
+      required: true
+    createFlowBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              data:
+                $ref: '#/components/schemas/Flow'
+      description: A Flow object.
+      required: true
+    createPipelineBody:
+      content:
+        application/json:
+          schema:
+            properties:
+              data:
+                $ref: '#/components/schemas/Pipeline'
+      description: A Pipeline object.
+      required: true
+  schemas:
+    BlockType:
+      type: string
+      description: The type of the block, i.e. its position in the pipeline.
+      enum:
+        - producer
+        - consumer
+        - producer_consumer
+    ConfigSchema:
+      type: object
+      description: >-
+        A JSON Schema object (implementing this schema http://json-schema.org/draft-04/schema#)
+        used to validate a pipeline (or block) configuration.
+      example:
+        $id: https://example.com/specs/astarte_flow/blocks/my_custom_block.json
+        $schema: http://json-schema.org/draft-04/schema#
+        title: "MyCustomBlockOptions"
+        type: "object"
+        additionalProperties: false
+        required:
+          - webhook_url
+        properties:
+          webhook_url:
+            type: string
+            description: the target URL to send data to
+    DefaultBlock:
+      type: object
+      required:
+        - name
+        - beam_module
+        - type
+        - schema
+      properties:
+        name:
+          type: string
+          pattern: '^[a-zA-Z][a-zA-Z0-9-_]*$'
+          example: my_custom_block
+        beam_module:
+          type: string
+          example: Astarte.Flow.Blocks.Filter
+        type:
+          $ref: '#/components/schemas/BlockType'
+        schema:
+          $ref: '#/components/schemas/ConfigSchema'
+    Flow:
+      type: object
+      required:
+        - name
+        - pipeline
+      properties:
+        name:
+          type: string
+          description: >-
+            The name of the flow. Since this serves as id, it must be unique at the realm level.
+          pattern: '^[a-zA-Z][a-zA-Z0-9-]*$'
+          example: my-flow
+        pipeline:
+          type: string
+          description: >-
+            The name of the pipeline this Flow will be an instance of.
+          example: my-pipeline
+        config:
+          type: object
+          description: >-
+            The configuration value that will be used to populate the pipeline parameters.
+
+            If the pipeline defines a schema, the config will be validated against it.
+          example:
+            webhook_url: https://example.com/webhook
+    Pipeline:
+      type: object
+      required:
+        - name
+        - source
+      properties:
+        name:
+          type: string
+          description: >-
+            The name of the pipeline. Since this serves as id, it must be unique at the realm level.
+          pattern: '^[a-zA-Z][a-zA-Z0-9-]*$'
+          example: my-pipeline
+        source:
+          $ref: '#/components/schemas/PipelineSource'
+        description:
+          type: string
+          description: An optional pipeline description.
+          example: This pipeline performs linear regression with the data from the last 7 days
+        schema:
+          $ref: '#/components/schemas/ConfigSchema'
+    PipelineSource:
+      type: string
+      description: |
+        A pipeline DSL source, which can also be used to define a custom block.
+
+        Special care must be taken to correctly escape double quotes inside the pipeline
+        source when embedding it inside a JSON. Newlines must be represented as `\n`.
+      example: |
+        random_source
+        .key("test")
+        | http_sink
+        .url(${$.config.webhook_url})
+    UserDefinedBlock:
+      type: object
+      required:
+        - name
+        - source
+        - type
+        - schema
+      properties:
+        name:
+          type: string
+          description:
+            The name of the block. Since this serves as id, it must be unique at the realm level.
+          pattern: '^[a-zA-Z][a-zA-Z0-9-_]*$'
+          example: my_custom_block
+        source:
+          $ref: '#/components/schemas/PipelineSource'
+        type:
+          $ref: '#/components/schemas/BlockType'
+        schema:
+          $ref: '#/components/schemas/ConfigSchema'

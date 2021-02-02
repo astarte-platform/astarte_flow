@@ -1,0 +1,70 @@
+name: Docs generation for Github Pages
+
+on:
+  push:
+    paths:
+    # Documentation pages
+    - 'guides/**'
+    # Swagger files
+    - 'priv/static/*.yaml'
+    # The action itself
+    - '.github/workflows/docs-workflow.yaml'
+    branches:
+    # Create the snapshot only when it matters
+    - 'master'
+    - 'release-*'
+  # Run on branch/tag creation
+  create:
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    # Checkout the source
+    - uses: actions/checkout@v2
+      with:
+        path: astarte
+    # Checkout the docs repository
+    - uses: actions/checkout@v2
+      with:
+        repository: astarte-platform/docs
+        ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
+        path: docs
+    - uses: actions/setup-elixir@v1.5.0
+      with:
+        otp-version: 21.3
+        elixir-version: 1.8.2
+    - name: Install Dependencies
+      run: mix deps.get
+    - name: Build Docs
+      run: mix docs
+    - name: Copy Docs
+      run: |
+        export DOCS_DIRNAME="flow/$(echo ${{ github.ref }} | sed 's,refs/heads/,,' | sed 's/master/snapshot/g' | sed 's/release-//g')"
+        rm -rf docs/$DOCS_DIRNAME
+        mkdir -p docs/$DOCS_DIRNAME
+        cp -r doc/* docs/$DOCS_DIRNAME/
+    - name: Checkout Swagger UI
+      uses: actions/checkout@v2
+      with:
+        repository: swagger-api/swagger-ui
+        path: swagger-ui
+        ref: 'v3.25.0'
+    - name: Copy all Swagger UI files
+      run: |
+        export DOCS_DIRNAME="flow/$(echo ${{ github.ref }} | sed 's,refs/heads/,,' | sed 's/master/snapshot/g' | sed 's/release-//g')"
+        mkdir docs/$DOCS_DIRNAME/api
+        cp swagger-ui/dist/* docs/$DOCS_DIRNAME/api
+        rm docs/$DOCS_DIRNAME/api/index.html
+        cp priv/static/swagger-ui-index.html docs/$DOCS_DIRNAME/api/index.html
+    - name: Commit files
+      working-directory: ./docs
+      run: |
+        git config --local user.email "astarte-machine@ispirata.com"
+        git config --local user.name "Astarte Bot"
+        git add .
+        git commit -m "Update Flow Documentation"
+    - name: Push changes
+      working-directory: ./docs
+      run: |
+        git push origin master
