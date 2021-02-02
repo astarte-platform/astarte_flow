@@ -112,3 +112,15 @@ astarte_devices_source
     .realms([{realm: ${$.config.realm}, jwt: ${$.config.pairing_jwt}}])
     .interfaces(${$.config.interfaces})
 ```
+
+# Installing a Pipeline
+
+Pipelines can be installed using Astarte Flow [REST API](api/index.html#/pipelines/createPipeline)
+or using Astarte Dashboard.
+
+# Running a Pipeline
+
+Pipelines are just blueprints and they must be instantiated so they can start processing messages,
+once instantiated they are called [Flows](). Pipelines must be installed in order to be instantiated,
+a pipeline which has not been instantiated does not consume any resource (and it does not process
+any message).
