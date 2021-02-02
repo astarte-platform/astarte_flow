@@ -22,6 +22,7 @@ jobs:
     steps:
     # Checkout the source
     - uses: actions/checkout@v2
+      with:
         path: astarte_flow
     # Checkout the docs repository
     - uses: actions/checkout@v2
