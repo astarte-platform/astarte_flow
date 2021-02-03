@@ -25,10 +25,11 @@ new block implementation requires writing a JSON Schema for it.
 # Implementing a Block
 
 Blocks can be implemented using different technologies:
-* As a Docker container using any language suitable for Docker (e.g. Python), which is the best
-  option for implementing custom complex algorithms
+* As a Docker container using any language suitable for [Docker](https://docs.docker.com/) (e.g.
+  [Python](https://github.com/astarte-platform/astarte_flow_sdk_python)), which is the best option
+  for implementing custom complex algorithms
 * As a chain of existing blocks (a pipeline), that is the go-to solution when a block can be
   implemented by just chaining blocks together
-* As a Lua 5.2 script, that is the idea solution for small adjustments and simple data
-  transformations, such as applying a conversion formula
-* As an Elixir module, that is how built-in blocks are implemented
+* As a [Lua 5.2]((https://www.lua.org/manual/5.2/)) script, that is the idea solution for small
+  adjustments and simple data transformations, such as applying a conversion formula
+* As an [Elixir](https://elixir-lang.org/) module, that is how built-in blocks are implemented
