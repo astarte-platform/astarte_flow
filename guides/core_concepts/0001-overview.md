@@ -23,6 +23,8 @@ These are some of the main concepts used in Astarte Flow and covered in this gui
   representing a specific computation.
 - [Flows](0005-flows.html) are specific instances of a pipeline, created providing concrete values
   to the parametric values of a pipeline.
+- [Streams](006-streams.html) are sequences of messages sharing the same key and processes by the
+  same Flow.
 
 The two main ways to interact with Flow are through the [pipeline builder]() and through the [REST
 API](api/index.html).
