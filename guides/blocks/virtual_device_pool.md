@@ -8,7 +8,7 @@ devices.
 
 Information about Device ID, interfaces and paths are deduced from the message key, so it's
 important that the key conforms to the [supported format](#accepted-input-messages). You can use a
-[lua_map block](0112-lua_map.html) to add the appropriate key to your message.
+[lua_map block](lua_map.html) to add the appropriate key to your message.
 
 Please refer to [Astarte documentation](https://docs.astarte-platform.org) to more information about
 Astarte concepts like Device IDs, Interfaces etc.
