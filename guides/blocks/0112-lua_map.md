@@ -48,6 +48,7 @@ All other existing message attributes are taken as-is from the input message.
 [...]
 | lua_map
   .script("""
+    new_message = {};
     new_message.key = config.prefix .. "/celsius";
     new_message.data = (message.data - 32) / 1.8;
     return new_message;
