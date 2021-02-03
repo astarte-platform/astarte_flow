@@ -19,8 +19,8 @@ These are some of the main concepts used in Astarte Flow and covered in this gui
 - [Blocks](0003-blocks.html) are the fundamental processing unit of Astarte Flow.
   [Container Blocks](0111-container.html) are a special kind of block which allows you to process
   your data with a Docker container.
-- [Pipelines]() are collections of blocks providing routing logic and representing a specific
-  computation.
+- [Pipelines](0004-pipelines.html) are collections of blocks providing routing logic and
+  representing a specific computation.
 - [Flows]() are specific instances of a pipeline, created providing concrete values to the
   parametric values of a pipeline.
 
