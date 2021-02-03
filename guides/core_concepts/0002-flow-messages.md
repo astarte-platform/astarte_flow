@@ -4,7 +4,7 @@ Astarte Flow main focus is messages processing.
 
 ## Message Structure
 
-* `:key`: a unicode string that identifies the stream the message belongs to.
+* `:key`: a unicode string that identifies the [stream](0006-streams.html) the message belongs to.
 * `:metadata`: additional message metadata as a map with string key and string value.
 * `:type`: message [data type](#data-and-types) (e.g. integer, real, boolean, etc...).
 * `:subtype`: a string that represents the subtype, that is a mimetype for binaries.
