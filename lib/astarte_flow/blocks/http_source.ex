@@ -72,7 +72,7 @@ defmodule Astarte.Flow.Blocks.HttpSource do
     * `:target_paths` (required) - A non-empty list of target paths for GET requests.
     * `:polling_interval_ms` - The interval between two consecutive GET requests, in milliseconds. Defaults to 1000 ms.
     * `:headers` - A list of `{key, value}` tuples where `key` and `value` are `String` and represent
-    headers to be set in the GET request.
+    headers to be set in the GET request. Headers can also be passed as a `String => String` map.
     * `:ignore_ssl_errors` - If `true`, ignore SSL errors that happen while performing the request.
     Defaults to `false`.
   """
@@ -82,7 +82,11 @@ defmodule Astarte.Flow.Blocks.HttpSource do
                {:base_url, url :: String.t()}
                | {:target_paths, target_paths :: nonempty_list(String.t())}
                | {:polling_interval_ms, polling_interval_ms :: number()}
-               | {:headers, headers :: [{String.t(), String.t()}]}
+               | {:headers, headers},
+             headers:
+               [{String.t(), String.t()}]
+               | %{optional(String.t()) => String.t()}
+
   def start_link(opts) do
     GenStage.start_link(__MODULE__, opts)
   end
@@ -94,7 +98,7 @@ defmodule Astarte.Flow.Blocks.HttpSource do
     with {:url, {:ok, base_url}} <- {:url, Keyword.fetch(opts, :base_url)},
          {:paths, {:ok, target_paths}} <- {:paths, Keyword.fetch(opts, :target_paths)},
          polling_interval_ms = Keyword.get(opts, :polling_interval_ms, 1000),
-         headers = Keyword.get(opts, :headers, []),
+         headers = Keyword.get(opts, :headers, %{}),
          :ok <- validate_target_paths(target_paths),
          :ok <- validate_headers(headers) do
       client = build_client(base_url, opts)
@@ -243,20 +247,24 @@ defmodule Astarte.Flow.Blocks.HttpSource do
     end
   end
 
-  defp validate_headers([]) do
-    :ok
-  end
+  defp validate_headers(headers) do
+    all_binary =
+      Enum.all?(headers, fn {key, value} ->
+        is_binary(key) and is_binary(value)
+      end)
 
-  defp validate_headers([{key, value} | tail]) when is_binary(key) and is_binary(value) do
-    validate_headers(tail)
-  end
-
-  defp validate_headers(_) do
-    {:error, :invalid_headers}
+    if all_binary do
+      :ok
+    else
+      {:error, :invalid_headers}
+    end
   end
 
   defp build_client(base_url, opts) do
-    headers = Keyword.get(opts, :headers, [])
+    # Convert headers to the keyword-list expected by Tesla
+    headers =
+      Keyword.get(opts, :headers, %{})
+      |> Enum.into([])
 
     middleware = [
       Tesla.Middleware.FollowRedirects,
