@@ -26,5 +26,5 @@ These are some of the main concepts used in Astarte Flow and covered in this gui
 - [Streams](006-streams.html) are sequences of messages sharing the same key and processes by the
   same Flow.
 
-The two main ways to interact with Flow are through the [pipeline builder]() and through the [REST
-API](api/index.html).
+The two main ways to interact with Flow are through the [pipeline editor](0020-pipeline-editor.html)
+and through the [REST API](api/index.html).
