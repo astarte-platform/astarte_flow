@@ -103,6 +103,7 @@ defmodule Astarte.Flow.MixProject do
     [
       main: "0001-overview",
       extra_section: "Guides",
+      assets: "guides/assets",
       extras: Path.wildcard("guides/*/*.md"),
       groups_for_extras: [
         "Core Concepts": ~r"/core_concepts/",
