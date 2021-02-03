@@ -21,8 +21,8 @@ These are some of the main concepts used in Astarte Flow and covered in this gui
   your data with a Docker container.
 - [Pipelines](0004-pipelines.html) are collections of blocks providing routing logic and
   representing a specific computation.
-- [Flows]() are specific instances of a pipeline, created providing concrete values to the
-  parametric values of a pipeline.
+- [Flows](0005-flows.html) are specific instances of a pipeline, created providing concrete values
+  to the parametric values of a pipeline.
 
 The two main ways to interact with Flow are through the [pipeline builder]() and through the [REST
 API](api/index.html).
