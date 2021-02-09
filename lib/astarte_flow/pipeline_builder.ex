@@ -120,11 +120,16 @@ defmodule Astarte.Flow.PipelineBuilder do
         other -> raise "Invalid type in container block: #{inspect(other)}"
       end
 
+    image_pull_secrets =
+      Map.get(opts, "image_pull_secrets")
+      |> eval!(config)
+
     {:ok,
      [
        {Container,
         [
           image: eval!(image, config),
+          image_pull_secrets: image_pull_secrets,
           type: type,
           connection: Config.default_amqp_connection!(),
           prefetch_count: Config.default_amqp_prefetch_count!()

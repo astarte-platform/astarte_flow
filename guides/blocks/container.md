@@ -23,6 +23,8 @@ be achieved using [Lua 5.2](https://www.lua.org/manual/5.2/) scripting blocks.
 
 * `image`: Docker container image (required, string)
 * `type`: Container type, either `"producer"`, `"consumer"` or `"producer_consumer"` (required)
+* `image_pull_secrets`: The secrets used to pull images from private registries (optional, array of
+  strings)
 
 ## `image`
 
@@ -34,6 +36,15 @@ Docker container image.
 
 According to container type a container is used as an AMQP producer, cosumer or as a middle
 processing block.
+
+## `image_pull_secrets`
+
+A list of names of Kubernetes secrets that will be used to pull the image. This is required only if
+the image is pulled from a private registry. The secrets must be already existing and must live in
+the same namespace where Astarte Flow is deployed.
+
+For more information on creating them, please read the relevant [Kubernetes
+documentation](https://kubernetes.io/docs/concepts/containers/images/#creating-a-secret-with-a-docker-config) 
 
 # Accepted Input Messages
 
