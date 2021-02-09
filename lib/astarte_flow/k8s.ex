@@ -43,6 +43,7 @@ defmodule Astarte.Flow.K8s do
     defstruct [
       :block_id,
       :image,
+      :image_pull_secrets,
       :config,
       :exchange_routing_key,
       :queue,
@@ -111,6 +112,7 @@ defmodule Astarte.Flow.K8s do
       block_id: block_id,
       config: config,
       image: image,
+      image_pull_secrets: image_pull_secrets_names,
       cpu_limit: cpu_limit,
       memory_limit: memory_limit,
       cpu_requests: cpu_requests,
@@ -119,11 +121,14 @@ defmodule Astarte.Flow.K8s do
 
     rabbitmq_map = build_rabbitmq_map(block)
 
+    image_pull_secrets = Enum.map(image_pull_secrets_names, fn name -> %{"name" => name} end)
+
     %{
       "config" => Jason.encode!(config),
       "environment" => [],
       "id" => block_id,
       "image" => image,
+      "imagePullSecrets" => image_pull_secrets,
       "resources" => %{
         "limits" => %{
           "cpu" => cpu_limit,

@@ -48,6 +48,7 @@ defmodule Astarte.Flow.Blocks.Container do
       :channel_ref,
       :conn_ref,
       :image,
+      :image_pull_secrets,
       :type,
       :inbound_routing_key,
       :outbound_routing_key,
@@ -66,6 +67,9 @@ defmodule Astarte.Flow.Blocks.Container do
   * `:config` - The Flow configuration that will be passed to the container.
   * `:connection` - A keyword list containing the options that will be passed to
     `AMQP.Connection.open/1`. Defaults to `[]`.
+  * `:image_pull_secrets` - An array of strings, representing the name of K8s secrets that
+    will be used by the Pod created by the container block. This is needed if your image
+    is pulled from a private container registry.
   * `:prefetch_count` - The prefetch count of the AMQP channel. Defaults to 100.
   * `:amqp_client` - A module that implements the
     `Astarte.Flow.Blocks.Container.AMQPClient` behaviour and that will
@@ -100,6 +104,7 @@ defmodule Astarte.Flow.Blocks.Container do
     type = Keyword.fetch!(opts, :type)
     amqp_client = Keyword.get(opts, :amqp_client, RabbitMQClient)
     config = Keyword.get(opts, :config) || %{}
+    image_pull_secrets = Keyword.get(opts, :image_pull_secrets)
 
     amqp_opts = Keyword.put(opts, :queue_prefix, id)
 
@@ -113,7 +118,8 @@ defmodule Astarte.Flow.Blocks.Container do
         config: config,
         channel_ref: nil,
         conn_ref: nil,
-        image: image
+        image: image,
+        image_pull_secrets: image_pull_secrets
       }
 
       send(self(), :connect)
@@ -219,6 +225,7 @@ defmodule Astarte.Flow.Blocks.Container do
     %State{
       id: block_id,
       image: image,
+      image_pull_secrets: image_pull_secrets,
       config: config,
       inbound_routing_key: exchange_routing_key,
       outbound_queues: outbound_queues
@@ -227,6 +234,7 @@ defmodule Astarte.Flow.Blocks.Container do
     container_block = %ContainerBlock{
       block_id: block_id,
       image: image,
+      image_pull_secrets: image_pull_secrets,
       config: config,
       exchange_routing_key: exchange_routing_key,
       queue: List.first(outbound_queues),
