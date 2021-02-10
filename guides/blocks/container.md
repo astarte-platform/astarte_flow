@@ -12,6 +12,10 @@ The block will manage the creation of the Container in a [Kubernetes](https://ku
 cluster using the
 [Astarte Kubernetes Operator](https://github.com/astarte-platform/astarte-kubernetes-operator).
 
+The Container runs with the `runAsNonRoot` security feature set to `true`. This means that you
+should make sure that your application doesn't run as the root user. You should use a normal user
+with the necessary permissions to run the application instead.
+
 Containers allow implementing and deploying algorithms with a language-agnostic approach. However a
 [Python SDK](https://github.com/astarte-platform/astarte_flow_sdk_python) is available as a
 replacement to AMQP connection and JSON SerDes code.
