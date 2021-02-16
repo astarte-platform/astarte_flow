@@ -1,0 +1,53 @@
+{
+  "name": "mqtt_sink",
+
+  "beam_module": "Elixir.Astarte.Flow.Blocks.MqttSink",
+  "type": "consumer",
+
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/mqtt_source.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "MQTT Sink options",
+    "description": "An Astarte Flow sink that publishes MQTT messages.",
+    "type": "object",
+
+    "additionalProperties": false,
+    "required": ["broker_url"],
+
+    "properties": {
+      "broker_url": {
+        "description": "The URL of the broker the source will connect to.",
+        "title": "Broker URL",
+        "type": "string"
+      },
+      "client_id": {
+        "description": "The client id used to connect. Defaults to a random string.",
+        "title": "Client ID",
+        "type": "string"
+      },
+      "ignore_ssl_errors": {
+        "default": false,
+        "description": "If true, accept invalid certificates (e.g. self-signed) when using SSL.",
+        "title": "Ignore SSL errors",
+        "type": "boolean"
+      },
+      "username": {
+        "description": "Username used to authenticate to the broker.",
+        "title": "Username",
+        "type": "string"
+      },
+      "password": {
+        "description": "Password used to authenticate to the broker.",
+        "title": "Password",
+        "type": "string"
+      },
+      "qos": {
+        "default": 0,
+        "description": "The QoS used when publishing.",
+        "title": "QoS",
+        "type": "integer",
+        "enum": [0, 1, 2]
+      }
+    }
+  }
+}
