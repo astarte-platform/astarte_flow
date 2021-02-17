@@ -91,10 +91,10 @@ defmodule Astarte.Flow.Blocks.JsonMapperTest do
 
   test "map valued message to JSON" do
     int_arr_value_message = %Message{
-      data: %{"x" => {:integer, "", -50}, "y" => {:integer, "", 0}},
+      data: %{"x" => -50, "y" => 0},
       key: "key",
       timestamp: 1_560_955_493_916_854,
-      type: :map
+      type: %{"x" => :integer, "y" => :integer}
     }
 
     int_arr_json_message = %Message{
@@ -106,6 +106,29 @@ defmodule Astarte.Flow.Blocks.JsonMapperTest do
     }
 
     {:ok, config} = Config.from_keyword([])
+
+    assert JsonMapper.to_json(int_arr_value_message, config) == {:ok, int_arr_json_message}
+  end
+
+  test "map valued message to JSON using a template" do
+    int_arr_value_message = %Message{
+      data: %{"x" => -50, "y" => 0},
+      key: "key",
+      timestamp: 1_560_955_493_916_854,
+      type: %{"x" => :integer, "y" => :integer}
+    }
+
+    int_arr_json_message = %Message{
+      data: ~s("k=key&x=-50&y=0"),
+      key: "key",
+      subtype: "application/json",
+      timestamp: 1_560_955_493_916_854,
+      type: :binary
+    }
+
+    template = "k={{message.key}}&x={{message.data.x}}&y={{message.data.y}}"
+
+    {:ok, config} = Config.from_keyword(template: template)
 
     assert JsonMapper.to_json(int_arr_value_message, config) == {:ok, int_arr_json_message}
   end

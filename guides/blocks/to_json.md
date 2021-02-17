@@ -10,10 +10,25 @@ and produces a message having a JSON serialized payload.
 # Properties
 
 * `pretty`: serialize the output to pretty format that is easier to read for humans. (optional, boolean)
+* `template`: a JSONTemplate template. (optional, object)
 
 ## `pretty`
 
 Specifies if the JSON binary should be pretty formatted.
+
+## `template`
+
+Given `{key: "key", data: 42}` as input message, the following template renders to
+`{"thekey": "key", "thevalue": 42}`:
+
+```
+.template(
+  {
+    thekey: "{{ message.key }}",
+    thevalue: "{{{ message.data }}}"
+  }
+)
+```
 
 # Output message
 
