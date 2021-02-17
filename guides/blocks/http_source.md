@@ -43,7 +43,7 @@ If the request succeeds, `http_source` produces a message containing these field
   to `"application/octet-stream"` if it's not found.
 * `metadata`: contains the `"base_url"` key with `base_url` as value. Moreover, it contains all the
   HTTP headers contained in the response with their keys prefixed with `"Astarte.Flow.HttpSource."`.
-* `timestamp` contains the timestamp (in microseconds) the response was received.
+* `timestamp`: contains the timestamp (in microseconds) the response was received.
 
 If the request can't be performed or an error status (`>= 400`) is returned, no message is
 produced.

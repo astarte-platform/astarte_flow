@@ -53,7 +53,7 @@ The delay between generated messages in milliseconds. For example use `5000` for
 * `key`: contains the `key` specified as parameter.
 * `data`: contains the generated value.
 * `type`: the `type` specified as parameter.
-* `timestamp` contains the timestamp (in microseconds) in which the message was generated.
+* `timestamp`: contains the timestamp (in microseconds) in which the message was generated.
 
 # Examples
 

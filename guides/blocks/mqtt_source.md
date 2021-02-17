@@ -57,7 +57,7 @@ A MIME type that will be put as [`subtype`](0002-flow-messages.html#subtype) in 
 * `subtype`: is always `"application/octet-stream"` but can be configured with the `subtype` option
 * `metadata`: contains the `Astarte.Flow.Blocks.MqttSource.broker_url` key with the broker url as
    value.
-* `timestamp` contains the timestamp (in microseconds) the response was received.
+* `timestamp`: contains the timestamp (in microseconds) the response was received.
 
 # Examples
 
