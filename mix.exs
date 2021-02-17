@@ -79,6 +79,7 @@ defmodule Astarte.Flow.MixProject do
       {:k8s, "~> 0.5-rc.1"},
       {:luerl, "~> 0.3"},
       {:prioqueue, "~> 0.2.0"},
+      {:modbux, "~> 0.3.9"},
       {:amqp, "~> 1.3"},
       {:phoenix, "~> 1.5.3"},
       {:phoenix_pubsub, "~> 2.0"},
