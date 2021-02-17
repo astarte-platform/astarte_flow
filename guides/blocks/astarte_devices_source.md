@@ -73,7 +73,7 @@ message with key
   type is deduced using an heuristic approach. This must be handled with care especially with
   numeric types, where there can be some instances where a `double` interface generates messages
   with `integer` type.
-* `timestamp` contains the timestamp (in microseconds) of the event. If the source interface
+* `timestamp`: contains the timestamp (in microseconds) of the event. If the source interface
   supports `explicit_timestamp`, the timestamp is the one explicitly sent from the device, otherwise
   it's the reception timestamp.
 

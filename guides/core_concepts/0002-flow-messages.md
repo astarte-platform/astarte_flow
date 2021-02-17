@@ -52,7 +52,7 @@ Keys can be any non empty string, Astarte Flow will take care of consistent shar
 
 Each message has a timestamp with microsecond precision, timestamps are generally related to the event
 that generated the message. For instance when the message represents a sensor measurement,
-timestamp will be likely the measurement timestamp (since
+timestamp will likely be the measurement timestamp (since
 [UTC Epoch](https://en.wikipedia.org/wiki/Unix_time)).
 
 ## Subtype
