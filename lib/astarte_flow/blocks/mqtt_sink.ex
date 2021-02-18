@@ -107,6 +107,12 @@ defmodule Astarte.Flow.Blocks.MqttSink do
     {:noreply, [], state}
   end
 
+  @impl true
+  def handle_info({{Tortoise, _}, _ref, _response}, state) do
+    # TODO: These are sent when QoS is 1 or 2, ignore these for now
+    {:noreply, [], state}
+  end
+
   defp fetch_qos(opts) do
     case Keyword.fetch(opts, :qos) do
       :error ->
@@ -128,7 +134,8 @@ defmodule Astarte.Flow.Blocks.MqttSink do
       base_opts = [
         client_id: client_id,
         broker_url: broker_url,
-        server: server
+        server: server,
+        handler: {Tortoise.Handler.Logger, []}
       ]
 
       additional_opts =
