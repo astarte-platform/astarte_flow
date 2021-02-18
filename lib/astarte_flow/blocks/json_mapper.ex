@@ -31,12 +31,13 @@ defmodule Astarte.Flow.Blocks.JsonMapper do
     @moduledoc false
 
     defstruct [
-      :pretty
+      :pretty,
+      :template
     ]
 
-    @type t() :: %__MODULE__{pretty: boolean()}
+    @type t() :: %__MODULE__{pretty: boolean(), template: any()}
 
-    @type option() :: {:pretty, boolean()}
+    @type option() :: {:pretty, boolean()} | {:template, any()}
 
     @doc """
     Initialize config from a keyword list.
@@ -44,15 +45,28 @@ defmodule Astarte.Flow.Blocks.JsonMapper do
     ## Options
 
       * `:pretty` - serialize the output to pretty format that is easier to read for humans.
+      * `:template` - a JSONTemplate applied right before serialization.
     """
     @spec from_keyword(list(option())) :: {:ok, t()}
     def from_keyword(kl) do
       pretty = Keyword.get(kl, :pretty, false)
 
-      {:ok,
-       %Config{
-         pretty: pretty
-       }}
+      case Keyword.fetch(kl, :template) do
+        {:ok, template} ->
+          with {:ok, compiled_template} <- ExJSONTemplate.compile_template(template) do
+            {:ok,
+             %Config{
+               pretty: pretty,
+               template: compiled_template
+             }}
+          end
+
+        :error ->
+          {:ok,
+           %Config{
+             pretty: pretty
+           }}
+      end
     end
   end
 
@@ -62,6 +76,7 @@ defmodule Astarte.Flow.Blocks.JsonMapper do
   ## Options
 
     * `:pretty` - serialize the output to pretty format that is easier to read for humans.
+    * `:template` - a JSONTemplate applied right before serialization.
   """
   @spec start_link(list(Config.option())) :: GenServer.on_start()
   def start_link(opts) do
@@ -100,22 +115,19 @@ defmodule Astarte.Flow.Blocks.JsonMapper do
   Makes a new Message with JSON serialzed data, `:binary` type and "application/json" subtype.
   """
   @spec to_json(Message.t(), Config.t()) :: {:ok, Message.t()} | {:error, any()}
-  def to_json(%Message{} = msg, %Config{pretty: pretty}) do
-    with %Message{type: type, data: data} <- msg,
-         wrapped_data = make_plain(data, type),
-         {:ok, encoded} <- Jason.encode(wrapped_data, pretty: pretty) do
+  def to_json(%Message{} = msg, %Config{pretty: pretty, template: compiled_template}) do
+    with {:ok, data} <- maybe_apply_template(msg, compiled_template),
+         {:ok, encoded} <- Jason.encode(data, pretty: pretty) do
       {:ok, %Message{msg | type: :binary, subtype: "application/json", data: encoded}}
     end
   end
 
-  defp make_plain(data, :map) when is_map(data) do
-    Enum.map(data, fn {key, {_type, _subtype, value}} ->
-      {key, value}
-    end)
-    |> Enum.into(%{})
+  defp maybe_apply_template(%Message{data: data, type: type} = _msg, _no_template = nil) do
+    {:ok, Message.wrap_data(data, type)}
   end
 
-  defp make_plain(data, _any_type) do
-    data
+  defp maybe_apply_template(msg, compiled_template) do
+    input = %{"message" => Message.to_map(msg)}
+    ExJSONTemplate.render(compiled_template, input)
   end
 end

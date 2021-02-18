@@ -12,6 +12,16 @@
 
     "additionalProperties": false,
 
-    "properties": {}
+    "properties": {
+      "pretty": {
+        "type": "boolean",
+        "description": "Serialize the output to pretty format that is easier to read for humans.",
+        "default": "false"
+      },
+      "template": {
+        "type": "object",
+        "description": "Apply given JSONTemplate."
+      }
+    }
   }
 }
