@@ -1,0 +1,22 @@
+{
+  "name": "update_metadata",
+  "beam_module": "Elixir.Astarte.Flow.Blocks.UpdateMetadata",
+  "type": "producer_consumer",
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/to_json.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "UpdateMetadataOptions",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["metadata"],
+    "properties": {
+      "metadata": {
+        "type": "object",
+        "description": "The metadata map. All keys with a string value will be upserted in the message metadata, while keys with a null value will be removed from the message metadata",
+        "additionalProperties": {
+          "type": ["string", "null"]
+        }
+      }
+    }
+  }
+}
