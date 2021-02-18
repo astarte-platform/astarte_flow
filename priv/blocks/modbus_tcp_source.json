@@ -1,0 +1,94 @@
+{
+  "name": "modbus_tcp_source",
+
+  "beam_module": "Elixir.Astarte.Flow.Blocks.ModbusTCPSource",
+  "type": "producer",
+
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/modbus_tcp_source.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Modbus TCP Source options",
+    "description": "An Astarte Flow source that produces data by polling a Modbus device.",
+    "type": "object",
+
+    "additionalProperties": false,
+    "required": ["host", "slave_id", "targets"],
+
+    "properties": {
+      "host": {
+        "description": "The IP address of the Modbus device the source will connect to.",
+        "title": "Modbus host",
+        "type": "string"
+      },
+      "port": {
+        "description": "The port of the Modbus device the source will connect to. Defaults to 502, the standard Modbus TCP port",
+        "title": "Modbus port",
+        "default": 502,
+        "type": "integer"
+      },
+      "slave_id": {
+        "description": "The slave id of the Modbus device.",
+        "title": "Slave ID",
+        "type": "integer"
+      },
+      "targets": {
+        "description": "An array of targets to be polled by the source",
+        "title": "Targets",
+        "type": "array",
+        "items" : {
+          "type": "object",
+
+          "additionalProperties": false,
+          "required": ["base_address", "name", "format", "modbus_type", "polling_interval_ms"],
+
+          "properties": {
+            "base_address": {
+              "description": "The Modbus address of the target.",
+              "title": "Base address",
+              "type": "integer"
+            },
+            "name": {
+              "description": "The name of the target, that will be used as key in the resulting Flow message.",
+              "title": "Name",
+              "type": "string"
+            },
+            "format": {
+              "description": "The data format.",
+              "title": "Format",
+              "type": "string",
+              "enum": [
+                "int16",
+                "uint16",
+                "float32be",
+                "float32le",
+                "boolean"
+              ]
+            },
+            "modbus_type": {
+              "description": "The modbus type of the target.",
+              "title": "Format",
+              "type": "string",
+              "enum": [
+                "coil",
+                "discrete_input",
+                "input_register",
+                "holding_register"
+              ]
+            },
+            "polling_interval_ms": {
+              "description": "The polling interval of the target, expressed in milliseconds.",
+              "title": "Polling",
+              "type": "integer"
+            },
+            "static_metadata": {
+              "description": "Static metadata that will be added as metadata in resulting Flow messages",
+              "title": "Static metadata",
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
