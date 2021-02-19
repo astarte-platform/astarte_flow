@@ -222,7 +222,7 @@ defmodule Astarte.Flow.Blocks.LuaMapper do
     %Message{msg | data: cast_data(data, type)}
   end
 
-  defp cast_data(data, :integer) do
+  defp cast_data(data, :integer) when is_float(data) do
     data
     |> Float.round()
     |> Kernel.trunc()
