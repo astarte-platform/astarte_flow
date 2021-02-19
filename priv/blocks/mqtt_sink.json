@@ -41,6 +41,21 @@
         "title": "Password",
         "type": "string"
       },
+      "ca_cert_pem": {
+        "description": "PEM encoded CA certificate.",
+        "title": "CA Certificate",
+        "type": "string"
+      },
+      "client_cert_pem": {
+        "description": "PEM encoded client certificate, used for mutual SSL authentication.",
+        "title": "Client Certificate",
+        "type": "string"
+      },
+      "private_key_pem": {
+        "description": "PEM encoded private key, used for mutual SSL authentication.",
+        "title": "Private Key",
+        "type": "string"
+      },
       "qos": {
         "default": 0,
         "description": "The QoS used when publishing.",

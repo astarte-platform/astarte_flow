@@ -56,6 +56,12 @@ defmodule Astarte.Flow.Blocks.MqttSink do
   * `client_id`: the client id used to connect. Defaults to a random string.
   * `username`: username used to authenticate to the broker.
   * `password`: password used to authenticate to the broker.
+  * `ca_cert_pem`: a PEM encoded CA certificate. If not provided, the default CA trust store
+  provided by `:certifi` will be used.
+  * `client_cert_pem`: a PEM encoded client certificate, used for mutual SSL authentication. If
+  this is provided, also `private_key_pem` must be provided.
+  * `private_key_pem`: a PEM encoded private key, used for mutual SSL authentication. If this
+  is provided, also `client_cert_pem` must be provided.
   * `ignore_ssl_errors`: if true, accept invalid certificates (e.g. self-signed) when using SSL.
   * `qos`: the qos that will be used to publish messages. Defaults to 0.
   """
@@ -162,35 +168,106 @@ defmodule Astarte.Flow.Blocks.MqttSink do
   defp build_server(broker_url, opts) do
     case URI.parse(broker_url) do
       %URI{scheme: "mqtts", host: host, port: port} when is_binary(host) ->
-        verify =
-          if Keyword.get(opts, :ignore_ssl_errors) do
-            :verify_none
-          else
-            :verify_peer
-          end
-
-        opts = [
-          host: host,
-          port: port || 8883,
-          cacertfile: :certifi.cacertfile(),
-          verify: verify,
-          depth: 10
-        ]
-
-        {:ok, {Tortoise.Transport.SSL, opts}}
+        build_ssl_server(host, port, opts)
 
       %URI{scheme: "mqtt", host: host, port: port} when is_binary(host) ->
-        opts = [
-          host: host,
-          port: port || 1883
-        ]
-
-        {:ok, {Tortoise.Transport.Tcp, opts}}
+        build_tcp_server(host, port)
 
       _ ->
         _ = Logger.warn("Can't parse broker url: #{inspect(broker_url)}")
         {:error, :invalid_broker_url}
     end
+  end
+
+  defp build_ssl_server(host, port, opts) do
+    with {:ok, cert_opts} <- build_cert_opts(opts) do
+      # This is needed to support wildcard certificates
+      hostname_match_fun = :public_key.pkix_verify_hostname_match_fun(:https)
+
+      verify =
+        if Keyword.get(opts, :ignore_ssl_errors) do
+          :verify_none
+        else
+          :verify_peer
+        end
+
+      server_opts =
+        [
+          host: host,
+          port: port || 8883,
+          verify: verify,
+          customize_hostname_check: [match_fun: hostname_match_fun],
+          depth: 10
+        ] ++ cert_opts
+
+      {:ok, {Tortoise.Transport.SSL, server_opts}}
+    end
+  end
+
+  defp build_cert_opts(opts) do
+    with {:ok, ca_opts} <- build_ca_opts(opts),
+         {:ok, mutual_auth_opts} <- build_mutual_auth_opts(opts) do
+      {:ok, ca_opts ++ mutual_auth_opts}
+    end
+  end
+
+  defp build_ca_opts(opts) do
+    with {:ok, ca_pem} <- Keyword.fetch(opts, :ca_cert_pem),
+         {:ok, ca} <- X509.Certificate.from_pem(ca_pem) do
+      ca_der = X509.Certificate.to_der(ca)
+
+      {:ok, [cacerts: [ca_der]]}
+    else
+      :error ->
+        # No explicit CA cert, use certifi
+        {:ok, [cacertfile: :certifi.cacertfile()]}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp build_mutual_auth_opts(opts) do
+    has_private_key = Keyword.has_key?(opts, :private_key_pem)
+    has_cert = Keyword.has_key?(opts, :client_cert_pem)
+
+    with {:has_key_and_cert, true, true} <- {:has_key_and_cert, has_private_key, has_cert},
+         key_pem = Keyword.fetch!(opts, :private_key_pem),
+         {:ok, key} <- X509.PrivateKey.from_pem(key_pem),
+         cert_pem = Keyword.fetch!(opts, :client_cert_pem),
+         {:ok, cert} <- X509.Certificate.from_pem(cert_pem) do
+      # Tortoise expects the key in the format {key_type, key_der}, the
+      # key type is contained in the Erlang native key format in the first
+      # tuple field
+      key_type = elem(key, 0)
+      key_der = X509.PrivateKey.to_der(key)
+
+      cert_der = X509.Certificate.to_der(cert)
+
+      {:ok, [key: {key_type, key_der}, cert: cert_der]}
+    else
+      {:has_key_and_cert, false, false} ->
+        # Both key and cert are missing so no mutual SSL auth, return empty opts
+        {:ok, []}
+
+      {:has_key_and_cert, true, false} ->
+        {:error, :missing_client_cert_pem}
+
+      {:has_key_and_cert, false, true} ->
+        {:error, :missing_private_key_pem}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp build_tcp_server(host, port) do
+    server_opts = [
+      host: host,
+      port: port || 1883
+    ]
+
+    {:ok, {Tortoise.Transport.Tcp, server_opts}}
   end
 
   defp random_client_id do
