@@ -20,7 +20,7 @@ defmodule Astarte.Flow.Blocks.DefaultBlocks do
   alias Astarte.Flow.Blocks.Block
 
   # Recompile when the blocks directory changes
-  @external_resource Path.expand("priv/blocks", __DIR__)
+  @external_resource "priv/blocks"
 
   Module.register_attribute(__MODULE__, :default_blocks, accumulate: true)
 
