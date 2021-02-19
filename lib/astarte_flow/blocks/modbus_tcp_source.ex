@@ -376,8 +376,14 @@ defmodule Astarte.Flow.Blocks.ModbusTCPSource do
       {:name, :error} ->
         {:error, :missing_name_in_target}
 
-      {:name, :error} ->
-        {:error, :missing_name_in_target}
+      {:format, :error} ->
+        {:error, :missing_format_in_target}
+
+      {:modbus_type, :error} ->
+        {:error, :missing_modbus_type_in_target}
+
+      {:polling_interval, :error} ->
+        {:error, :missing_polling_interval_in_target}
 
       {:error, reason} ->
         {:error, reason}
