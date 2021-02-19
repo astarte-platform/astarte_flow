@@ -120,8 +120,6 @@ defmodule Astarte.Flow.Blocks.UpdateMetadata do
       metadata_merge_map: metadata_merge_map
     } = config
 
-    IO.puts("AAAAA " <> inspect(config))
-
     updated_msgs =
       Enum.map(events, fn message ->
         metadata = message.metadata || %{}
