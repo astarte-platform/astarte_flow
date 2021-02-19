@@ -20,6 +20,11 @@ application](https://hexdocs.pm/tortoise/introduction.html).
    (optional, boolean, default: `false`)
 * `username`: Username used to authenticate to the broker. (optional, string)
 * `password`: Password used to authenticate to the broker. (optional, string)
+* `ca_cert_pem`: PEM encoded CA certificate. (optional, string)
+* `client_cert_pem`: PEM encoded client certificate, used for mutual SSL authentication.
+  (optional, string)
+* `private_key_pem`: PEM encoded private key, used for mutual SSL authentication. (optional,
+  string)
 * `qos`: The QoS used when publishing (optional, integer, default: `0`)
 
 ## `broker_url`
@@ -43,6 +48,21 @@ Username used to authenticate to the broker.
 ## `password`
 
 Password used to authenticate to the broker.
+
+## `ca_cert_pem`
+
+A PEM encoded CA certificate. If not provided, the default CA trust store provided by `:certifi`
+will be used.
+
+## `client_cert_pem`
+
+A PEM encoded client certificate, used for mutual SSL authentication. If this is provided, also
+`private_key_pem` must be provided.
+
+## `private_key_pem`
+
+A PEM encoded private key, used for mutual SSL authentication. If this is provided, also
+`client_cert_pem` must be provided.
 
 ## `qos`
 

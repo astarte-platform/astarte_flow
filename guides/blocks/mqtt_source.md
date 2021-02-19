@@ -17,6 +17,11 @@ This block has been implemented using the [Elixir](https://elixir-lang.org/)
    (optional, boolean, default: false)
 * `username`: Username used to authenticate to the broker. (optional, string)
 * `password`: Password used to authenticate to the broker. (optional, string)
+* `ca_cert_pem`: PEM encoded CA certificate. (optional, string)
+* `client_cert_pem`: PEM encoded client certificate, used for mutual SSL authentication.
+  (optional, string)
+* `private_key_pem`: PEM encoded private key, used for mutual SSL authentication. (optional,
+  string)
 * `subtype`: A MIME type that will be put as `subtype` in the generated Messages. Defaults to `application/octet-stream`.
 
 ## `broker_url`
@@ -44,6 +49,21 @@ Username used to authenticate to the broker.
 ## `password`
 
 Password used to authenticate to the broker.
+
+## `ca_cert_pem`
+
+A PEM encoded CA certificate. If not provided, the default CA trust store provided by `:certifi`
+will be used.
+
+## `client_cert_pem`
+
+A PEM encoded client certificate, used for mutual SSL authentication. If this is provided, also
+`private_key_pem` must be provided.
+
+## `private_key_pem`
+
+A PEM encoded private key, used for mutual SSL authentication. If this is provided, also
+`client_cert_pem` must be provided.
 
 ## `subtype`
 
