@@ -247,8 +247,8 @@ defmodule Astarte.Flow.Blocks.ModbusTCPSource do
     case format do
       :int16 -> :integer
       :uint16 -> :integer
-      :float32be -> :float
-      :float32le -> :float
+      :float32be -> :real
+      :float32le -> :real
       :boolean -> :boolean
     end
   end
