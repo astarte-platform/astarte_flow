@@ -339,6 +339,8 @@ defmodule Astarte.Flow.Flows.Flow do
 
   @impl true
   def terminate(_reason, state) do
-    K8s.try_delete_flow(state.flow.name)
+    if state.container_block_pids != [] do
+      K8s.try_delete_flow(state.flow.name)
+    end
   end
 end
