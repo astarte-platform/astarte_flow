@@ -87,6 +87,9 @@ astarte_devices_source
     .realm(${$.config.realm})
 ```
 
+*Note*: JSONPath expressions must always appear as bare JSONPath expressions and *must not* be
+surrounded by double quotes, even if they represent string variables.
+
 # Pipeline Example
 
 ```
