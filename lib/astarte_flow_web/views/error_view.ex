@@ -32,6 +32,10 @@ defmodule Astarte.FlowWeb.ErrorView do
     %{errors: %{detail: Phoenix.Controller.status_message_from_template(template)}}
   end
 
+  def render("404_pipeline_not_found.json", _assigns) do
+    %{errors: %{detail: "Pipeline not found"}}
+  end
+
   def render("409_existing_pipeline.json", _assigns) do
     %{errors: %{detail: "Pipeline already exists"}}
   end
