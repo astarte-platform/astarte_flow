@@ -78,13 +78,13 @@ defmodule Astarte.Flow.PipelineBuilder do
   defp setup_block(_realm, "astarte_devices_source", opts, config) do
     %{
       "realm" => realm,
-      "amqp_exchange" => amqp_exchange
+      "amqp_exchange" => amqp_exchange,
+      "amqp_routing_key" => amqp_routing_key
     } = opts
 
     evaluated_exchange = eval!(amqp_exchange, config)
     evaluated_realm = eval!(realm, config)
 
-    amqp_routing_key = Map.get(opts, "amqp_routing_key", "")
     target_devices = Map.get(opts, "target_devices")
 
     # TODO: we should go for a proper validation system
