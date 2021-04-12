@@ -1,0 +1,42 @@
+{
+  "name": "astarte_devices_source",
+  "beam_module": "Elixir.Astarte.Flow.Blocks.DeviceEventsProducer",
+  "type": "producer",
+  "schema": {
+    "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/astarte_devices_source.json",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Properties",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "realm",
+      "amqp_exchange",
+      "amqp_routing_key"
+    ],
+    "properties": {
+      "realm": {
+        "type": "string",
+        "title": "Realm",
+        "description": "The realm which is generating the events"
+      },
+      "amqp_exchange": {
+        "type": "string",
+        "title": "AMQP exchange",
+        "description": "The exchange where the events are being published"
+      },
+      "amqp_routing_key": {
+        "type": "string",
+        "title": "AMQP routing key",
+        "description": "The routing key used to bind the consumer queue to the exchange"
+      },
+      "target_devices": {
+        "type": "array",
+        "title": "Target devices",
+        "items": {
+          "type": "string"
+        },
+        "description": "A list of Device IDs. If present, only events coming from these devices will generate a message"
+      }
+    }
+  }
+}
