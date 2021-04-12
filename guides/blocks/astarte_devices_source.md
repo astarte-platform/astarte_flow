@@ -15,8 +15,8 @@ and transforming them to Flow [messages](0002-flow-messages.html).
 
 * `realm`: the Realm which is generating the events (required, string)
 * `amqp_exchange`: the exchange where the events are being published (required, string)
-* `amqp_routing_key`: a custom routing key used to bind the consumer queue to the exchange
-  (optional, string)
+* `amqp_routing_key`: the routing key used to bind the consumer queue to the exchange (required,
+  string)
 * `target_devices`: a list of Device IDs. If present, only events coming from these devices will
   generate a message (optional, array of strings)
 
@@ -42,9 +42,8 @@ where `$realm` must be substituted with the provided `realm`.
 
 ## `amqp_routing_key`
 
-A custom routing key used to bind the queue to the `amqp_exchange`. This must match the
-`amqp_routing_key` used in the AMQP trigger, and can be omitted (which is the default in AMQP
-triggers).
+The routing key used to bind the queue to the `amqp_exchange`. This must match the
+`amqp_routing_key` used in the AMQP trigger.
 
 ## `target_devices`
 
