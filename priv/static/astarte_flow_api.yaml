@@ -451,11 +451,11 @@ components:
     ConfigSchema:
       type: object
       description: >-
-        A JSON Schema object (implementing this schema http://json-schema.org/draft-04/schema#)
+        A JSON Schema object (implementing this schema http://json-schema.org/draft-07/schema#)
         used to validate a pipeline (or block) configuration.
       example:
         $id: https://example.com/specs/astarte_flow/blocks/my_custom_block.json
-        $schema: http://json-schema.org/draft-04/schema#
+        $schema: http://json-schema.org/draft-07/schema#
         title: "MyCustomBlockOptions"
         type: "object"
         additionalProperties: false

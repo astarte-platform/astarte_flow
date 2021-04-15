@@ -6,7 +6,7 @@
 
   "schema": {
     "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/modbus_tcp_source.json",
-    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Modbus TCP Source options",
     "description": "An Astarte Flow source that produces data by polling a Modbus device.",
     "type": "object",
