@@ -121,7 +121,7 @@ defmodule Astarte.Flow.PipelineBuilder do
       end
 
     image_pull_secrets =
-      Map.get(opts, "image_pull_secrets")
+      Map.get(opts, "image_pull_secrets", [])
       |> eval!(config)
 
     {:ok,
