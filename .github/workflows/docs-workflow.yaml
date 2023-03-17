@@ -51,7 +51,7 @@ jobs:
       with:
         repository: swagger-api/swagger-ui
         path: swagger-ui
-        ref: 'v3.25.0'
+        ref: 'v4.9.1'
     - name: Copy all Swagger UI files
       run: |
         export DOCS_DIRNAME="flow/$(echo ${{ github.ref }} | sed 's,refs/heads/,,' | sed 's/master/snapshot/g' | sed 's/release-//g')"

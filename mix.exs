@@ -96,7 +96,7 @@ defmodule Astarte.Flow.MixProject do
       {:xandra, "~> 0.12"},
       {:skogsra, "~> 2.0"},
       {:castore, "~> 0.1.0"},
-      {:ex_doc, "~> 0.22", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.29", only: :dev, runtime: false}
     ]
   end
 
@@ -106,6 +106,7 @@ defmodule Astarte.Flow.MixProject do
       main: "0001-overview",
       extra_section: "Guides",
       assets: "guides/assets",
+      logo: "guides/assets/images/mascot.png",
       extras: Path.wildcard("guides/*/*.md"),
       groups_for_extras: [
         "Core Concepts": ~r"/core_concepts/",
