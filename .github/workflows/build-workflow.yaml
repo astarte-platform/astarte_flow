@@ -12,13 +12,13 @@ on:
   pull_request:
 
 env:
-  elixir_version: 1.10.1
-  otp_version: 22.2
+  elixir_version: 1.11.4
+  otp_version: 23.2
 
 jobs:
   test-dialyzer:
     name: Check Dialyzer
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     env:
       MIX_ENV: ci
     steps:
@@ -39,7 +39,7 @@ jobs:
         key: ${{ runner.os }}-${{ env.elixir_version }}-${{ env.otp_version }}-dialyzer_cache-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-${{ env.elixir_version }}-${{ env.otp_version }}-dialyzer_cache-
-    - uses: erlef/setup-elixir@v1.6.0
+    - uses: erlef/setup-beam@v1.7.0
       with:
         otp-version: ${{ env.otp_version }}
         elixir-version: ${{ env.elixir_version }}
@@ -51,7 +51,7 @@ jobs:
 
   test-coverage:
     name: Build and Test
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     # Wait for Dialyzer to give it a go before building
     needs:
       - test-dialyzer
@@ -67,7 +67,7 @@ jobs:
       with:
         path: _build
         key: ${{ runner.os }}-${{ env.elixir_version }}-${{ env.otp_version }}-_build-${{ github.sha }}
-    - uses: erlef/setup-elixir@v1.6.0
+    - uses: erlef/setup-beam@v1.7.0
       with:
         otp-version: ${{ env.otp_version }}
         elixir-version: ${{ env.elixir_version }}
