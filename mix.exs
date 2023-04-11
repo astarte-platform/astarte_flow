@@ -19,6 +19,10 @@
 defmodule Astarte.Flow.MixProject do
   use Mix.Project
 
+  @source_ref "master"
+  @source_version String.replace_prefix(@source_ref, "release-", "")
+                  |> String.replace("master", "snapshot")
+
   def project do
     [
       app: :astarte_flow,
@@ -36,6 +40,8 @@ defmodule Astarte.Flow.MixProject do
         "coveralls.post": :test,
         "coveralls.html": :test
       ],
+      homepage_url: "https://docs.astarte-platform.org/flow/#{@source_version}/",
+      source_url: "https://github.com/astarte-platform/astarte_flow",
       docs: docs()
     ]
   end
@@ -107,6 +113,7 @@ defmodule Astarte.Flow.MixProject do
       extra_section: "Guides",
       assets: "guides/assets",
       logo: "guides/assets/images/mascot.png",
+      source_ref: "#{@source_ref}",
       extras: Path.wildcard("guides/*/*.md"),
       groups_for_extras: [
         "Core Concepts": ~r"/core_concepts/",
