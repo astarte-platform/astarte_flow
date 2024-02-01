@@ -4,7 +4,7 @@
   "type": "consumer",
   "schema": {
     "$id": "https://astarte-platform.org/specs/astarte_flow/blocks/http_sink.json",
-    "$schema": "http://json-schema.org/draft-04/schema#",
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "HttpSinkOptions",
     "type": "object",
     "additionalProperties": false,
