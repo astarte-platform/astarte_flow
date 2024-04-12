@@ -22,6 +22,8 @@ defmodule Astarte.Flow.Auth.AstartePublicKeyProvider do
   require Logger
 
   alias Astarte.Core.Realm
+  alias Astarte.Core.CQLUtils
+  alias Astarte.Flow.Config
 
   @impl true
   @spec fetch_public_key(realm :: String.t()) ::
@@ -31,6 +33,8 @@ defmodule Astarte.Flow.Auth.AstartePublicKeyProvider do
   end
 
   defp fetch_realm_public_key(conn, realm_name) do
+    realm_name = CQLUtils.realm_name_to_keyspace_name(realm_name, Config.astarte_instance_id!())
+
     statement = """
     SELECT blobAsVarchar(value)
     FROM :realm_name.kv_store
