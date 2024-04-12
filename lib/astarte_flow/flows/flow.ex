@@ -206,9 +206,7 @@ defmodule Astarte.Flow.Flows.Flow do
       error ->
         _ =
           Logger.error(
-            "Could not start block #{inspect(block_module)} with opts #{inspect(block_opts)}: #{
-              inspect(error)
-            }"
+            "Could not start block #{inspect(block_module)} with opts #{inspect(block_opts)}: #{inspect(error)}"
           )
 
         {:error, :block_start_failed}
