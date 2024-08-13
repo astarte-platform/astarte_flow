@@ -23,7 +23,7 @@ defmodule Astarte.Flow.K8s do
   alias K8s.Conn
   alias Astarte.Flow.Config
 
-  @api_version "api.astarte-platform.org/v1alpha1"
+  @api_version "api.astarte-platform.org/v1alpha2"
   @flow_kind "Flow"
 
   defmodule ContainerBlock do
