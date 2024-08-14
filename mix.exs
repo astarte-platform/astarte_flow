@@ -27,7 +27,7 @@ defmodule Astarte.Flow.MixProject do
     [
       app: :astarte_flow,
       version: "0.1.0",
-      elixir: "~> 1.7",
+      elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -67,14 +67,14 @@ defmodule Astarte.Flow.MixProject do
   defp deps do
     [
       {:astarte_device, github: "astarte-platform/astarte-device-sdk-elixir"},
-      {:astarte_core, github: "astarte-platform/astarte_core"},
+      {:astarte_core, github: "eddbbt/astarte_core", branch: "keyspace_feature", override: true},
       {:cors_plug, "~> 2.0"},
-      {:cyanide, "~> 1.0"},
+      {:cyanide, "~> 2.0"},
       {:certifi, "~> 2.5"},
       {:tortoise, "~> 0.9"},
       {:elixir_uuid, "~> 1.2"},
       {:excoveralls, "~> 0.10", only: :test},
-      {:exjsonpath, "~> 0.9.0"},
+      {:exjsonpath, [env: :prod, git: "https://github.com/ispirata/exjsonpath.git"]},
       {:exjsontemplate, github: "ispirata/exjsontemplate"},
       {:ex_json_schema, "~> 0.7"},
       {:gen_stage, "~> 0.14"},

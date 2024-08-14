@@ -1,4 +1,8 @@
-FROM ispirata/elixir:1.10-otp-23 as builder
+FROM hexpm/elixir:1.15.7-erlang-26.1-debian-bookworm-20230612-slim as builder
+# install build dependencies
+# --allow-releaseinfo-change allows to pull from 'oldstable'
+RUN apt-get update --allow-releaseinfo-change -y && apt-get install -y build-essential git libc6 \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 WORKDIR /app
 
@@ -23,7 +27,7 @@ ADD . .
 RUN mix do compile, release
 
 # Note: it is important to keep Debian versions in sync, or incompatibilities between libcrypto will happen
-FROM debian:buster-slim
+FROM debian:bookworm-20230612-slim
 
 WORKDIR /app
 
@@ -33,7 +37,7 @@ RUN apt-get -qq update
 ENV LANG C.UTF-8
 
 # We need SSL
-RUN apt-get -qq install libssl1.1
+RUN apt-get -qq install libssl3
 
 # We have to redefine this here since it goes out of scope for each build stage
 ARG BUILD_ENV=prod

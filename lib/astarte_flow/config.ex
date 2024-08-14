@@ -130,6 +130,12 @@ defmodule Astarte.Flow.Config do
     os_env: "CASSANDRA_NODES",
     type: XandraNodes
 
+  @envdoc "The astarte instance id to generate keyspaces with"
+  app_env :astarte_instance_id, :astarte_flow, :astarte_instance_id,
+    os_env: "ASTARTE_INSTANCE_ID",
+    default: "",
+    type: :binary
+
   @doc "Returns the default amqp connection parameters"
   @type ssl_option ::
           {:cacertfile, String.t()}
