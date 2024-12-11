@@ -112,7 +112,7 @@ defmodule Astarte.Flow.MixProject do
       main: "0001-overview",
       extra_section: "Guides",
       assets: "guides/assets",
-      logo: "guides/assets/images/mascot.png",
+      logo: "guides/assets/images/clea_bw.png",
       source_ref: "#{@source_ref}",
       extras: Path.wildcard("guides/*/*.md"),
       groups_for_extras: [
