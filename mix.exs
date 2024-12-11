@@ -26,6 +26,7 @@ defmodule Astarte.Flow.MixProject do
   def project do
     [
       app: :astarte_flow,
+      name: "Clea Astarte Flow",
       version: "0.1.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
