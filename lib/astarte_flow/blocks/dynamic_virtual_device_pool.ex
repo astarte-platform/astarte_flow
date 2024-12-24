@@ -62,7 +62,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool do
     * `:interface_provider` (required) - The `interface_provider` that will be used by the spawned devices.
     * `:ignore_ssl_errors` - A boolean to indicate wether devices have to ignore SSL errors when connecting to the broker. Defaults to `false`.
     * `:credentials_storage` - The module used to store and fetch credentials secrets. Defaults to `DETSCredentialsStorage`.
-    * `:pairing_agent` - The module used to register the devices. Defaults to `Astarte.API.Pairing.Agent` 
+    * `:pairing_agent` - The module used to register the devices. Defaults to `Astarte.API.Pairing.Agent`
   """
   @spec start_link(options) :: GenServer.on_start()
         when options: [option],
@@ -132,7 +132,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool do
       :ok
     else
       {:error, reason} ->
-        _ = Logger.warn("Error handling message: #{inspect(reason)}", message: message)
+        _ = Logger.warning("Error handling message: #{inspect(reason)}", message: message)
         {:error, reason}
     end
   end
@@ -218,12 +218,12 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool do
       {:ok, credentials_secret}
     else
       :error ->
-        Logger.warn("No JWT available for realm #{realm}")
+        Logger.warning("No JWT available for realm #{realm}")
 
         {:error, :jwt_not_found}
 
       {:ok, %{status: status, body: body}} ->
-        Logger.warn(
+        Logger.warning(
           "Cannot register device #{device_id} in realm #{realm}: " <>
             "#{inspect(status)} #{inspect(body)}"
         )
@@ -231,7 +231,7 @@ defmodule Astarte.Flow.Blocks.DynamicVirtualDevicePool do
         {:error, :cannot_register_device}
 
       {:error, reason} ->
-        Logger.warn(
+        Logger.warning(
           "Error registering device #{inspect(device_id)} in realm #{realm}: #{inspect(reason)}"
         )
 

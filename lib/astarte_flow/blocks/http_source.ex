@@ -173,7 +173,7 @@ defmodule Astarte.Flow.Blocks.HttpSource do
 
       {:ok, %{status: status, body: body}} ->
         _ =
-          Logger.warn("HttpSource received error status",
+          Logger.warning("HttpSource received error status",
             status: status,
             body: body
           )
@@ -181,7 +181,7 @@ defmodule Astarte.Flow.Blocks.HttpSource do
         {:error, :http_error_response}
 
       {:error, reason} ->
-        _ = Logger.warn("HttpSource cannot make GET request", reason: reason)
+        _ = Logger.warning("HttpSource cannot make GET request", reason: reason)
         {:error, :request_failed}
     end
   end

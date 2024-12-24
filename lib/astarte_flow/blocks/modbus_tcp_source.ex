@@ -174,11 +174,11 @@ defmodule Astarte.Flow.Blocks.ModbusTCPSource do
       dispatch_messages(%{state | queue: updated_queue}, [])
     else
       :error ->
-        _ = Logger.warn("Received data for unknown target address: #{address}")
+        _ = Logger.warning("Received data for unknown target address: #{address}")
         {:noreply, [], state}
 
       {:error, reason} ->
-        _ = Logger.warn("Error generating message from Modbus data: #{reason}")
+        _ = Logger.warning("Error generating message from Modbus data: #{reason}")
         {:noreply, [], state}
     end
   end
@@ -229,7 +229,7 @@ defmodule Astarte.Flow.Blocks.ModbusTCPSource do
   end
 
   defp convert_values(values, format) do
-    Logger.warn("Invalid conversion, values: #{inspect(values)}, format: #{inspect(format)}")
+    Logger.warning("Invalid conversion, values: #{inspect(values)}, format: #{inspect(format)}")
     {:error, :invalid_conversion}
   end
 

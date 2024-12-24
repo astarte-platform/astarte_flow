@@ -51,7 +51,7 @@ defmodule Astarte.Flow.RestoreFlowsTask do
           :ok
 
         {:error, reason} ->
-          Logger.warn(
+          Logger.warning(
             "Cannot start Flow #{inspect(flow.name)} in realm " <>
               "#{inspect(realm)}: #{inspect(reason)}."
           )

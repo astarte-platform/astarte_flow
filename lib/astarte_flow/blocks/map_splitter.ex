@@ -101,7 +101,7 @@ defmodule Astarte.Flow.Blocks.MapSplitter do
             messages
 
           any ->
-            _ = Logger.warn("Error while running split_map.", message: msg, data: any)
+            _ = Logger.warning("Error while running split_map.", message: msg, data: any)
             []
         end
       end)

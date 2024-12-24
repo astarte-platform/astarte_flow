@@ -66,7 +66,7 @@ defmodule Astarte.Flow.Blocks.LuaMapper do
          }}
       else
         any ->
-          _ = Logger.warn("Error while loading Lua script: #{inspect(any)}")
+          _ = Logger.warning("Error while loading Lua script: #{inspect(any)}")
           {:error, :invalid_lua_script}
       end
     end
@@ -128,7 +128,7 @@ defmodule Astarte.Flow.Blocks.LuaMapper do
             [msg | acc]
 
           any ->
-            _ = Logger.warn("Error while running lua_map script.", message: msg, data: any)
+            _ = Logger.warning("Error while running lua_map script.", message: msg, data: any)
             acc
         end
       end)
@@ -198,7 +198,7 @@ defmodule Astarte.Flow.Blocks.LuaMapper do
           %Message{acc | data: value}
 
         key ->
-          _ = Logger.warn("Unexpected key in lua message: #{key}.")
+          _ = Logger.warning("Unexpected key in lua message: #{key}.")
           acc
       end
     end)

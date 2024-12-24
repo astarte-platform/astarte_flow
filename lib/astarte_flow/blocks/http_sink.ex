@@ -105,7 +105,7 @@ defmodule Astarte.Flow.Blocks.HttpSink do
 
       {:ok, %{status: status, body: body}} ->
         _ =
-          Logger.warn("HttpSink received error status",
+          Logger.warning("HttpSink received error status",
             status: status,
             body: body
           )
@@ -113,7 +113,7 @@ defmodule Astarte.Flow.Blocks.HttpSink do
         {:error, :http_error_response}
 
       {:error, reason} ->
-        _ = Logger.warn("HttpSink cannot make POST request", reason: reason)
+        _ = Logger.warning("HttpSink cannot make POST request", reason: reason)
         {:error, :request_failed}
     end
   end

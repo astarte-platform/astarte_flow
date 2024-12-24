@@ -183,7 +183,7 @@ defmodule Astarte.Flow.Blocks.MqttSource do
         build_tcp_server(host, port)
 
       _ ->
-        _ = Logger.warn("Can't parse broker url: #{inspect(broker_url)}")
+        _ = Logger.warning("Can't parse broker url: #{inspect(broker_url)}")
         {:error, :invalid_broker_url}
     end
   end
