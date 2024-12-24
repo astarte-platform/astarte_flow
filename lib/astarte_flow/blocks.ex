@@ -23,7 +23,7 @@ defmodule Astarte.Flow.Blocks do
   alias Astarte.Flow.Blocks.DefaultBlocks
   alias Astarte.Flow.Blocks.DETSStorage
 
-  @storage Application.get_env(:astarte_flow, :blocks_storage_mod, DETSStorage)
+  @storage Application.compile_env(:astarte_flow, :blocks_storage_mod, DETSStorage)
 
   def list_blocks(realm) when is_binary(realm) do
     @storage.list_blocks(realm) ++ DefaultBlocks.list()

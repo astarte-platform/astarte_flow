@@ -28,7 +28,7 @@ defmodule Astarte.Flow.Flows do
   alias Astarte.Flow.Flows.Supervisor, as: FlowsSupervisor
   require Logger
 
-  @storage Application.get_env(:astarte_flow, :flows_storage_mod, DETSStorage)
+  @storage Application.compile_env(:astarte_flow, :flows_storage_mod, DETSStorage)
 
   @doc """
   Returns the list of flows for a realm.

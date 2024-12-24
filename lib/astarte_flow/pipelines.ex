@@ -22,7 +22,7 @@ defmodule Astarte.Flow.Pipelines do
   alias Astarte.Flow.Pipelines.Pipeline
   alias Astarte.Flow.Pipelines.DETSStorage
 
-  @storage Application.get_env(:astarte_flow, :pipelines_storage_mod, DETSStorage)
+  @storage Application.compile_env(:astarte_flow, :pipelines_storage_mod, DETSStorage)
 
   def list_pipelines(realm) when is_binary(realm) do
     @storage.list_pipelines(realm)
