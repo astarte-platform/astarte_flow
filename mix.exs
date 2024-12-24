@@ -31,7 +31,7 @@ defmodule Astarte.Flow.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix, :gettext] ++ Mix.compilers(),
+      compilers: [:phoenix] ++ Mix.compilers(),
       dialyzer_cache_directory: dialyzer_cache_directory(Mix.env()),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
