@@ -17,9 +17,9 @@
 #
 
 # This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
+# and its dependencies with the aid of the Config module.
 
-use Mix.Config
+import Config
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
