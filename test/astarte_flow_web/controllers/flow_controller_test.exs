@@ -83,7 +83,7 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
       conn = get(conn, Routes.flow_path(conn, :show, @realm, name))
 
       assert %{
-               "name" => name
+               "name" => ^name
              } = json_response(conn, 200)["data"]
     end
 

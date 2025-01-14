@@ -236,7 +236,7 @@ defmodule Astarte.Flow.FlowsTest do
         :ok
       end)
 
-      assert {:ok, %Flow{} = flow} = Flows.create_flow(@realm, @valid_attrs)
+      assert {:ok, %Flow{} = _flow} = Flows.create_flow(@realm, @valid_attrs)
 
       assert {:ok, %Flow{} = flow2} = Flows.create_flow("otherrealm", @valid_attrs)
 
@@ -253,7 +253,7 @@ defmodule Astarte.Flow.FlowsTest do
         :ok
       end)
 
-      assert {:ok, %Flow{} = flow} = Flows.create_flow(@realm, @valid_attrs)
+      assert {:ok, %Flow{} = _flow} = Flows.create_flow(@realm, @valid_attrs)
       assert {:error, %Ecto.Changeset{} = cs} = Flows.create_flow(@realm, @valid_attrs)
       assert cs.errors[:name] != nil
     end
