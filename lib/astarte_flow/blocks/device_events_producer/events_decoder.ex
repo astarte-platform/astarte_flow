@@ -123,7 +123,8 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.EventsDecoder do
       v when is_binary(v) ->
         {:ok, :string}
 
-      {subtype, bin} when is_integer(subtype) and is_binary(bin) ->
+      # From Cyanide 2.0, binaries are decoded as %Cyanide.Binary{}
+      %Cyanide.Binary{subtype: subtype, data: bin} when is_atom(subtype) and is_binary(bin) ->
         {:ok, :binary}
 
       v when is_map(v) ->
@@ -140,7 +141,8 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer.EventsDecoder do
   end
 
   # This is just needed to extract Cyanide binaries from the tuple for now
-  defp normalize_value({_subtype, binary}, :binary) do
+  # From Cyanide 2.0, binaries are decoded as %Cyanide.Binary{}
+  defp normalize_value(%Cyanide.Binary{subtype: _subtype, data: binary}, :binary) do
     binary
   end
 

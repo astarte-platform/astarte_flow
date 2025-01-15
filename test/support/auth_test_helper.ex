@@ -17,7 +17,7 @@
 #
 
 # This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
+# and its dependencies with the aid of the Config module.
 
 defmodule Astarte.Flow.AuthTestHelper do
   @behaviour Astarte.Flow.Auth.RealmPublicKeyProvider

@@ -153,7 +153,7 @@ defmodule Astarte.Flow.Blocks.VirtualDevicePool do
       :ok
     else
       {:error, reason} ->
-        _ = Logger.warn("Error handling message: #{inspect(reason)}", message: message)
+        _ = Logger.warning("Error handling message: #{inspect(reason)}", message: message)
         {:error, reason}
     end
   end

@@ -49,12 +49,12 @@ defmodule Astarte.Flow.Auth.AstartePublicKeyProvider do
       end
     else
       {:error, %Xandra.Error{} = err} ->
-        _ = Logger.warn("Database error: #{inspect(err)}.", tag: "database_error")
+        _ = Logger.warning("Database error: #{inspect(err)}.", tag: "database_error")
         {:error, :database_error}
 
       {:error, %Xandra.ConnectionError{} = err} ->
         _ =
-          Logger.warn("Database connection error: #{inspect(err)}.",
+          Logger.warning("Database connection error: #{inspect(err)}.",
             tag: "database_connection_error"
           )
 
@@ -62,7 +62,7 @@ defmodule Astarte.Flow.Auth.AstartePublicKeyProvider do
 
       {:error, reason} ->
         _ =
-          Logger.warn("Cannot get public key: #{inspect(reason)}.",
+          Logger.warning("Cannot get public key: #{inspect(reason)}.",
             tag: "fetch_public_key_error",
             realm: realm_name
           )
@@ -76,7 +76,7 @@ defmodule Astarte.Flow.Auth.AstartePublicKeyProvider do
       :ok
     else
       _ =
-        Logger.warn("Invalid realm name.",
+        Logger.warning("Invalid realm name.",
           tag: "invalid_realm_name",
           realm: realm_name
         )

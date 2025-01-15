@@ -25,7 +25,7 @@ defmodule Astarte.Flow.RestoreFlowsTask do
   alias Astarte.Flow.Flows.Flow
   alias Astarte.Flow.Flows.Supervisor, as: FlowsSupervisor
 
-  @storage Application.get_env(:astarte_flow, :flows_storage_mod, DETSStorage)
+  @storage Application.compile_env(:astarte_flow, :flows_storage_mod, DETSStorage)
 
   if Mix.env() == :test do
     # Fake task to avoid Flows from trying to be restored during tests
@@ -51,7 +51,7 @@ defmodule Astarte.Flow.RestoreFlowsTask do
           :ok
 
         {:error, reason} ->
-          Logger.warn(
+          Logger.warning(
             "Cannot start Flow #{inspect(flow.name)} in realm " <>
               "#{inspect(realm)}: #{inspect(reason)}."
           )

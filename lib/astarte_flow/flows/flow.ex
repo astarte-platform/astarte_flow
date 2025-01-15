@@ -206,9 +206,7 @@ defmodule Astarte.Flow.Flows.Flow do
       error ->
         _ =
           Logger.error(
-            "Could not start block #{inspect(block_module)} with opts #{inspect(block_opts)}: #{
-              inspect(error)
-            }"
+            "Could not start block #{inspect(block_module)} with opts #{inspect(block_opts)}: #{inspect(error)}"
           )
 
         {:error, :block_start_failed}
@@ -254,7 +252,7 @@ defmodule Astarte.Flow.Flows.Flow do
       {:noreply, %{state | status: :creating_containers}}
     else
       error ->
-        Logger.warn(
+        Logger.warning(
           "K8s initialization failed: #{inspect(error)}. Retrying in #{@retry_timeout_ms} ms.",
           flow: flow.name
         )
@@ -294,7 +292,7 @@ defmodule Astarte.Flow.Flows.Flow do
       {:noreply, %{state | status: :flowing}}
     else
       error ->
-        Logger.warn("Block connection failed: #{inspect(error)}.",
+        Logger.warning("Block connection failed: #{inspect(error)}.",
           flow: flow.name,
           tag: "flow_block_connection_failed"
         )

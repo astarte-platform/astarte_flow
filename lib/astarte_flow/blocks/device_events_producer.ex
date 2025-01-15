@@ -232,7 +232,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducer do
         }
 
       {:error, reason} ->
-        Logger.warn(
+        Logger.warning(
           "Cannot connect to RabbitMQ: #{inspect(reason)}. Retrying in #{@retry_timeout_ms} ms"
         )
 

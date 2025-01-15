@@ -12,8 +12,8 @@ on:
   pull_request:
 
 env:
-  elixir_version: 1.11.4
-  otp_version: 23.2
+  elixir_version: 1.16.3
+  otp_version: 24.3.4.17
 
 jobs:
   test-dialyzer:
@@ -39,7 +39,7 @@ jobs:
         key: ${{ runner.os }}-${{ env.elixir_version }}-${{ env.otp_version }}-dialyzer_cache-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-${{ env.elixir_version }}-${{ env.otp_version }}-dialyzer_cache-
-    - uses: erlef/setup-beam@v1.7.0
+    - uses: erlef/setup-beam@v1.17.0
       with:
         otp-version: ${{ env.otp_version }}
         elixir-version: ${{ env.elixir_version }}
@@ -67,7 +67,7 @@ jobs:
       with:
         path: _build
         key: ${{ runner.os }}-${{ env.elixir_version }}-${{ env.otp_version }}-_build-${{ github.sha }}
-    - uses: erlef/setup-beam@v1.7.0
+    - uses: erlef/setup-beam@v1.17.0
       with:
         otp-version: ${{ env.otp_version }}
         elixir-version: ${{ env.elixir_version }}

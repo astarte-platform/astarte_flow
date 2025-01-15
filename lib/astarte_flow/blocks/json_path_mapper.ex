@@ -95,7 +95,7 @@ defmodule Astarte.Flow.Blocks.JsonPathMapper do
             [msg | acc]
 
           any ->
-            _ = Logger.warn("Error while mapping message to json.", message: msg, data: any)
+            _ = Logger.warning("Error while mapping message to json.", message: msg, data: any)
             acc
         end
       end)

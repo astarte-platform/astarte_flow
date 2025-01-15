@@ -34,7 +34,7 @@ defmodule Astarte.Flow.Compat do
 
     if String.ends_with?(stripped_url, "/v1") do
       _ =
-        Logger.warn(
+        Logger.warning(
           "Found trailing /v1 in pairing_url: #{pairing_url}. " <>
             "The /v1 suffix is deprecated and will stop working in a future release. " <>
             "Please update your pipeline or flow configuration removing the /v1 suffix.",

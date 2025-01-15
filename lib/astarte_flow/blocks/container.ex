@@ -206,7 +206,7 @@ defmodule Astarte.Flow.Blocks.Container do
       {:noreply, [message], state}
     else
       {:error, reason} ->
-        Logger.warn("Invalid message received: #{inspect(reason)}",
+        Logger.warning("Invalid message received: #{inspect(reason)}",
           tag: "container_invalid_message"
         )
 
@@ -278,7 +278,7 @@ defmodule Astarte.Flow.Blocks.Container do
         }
 
       {:error, reason} ->
-        Logger.warn(
+        Logger.warning(
           "Cannot connect to RabbitMQ: #{inspect(reason)}. Retrying in #{@retry_timeout_ms} ms"
         )
 

@@ -36,7 +36,7 @@ defmodule Astarte.Flow.Auth.FilesystemPublicKeyProvider do
         {:ok, public_key}
 
       {:error, reason} ->
-        Logger.warn("Cannot get public key for realm #{realm}: #{inspect(reason)}.",
+        Logger.warning("Cannot get public key for realm #{realm}: #{inspect(reason)}.",
           tag: "fetch_public_key_error"
         )
 

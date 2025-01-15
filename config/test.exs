@@ -17,9 +17,9 @@
 #
 
 # This file is responsible for configuring your application
-# and its dependencies with the aid of the Mix.Config module.
+# and its dependencies with the aid of the Config module.
 
-use Mix.Config
+import Config
 
 config :astarte_device,
   connection_mod: ConnectionMock,
@@ -56,4 +56,4 @@ config :logger, :console,
   ]
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :warning
