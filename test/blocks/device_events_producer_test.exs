@@ -128,7 +128,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducerTest do
         "int" => 1,
         "bool" => true,
         "string" => "アスタルテ",
-        "bin" => {0, <<0, 1, 2>>},
+        "bin" => %Cyanide.Binary{subtype: :generic, data: <<0, 1, 2>>},
         "datetime" => DateTime.from_unix!(1_582_112_861_835, :millisecond)
       }
 
@@ -215,7 +215,7 @@ defmodule Astarte.Flow.Blocks.DeviceEventsProducerTest do
         realm: realm,
         device_id: device_id,
         timestamp: timestamp_ms,
-        event: {:device_connected_event, event}
+        event: {:value_change_event, event}
       }
 
       FakeAMQPClient.push_event(pid, value_change_event)

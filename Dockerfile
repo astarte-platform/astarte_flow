@@ -1,4 +1,15 @@
-FROM ispirata/elixir:1.10-otp-23 as builder
+ARG ELIXIR_VERSION=1.16.3
+ARG OTP_VERSION=24.3.4.17
+ARG DEBIAN_VERSION=bullseye-20241111-slim
+
+ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
+ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
+
+FROM ${BUILDER_IMAGE} as builder
+
+# install build dependencies
+RUN apt-get update -y && apt-get install -y build-essential git \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 WORKDIR /app
 
@@ -23,7 +34,7 @@ ADD . .
 RUN mix do compile, release
 
 # Note: it is important to keep Debian versions in sync, or incompatibilities between libcrypto will happen
-FROM debian:buster-slim
+FROM ${RUNNER_IMAGE}
 
 WORKDIR /app
 
