@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ defmodule Astarte.Flow.MixProject do
     [
       app: :astarte_flow,
       version: "0.1.0",
-      elixir: "~> 1.7",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -81,20 +81,20 @@ defmodule Astarte.Flow.MixProject do
       {:tesla, "~> 1.2"},
       {:dialyzex, github: "Comcast/dialyzex", only: [:dev, :ci]},
       {:mox, "~> 0.5", only: :test},
-      {:jason, "~> 1.1"},
+      {:jason, "~> 1.2"},
       {:k8s, "~> 0.5-rc.1"},
       {:luerl, "~> 0.3"},
       {:prioqueue, "~> 0.2.0"},
       {:modbux, "~> 0.3.9"},
       {:amqp, "~> 2.1"},
-      {:phoenix, "~> 1.5.3"},
+      {:phoenix, "~> 1.6.16"},
       {:phoenix_pubsub, "~> 2.0"},
-      {:phoenix_ecto, "~> 4.0"},
-      {:telemetry_metrics, "~> 0.4"},
+      {:phoenix_ecto, "~> 4.4"},
+      {:telemetry_metrics, "~> 0.6"},
       {:telemetry_metrics_prometheus_core, "~> 0.4"},
-      {:telemetry_poller, "~> 0.4"},
-      {:gettext, "~> 0.11"},
-      {:plug_cowboy, "~> 2.2"},
+      {:telemetry_poller, "~> 0.5"},
+      {:gettext, "~> 0.18"},
+      {:plug_cowboy, "~> 2.5"},
       {:plug_logger_with_meta, "~> 0.1"},
       {:pretty_log, "~> 0.1"},
       {:guardian, "~> 2.0"},

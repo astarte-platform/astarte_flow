@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ defmodule Astarte.Flow.Application do
   alias Astarte.Flow.Auth.AstartePublicKeyProvider
   alias Astarte.Flow.Auth.FilesystemPublicKeyProvider
 
+  @impl true
   def start(_type, _args) do
     Config.validate!()
 
@@ -57,6 +58,7 @@ defmodule Astarte.Flow.Application do
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
+  @impl true
   def config_change(changed, _new, removed) do
     Astarte.FlowWeb.Endpoint.config_change(changed, removed)
     :ok
