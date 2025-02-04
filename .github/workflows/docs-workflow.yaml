@@ -18,22 +18,22 @@ on:
 
 jobs:
   docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     # Checkout the source
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         path: astarte_flow
     # Checkout the docs repository
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         repository: astarte-platform/docs
         ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
         path: docs
-    - uses: erlef/setup-beam@v1.7.0
+    - uses: erlef/setup-beam@v1.17.0
       with:
-        otp-version: "23.2"
-        elixir-version: "1.11.4"
+        otp-version: "25.3.2.16"
+        elixir-version: "1.17.3"
     - name: Install Dependencies
       working-directory: ./astarte_flow
       run: mix deps.get
@@ -47,7 +47,7 @@ jobs:
         mkdir -p docs/$DOCS_DIRNAME
         cp -r astarte_flow/doc/* docs/$DOCS_DIRNAME/
     - name: Checkout Swagger UI
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: swagger-api/swagger-ui
         path: swagger-ui
