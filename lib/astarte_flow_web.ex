@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,17 +52,18 @@ defmodule Astarte.FlowWeb do
         namespace: Astarte.FlowWeb
 
       # Import convenience functions from controllers
-      import Phoenix.Controller, only: [get_flash: 1, get_flash: 2, view_module: 1]
+      import Phoenix.Controller,
+        only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
 
-      import Astarte.FlowWeb.ErrorHelpers
-      import Astarte.FlowWeb.Gettext
-      alias Astarte.FlowWeb.Router.Helpers, as: Routes
+      # Include shared imports and aliases for views
+      unquote(view_helpers())
     end
   end
 
   def router do
     quote do
       use Phoenix.Router
+
       import Plug.Conn
       import Phoenix.Controller
     end
@@ -72,6 +73,17 @@ defmodule Astarte.FlowWeb do
     quote do
       use Phoenix.Channel
       import Astarte.FlowWeb.Gettext
+    end
+  end
+
+  defp view_helpers do
+    quote do
+      # Import basic rendering functionality (render, render_layout, etc)
+      import Phoenix.View
+
+      import Astarte.FlowWeb.ErrorHelpers
+      import Astarte.FlowWeb.Gettext
+      alias Astarte.FlowWeb.Router.Helpers, as: Routes
     end
   end
 

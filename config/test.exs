@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@ config :tesla, adapter: Tesla.Mock
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :astarte_flow, Astarte.FlowWeb.Endpoint,
-  http: [port: 4002],
+  http: [ip: {127, 0, 0, 1}, port: 4002],
+  secret_key_base: "X3gHOtNcFe1yn3VG0cJAAiedEkYISl3UNgQanRZG9NCbMZvUnEO1OIGXqqFysOay",
   server: false
 
 config :astarte_flow, :pipelines_storage_mod, PipelinesStorageMock
@@ -57,3 +58,6 @@ config :logger, :console,
 
 # Print only warnings and errors during test
 config :logger, level: :warning
+
+# Initialize plugs at runtime for faster test compilation
+config :phoenix, :plug_init_mode, :runtime

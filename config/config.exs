@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ config :lager,
 # Configures the endpoint
 config :astarte_flow, Astarte.FlowWeb.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "o/WvTw7d0OPFuYFKe9Wk0MtjJsUaiX+g+JkkZIfhg18frniYdbQnZ1DC0V2gZVY4",
   render_errors: [view: Astarte.FlowWeb.ErrorView, accepts: ~w(json)],
   pubsub_server: Astarte.Flow.PubSub
 
@@ -53,4 +52,4 @@ config :astarte_flow, :default_amqp_connection_port, 5672
 config :astarte_flow, Astarte.Flow.Auth.Guardian,
   allowed_algos: ["ES256", "ES384", "ES512", "PS256", "PS384", "PS512", "RS256", "RS384", "RS512"]
 
-import_config "#{Mix.env()}.exs"
+import_config "#{config_env()}.exs"
