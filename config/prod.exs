@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ config :astarte_flow, Astarte.FlowWeb.Endpoint,
 
 # Do not print debug messages in production
 config :logger,
+  level: :info,
   compile_time_purge_matching: [
     [level_lower_than: :info]
   ]
@@ -60,3 +61,6 @@ config :k8s,
   clusters: %{
     default: %{}
   }
+
+# Runtime production configuration, including reading
+# of environment variables, is done on config/runtime.exs.

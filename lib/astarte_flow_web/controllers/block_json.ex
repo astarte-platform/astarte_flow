@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,21 +16,24 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.BlockView do
-  use Astarte.FlowWeb, :view
+defmodule Astarte.FlowWeb.BlockJSON do
+  alias Astarte.Flow.Blocks.Block
 
-  alias Astarte.FlowWeb.BlockView
-
-  def render("index.json", %{blocks: blocks}) do
-    %{data: render_many(blocks, BlockView, "block.json")}
+  @doc """
+  Renders a list of blocks.
+  """
+  def index(%{blocks: blocks}) do
+    %{data: for(block <- blocks, do: data(block))}
   end
 
-  def render("show.json", %{block: block}) do
-    %{data: render_one(block, BlockView, "block.json")}
+  @doc """
+  Renders a single block.
+  """
+  def show(%{block: block}) do
+    %{data: data(block)}
   end
 
-  def render("block.json", %{block: %{beam_module: beam_module} = block})
-      when not is_nil(beam_module) do
+  defp data(%Block{} = %{beam_module: beam_module} = block) when not is_nil(beam_module) do
     # Default block
     %{
       name: block.name,
@@ -40,7 +43,7 @@ defmodule Astarte.FlowWeb.BlockView do
     }
   end
 
-  def render("block.json", %{block: block}) do
+  defp data(%Block{} = block) do
     # User block
     %{
       name: block.name,
@@ -48,9 +51,5 @@ defmodule Astarte.FlowWeb.BlockView do
       type: block.type,
       schema: block.schema
     }
-  end
-
-  def render("block_name.json", %{block: block}) do
-    block.name
   end
 end

@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,29 +16,33 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.PipelineView do
-  use Astarte.FlowWeb, :view
+defmodule Astarte.FlowWeb.PipelineJSON do
+  alias Astarte.Flow.Pipelines.Pipeline
 
-  alias Astarte.FlowWeb.PipelineView
-
-  def render("index.json", %{pipelines: pipelines}) do
-    %{data: render_many(pipelines, PipelineView, "pipeline_name.json")}
+  @doc """
+  Renders a list of pipelines.
+  """
+  def index(%{pipelines: pipelines}) do
+    %{data: for(pipeline <- pipelines, do: pipeline_name(pipeline))}
   end
 
-  def render("show.json", %{pipeline: pipeline}) do
-    %{data: render_one(pipeline, PipelineView, "pipeline.json")}
+  @doc """
+  Renders a single pipeline.
+  """
+  def show(%{pipeline: pipeline}) do
+    %{data: data(pipeline)}
   end
 
-  def render("pipeline.json", %{pipeline: pipeline}) do
+  defp pipeline_name(%Pipeline{} = pipeline) do
+    pipeline.name
+  end
+
+  defp data(%Pipeline{} = pipeline) do
     %{
       name: pipeline.name,
       source: pipeline.source,
       description: pipeline.description,
       schema: pipeline.schema || %{}
     }
-  end
-
-  def render("pipeline_name.json", %{pipeline: pipeline}) do
-    pipeline.name
   end
 end

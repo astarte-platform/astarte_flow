@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2019 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ defmodule Astarte.Flow.Application do
   alias Astarte.Flow.Auth.AstartePublicKeyProvider
   alias Astarte.Flow.Auth.FilesystemPublicKeyProvider
 
+  @impl true
   def start(_type, _args) do
     Config.validate!()
 
@@ -35,7 +36,10 @@ defmodule Astarte.Flow.Application do
     children =
       [
         Astarte.FlowWeb.Telemetry,
+        {DNSCluster, query: Application.get_env(:sample_app, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Astarte.Flow.PubSub},
+        # Start a worker by calling: Astarte.Flow.Worker.start_link(arg)
+        # {Astarte.Flow.Worker, arg},
         {Registry, keys: :unique, name: Astarte.Flow.Flows.Registry},
         {Registry, keys: :duplicate, name: Astarte.Flow.Flows.RealmRegistry},
         Astarte.Flow.Blocks.DETSStorage,
@@ -45,6 +49,7 @@ defmodule Astarte.Flow.Application do
         Astarte.Flow.Blocks.DynamicVirtualDevicePool.DETSCredentialsStorage,
         {DynamicSupervisor, strategy: :one_for_one, name: Astarte.Flow.VirtualDevicesSupervisor},
         Astarte.Flow.RestoreFlowsTask,
+        # Start to serve requests, typically the last entry
         Astarte.FlowWeb.Endpoint
       ]
       |> setup_public_key_provider()
@@ -57,6 +62,7 @@ defmodule Astarte.Flow.Application do
 
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
+  @impl true
   def config_change(changed, _new, removed) do
     Astarte.FlowWeb.Endpoint.config_change(changed, removed)
     :ok

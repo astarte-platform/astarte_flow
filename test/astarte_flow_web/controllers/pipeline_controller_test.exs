@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         [@pipeline]
       end)
 
-      conn = get(conn, Routes.pipeline_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/pipelines")
       assert json_response(conn, 200)["data"] == [@name]
     end
   end
@@ -85,7 +85,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         {:ok, @pipeline}
       end)
 
-      conn = get(conn, Routes.pipeline_path(conn, :show, @realm, @name))
+      conn = get(conn, ~p"/v1/#{@realm}/pipelines/#{@name}")
 
       assert %{
                "name" => @name,
@@ -101,7 +101,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         {:error, :not_found}
       end)
 
-      conn = get(conn, Routes.pipeline_path(conn, :show, @realm, "notexisting"))
+      conn = get(conn, ~p"/v1/#{@realm}/pipelines/notexisting")
       assert json_response(conn, 404)["errors"]["detail"] == "Not Found"
     end
   end
@@ -116,7 +116,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         source: @source
       }
 
-      conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+      conn = post(conn, ~p"/v1/#{@realm}/pipelines", data: params)
 
       assert json_response(conn, 422)["errors"]["name"] != nil
     end
@@ -128,7 +128,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         source: "invalid_source .."
       }
 
-      conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+      conn = post(conn, ~p"/v1/#{@realm}/pipelines", data: params)
 
       assert json_response(conn, 422)["errors"]["source"] != nil
     end
@@ -141,7 +141,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         schema: %{required: 42}
       }
 
-      conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+      conn = post(conn, ~p"/v1/#{@realm}/pipelines", data: params)
 
       assert json_response(conn, 422)["errors"]["schema"] != nil
     end
@@ -171,7 +171,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         schema: @schema
       }
 
-      create_conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+      create_conn = post(conn, ~p"/v1/#{@realm}/pipelines", data: params)
 
       assert %{
                "name" => @name,
@@ -180,7 +180,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
                "schema" => @schema
              } == json_response(create_conn, 201)["data"]
 
-      show_conn = get(conn, Routes.pipeline_path(conn, :show, @realm, @name))
+      show_conn = get(conn, ~p"/v1/#{@realm}/pipelines/#{@name}")
 
       assert %{
                "name" => @name,
@@ -207,7 +207,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         source: @source
       }
 
-      create_conn = post(conn, Routes.pipeline_path(conn, :create, @realm), data: params)
+      create_conn = post(conn, ~p"/v1/#{@realm}/pipelines", data: params)
 
       assert json_response(create_conn, 409)["errors"]["detail"] == "Pipeline already exists"
     end
@@ -222,7 +222,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         {:error, :not_found}
       end)
 
-      conn = delete(conn, Routes.pipeline_path(conn, :delete, @realm, "notexisting"))
+      conn = delete(conn, ~p"/v1/#{@realm}/pipelines/notexisting")
       assert json_response(conn, 404)["errors"]["detail"] == "Not Found"
     end
 
@@ -244,10 +244,10 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
         {:error, :not_found}
       end)
 
-      delete_conn = delete(conn, Routes.pipeline_path(conn, :delete, @realm, @name))
+      delete_conn = delete(conn, ~p"/v1/#{@realm}/pipelines/#{@name}")
       assert response(delete_conn, 204)
 
-      show_conn = get(conn, Routes.pipeline_path(conn, :show, @realm, @name))
+      show_conn = get(conn, ~p"/v1/#{@realm}/pipelines/#{@name}")
 
       assert json_response(show_conn, 404)
     end

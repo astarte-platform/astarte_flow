@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
     setup [:set_mox_from_context, :setup_public_key_provider, :verify_on_exit!]
 
     test "lists all flows", %{conn: conn} do
-      conn = get(conn, Routes.flow_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/flows")
       assert json_response(conn, 200)["data"] == []
     end
   end
@@ -77,10 +77,10 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
         :ok
       end)
 
-      conn = post(conn, Routes.flow_path(conn, :create, @realm), data: @create_attrs)
+      conn = post(conn, ~p"/v1/#{@realm}/flows", data: @create_attrs)
       assert %{"name" => name} = json_response(conn, 201)["data"]
 
-      conn = get(conn, Routes.flow_path(conn, :show, @realm, name))
+      conn = get(conn, ~p"/v1/#{@realm}/flows/#{name}")
 
       assert %{
                "name" => ^name
@@ -88,7 +88,7 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.flow_path(conn, :create, @realm), data: @invalid_attrs)
+      conn = post(conn, ~p"/v1/#{@realm}/flows", data: @invalid_attrs)
       assert json_response(conn, 422)["errors"] != %{}
     end
   end
@@ -112,10 +112,10 @@ defmodule Astarte.FlowWeb.FlowControllerTest do
         :ok
       end)
 
-      conn = delete(conn, Routes.flow_path(conn, :delete, @realm, flow))
+      conn = delete(conn, ~p"/v1/#{@realm}/flows/#{flow}")
       assert response(conn, 204)
 
-      conn = get(conn, Routes.flow_path(conn, :show, @realm, flow))
+      conn = get(conn, ~p"/v1/#{@realm}/flows/#{flow}")
       assert response(conn, 404)
     end
   end
