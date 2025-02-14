@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,12 +34,12 @@ defmodule Astarte.FlowWeb.AuthTest do
     setup [:setup_unauthorized_conn, :stub_public_key_provider]
 
     test "returns 401 when accessing pipelines", %{conn: conn} do
-      conn = get(conn, Routes.pipeline_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/pipelines")
       assert json_response(conn, 401)["errors"] != nil
     end
 
     test "returns 401 when accessing flows", %{conn: conn} do
-      conn = get(conn, Routes.flow_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/flows")
       assert json_response(conn, 401)["errors"] != nil
     end
   end
@@ -48,12 +48,12 @@ defmodule Astarte.FlowWeb.AuthTest do
     setup [:setup_post_authorized_conn, :stub_public_key_provider]
 
     test "returns 403 when GETting pipelines", %{conn: conn} do
-      conn = get(conn, Routes.pipeline_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/pipelines")
       assert json_response(conn, 403)["errors"] != nil
     end
 
     test "returns 403 when GETting flows", %{conn: conn} do
-      conn = get(conn, Routes.flow_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/flows")
       assert json_response(conn, 403)["errors"] != nil
     end
   end
@@ -62,12 +62,12 @@ defmodule Astarte.FlowWeb.AuthTest do
     setup [:setup_get_authorized_conn, :stub_public_key_provider]
 
     test "succesfully GETs pipelines", %{conn: conn} do
-      conn = get(conn, Routes.pipeline_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/pipelines")
       assert json_response(conn, 200)
     end
 
     test "succesfully GETs flows", %{conn: conn} do
-      conn = get(conn, Routes.flow_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/flows")
       assert json_response(conn, 200)
     end
   end
@@ -76,12 +76,12 @@ defmodule Astarte.FlowWeb.AuthTest do
     setup [:setup_pipelines_authorized_conn, :stub_public_key_provider]
 
     test "succesfully GETs pipelines", %{conn: conn} do
-      conn = get(conn, Routes.pipeline_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/pipelines")
       assert json_response(conn, 200)
     end
 
     test "returns 403 when GETting flows", %{conn: conn} do
-      conn = get(conn, Routes.flow_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/flows")
       assert json_response(conn, 403)["errors"] != nil
     end
   end
@@ -90,12 +90,12 @@ defmodule Astarte.FlowWeb.AuthTest do
     setup [:setup_all_access_authorized_conn, :stub_public_key_provider]
 
     test "succesfully GETs pipelines", %{conn: conn} do
-      conn = get(conn, Routes.pipeline_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/pipelines")
       assert json_response(conn, 200)
     end
 
     test "succesfully GETs flows", %{conn: conn} do
-      conn = get(conn, Routes.flow_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/flows")
       assert json_response(conn, 200)
     end
   end

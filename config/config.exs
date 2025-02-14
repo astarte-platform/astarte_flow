@@ -31,8 +31,13 @@ config :lager,
 # Configures the endpoint
 config :astarte_flow, Astarte.FlowWeb.Endpoint,
   url: [host: "localhost"],
-  render_errors: [view: Astarte.FlowWeb.ErrorView, accepts: ~w(json)],
-  pubsub_server: Astarte.Flow.PubSub
+  adapter: Bandit.PhoenixAdapter,
+  render_errors: [
+    formats: [json: Astarte.FlowWeb.ErrorJSON],
+    layout: false
+  ],
+  pubsub_server: Astarte.Flow.PubSub,
+  live_view: [signing_salt: "sWcZAhO3"]
 
 # Disable phoenix logger since we're using PlugLoggerWithMeta
 config :phoenix, :logger, false

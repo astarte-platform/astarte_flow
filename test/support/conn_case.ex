@@ -37,15 +37,15 @@ defmodule Astarte.FlowWeb.ConnCase do
 
   using do
     quote do
+      # The default endpoint for testing
+      @endpoint Astarte.FlowWeb.Endpoint
+
+      use Astarte.FlowWeb, :verified_routes
+
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
       import Astarte.FlowWeb.ConnCase
-
-      alias Astarte.FlowWeb.Router.Helpers, as: Routes
-
-      # The default endpoint for testing
-      @endpoint Astarte.FlowWeb.Endpoint
     end
   end
 

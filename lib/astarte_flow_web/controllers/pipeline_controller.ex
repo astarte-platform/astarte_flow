@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@ defmodule Astarte.FlowWeb.PipelineController do
 
   def index(conn, %{"realm" => realm}) do
     pipelines = Pipelines.list_pipelines(realm)
-    render(conn, "index.json", pipelines: pipelines)
+    render(conn, :index, pipelines: pipelines)
   end
 
   def show(conn, %{"realm" => realm, "name" => name}) do
     with {:ok, pipeline} <- Pipelines.get_pipeline(realm, name) do
-      render(conn, "show.json", pipeline: pipeline)
+      render(conn, :show, pipeline: pipeline)
     end
   end
 
@@ -38,8 +38,8 @@ defmodule Astarte.FlowWeb.PipelineController do
     with {:ok, pipeline} <- Pipelines.create_pipeline(realm, params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.pipeline_path(conn, :show, realm, pipeline))
-      |> render("show.json", pipeline: pipeline)
+      |> put_resp_header("location", ~p"/v1/#{realm}/pipelines/#{pipeline}")
+      |> render(:show, pipeline: pipeline)
     end
   end
 

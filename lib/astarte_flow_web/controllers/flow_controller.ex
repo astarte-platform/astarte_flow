@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,26 +21,24 @@ defmodule Astarte.FlowWeb.FlowController do
 
   alias Astarte.Flow.Flows
   alias Astarte.Flow.Flows.Flow
-  alias Astarte.Flow.PipelineBuilder.Error
+  alias Astarte.Flow.PipelineBuilder
 
   action_fallback Astarte.FlowWeb.FallbackController
 
   def index(conn, %{"realm" => realm}) do
     flows = Flows.list_flows(realm)
-    render(conn, "index.json", flows: flows)
+    render(conn, :index, flows: flows)
   end
 
   def create(conn, %{"realm" => realm, "data" => flow_params}) do
     with {:ok, %Flow{} = flow} <- Flows.create_flow(realm, flow_params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.flow_path(conn, :show, realm, flow))
-      |> render("show.json", flow: flow)
+      |> put_resp_header("location", ~p"/v1/#{realm}/flows/#{flow}")
+      |> render(:show, flow: flow)
     else
-      {:error, %Error{} = reason} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render("error.json", error: reason)
+      {:error, %PipelineBuilder.Error{} = reason} ->
+        render(conn, :error, error: reason)
 
       {:error, reason} ->
         {:error, reason}
@@ -49,7 +47,7 @@ defmodule Astarte.FlowWeb.FlowController do
 
   def show(conn, %{"realm" => realm, "name" => name}) do
     with {:ok, flow} <- Flows.get_flow(realm, name) do
-      render(conn, "show.json", flow: flow)
+      render(conn, :show, flow: flow)
     end
   end
 

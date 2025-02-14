@@ -36,7 +36,10 @@ defmodule Astarte.Flow.Application do
     children =
       [
         Astarte.FlowWeb.Telemetry,
+        {DNSCluster, query: Application.get_env(:sample_app, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Astarte.Flow.PubSub},
+        # Start a worker by calling: Astarte.Flow.Worker.start_link(arg)
+        # {Astarte.Flow.Worker, arg},
         {Registry, keys: :unique, name: Astarte.Flow.Flows.Registry},
         {Registry, keys: :duplicate, name: Astarte.Flow.Flows.RealmRegistry},
         Astarte.Flow.Blocks.DETSStorage,
@@ -46,6 +49,7 @@ defmodule Astarte.Flow.Application do
         Astarte.Flow.Blocks.DynamicVirtualDevicePool.DETSCredentialsStorage,
         {DynamicSupervisor, strategy: :one_for_one, name: Astarte.Flow.VirtualDevicesSupervisor},
         Astarte.Flow.RestoreFlowsTask,
+        # Start to serve requests, typically the last entry
         Astarte.FlowWeb.Endpoint
       ]
       |> setup_public_key_provider()
