@@ -48,7 +48,7 @@ defmodule Astarte.Flow.MixProject do
 
   def application do
     [
-      extra_applications: [:lager, :logger],
+      extra_applications: [:logger],
       mod: {Astarte.Flow.Application, []}
     ]
   end
@@ -86,7 +86,7 @@ defmodule Astarte.Flow.MixProject do
       {:luerl, "~> 0.4"},
       {:prioqueue, "~> 0.2.7"},
       {:modbux, "~> 0.3.13"},
-      {:amqp, "~> 2.1.2"},
+      {:amqp, "~> 3.3"},
       {:phoenix, "~> 1.7.18"},
       {:phoenix_pubsub, "~> 2.1.3"},
       {:phoenix_ecto, "~> 4.6.3"},

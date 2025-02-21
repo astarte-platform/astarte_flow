@@ -31,6 +31,7 @@ defmodule Astarte.Flow.Blocks.MqttSourceTest do
         subscriptions: @subscriptions
       ]
 
+      Process.flag(:trap_exit, true)
       assert MqttSource.start_link(opts) == {:error, :missing_broker_url}
     end
 
@@ -40,6 +41,7 @@ defmodule Astarte.Flow.Blocks.MqttSourceTest do
         broker_url: "ftp://example.com"
       ]
 
+      Process.flag(:trap_exit, true)
       assert MqttSource.start_link(opts) == {:error, :invalid_broker_url}
     end
 
@@ -48,6 +50,7 @@ defmodule Astarte.Flow.Blocks.MqttSourceTest do
         broker_url: @broker_url
       ]
 
+      Process.flag(:trap_exit, true)
       assert MqttSource.start_link(opts) == {:error, :missing_subscriptions}
     end
 
@@ -57,6 +60,7 @@ defmodule Astarte.Flow.Blocks.MqttSourceTest do
         subscriptions: []
       ]
 
+      Process.flag(:trap_exit, true)
       assert MqttSource.start_link(opts) == {:error, :empty_subscriptions}
     end
 

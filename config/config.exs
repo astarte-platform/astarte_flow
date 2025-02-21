@@ -22,12 +22,6 @@ import Config
 
 config :tesla, adapter: Tesla.Adapter.Hackney
 
-# lager is used by rabbit_common.
-# Silent it by setting the higher loglevel.
-config :lager,
-  error_logger_redirect: false,
-  handlers: [level: :critical]
-
 # Configures the endpoint
 config :astarte_flow, Astarte.FlowWeb.Endpoint,
   url: [host: "localhost"],

@@ -40,6 +40,7 @@ defmodule Astarte.Flow.Blocks.HttpSourceTest do
         target_paths: ["/test"]
       ]
 
+      Process.flag(:trap_exit, true)
       assert HttpSource.start_link(opts) == {:error, :missing_base_url}
     end
 
@@ -48,6 +49,7 @@ defmodule Astarte.Flow.Blocks.HttpSourceTest do
         base_url: @base_url
       ]
 
+      Process.flag(:trap_exit, true)
       assert HttpSource.start_link(opts) == {:error, :missing_target_paths}
     end
 
@@ -57,6 +59,7 @@ defmodule Astarte.Flow.Blocks.HttpSourceTest do
         target_paths: []
       ]
 
+      Process.flag(:trap_exit, true)
       assert HttpSource.start_link(opts) == {:error, :empty_target_paths}
     end
 
