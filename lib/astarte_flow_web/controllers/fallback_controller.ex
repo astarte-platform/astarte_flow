@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,42 +27,48 @@ defmodule Astarte.FlowWeb.FallbackController do
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
-    |> put_view(Astarte.FlowWeb.ChangesetView)
+    |> put_view(json: Astarte.FlowWeb.ChangesetJSON)
     |> render("error.json", changeset: changeset)
   end
 
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
-    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> put_view(json: Astarte.FlowWeb.ErrorJSON)
     |> render(:"404")
   end
 
   def call(conn, {:error, :pipeline_not_found}) do
     conn
     |> put_status(:not_found)
-    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> put_view(json: Astarte.FlowWeb.ErrorJSON)
     |> render(:"404_pipeline_not_found")
   end
 
   def call(conn, {:error, :already_existing_pipeline}) do
     conn
     |> put_status(:conflict)
-    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> put_view(json: Astarte.FlowWeb.ErrorJSON)
     |> render(:"409_existing_pipeline")
+  end
+
+  def call(conn, {:error, failures: failures}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(:"422_failed_pipeline_instantiation", error: failures)
   end
 
   def call(conn, {:error, :already_existing_block}) do
     conn
     |> put_status(:conflict)
-    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> put_view(json: Astarte.FlowWeb.ErrorJSON)
     |> render(:"409_existing_block")
   end
 
   def call(conn, {:error, :unauthorized}) do
     conn
     |> put_status(:unauthorized)
-    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> put_view(json: Astarte.FlowWeb.ErrorJSON)
     |> render(:"401")
   end
 
@@ -70,7 +76,7 @@ defmodule Astarte.FlowWeb.FallbackController do
   def auth_error(conn, {:unauthenticated, _reason}, _opts) do
     conn
     |> put_status(:unauthorized)
-    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> put_view(json: Astarte.FlowWeb.ErrorJSON)
     |> render(:"401")
   end
 
@@ -78,7 +84,7 @@ defmodule Astarte.FlowWeb.FallbackController do
   def auth_error(conn, _reason, _opts) do
     conn
     |> put_status(:forbidden)
-    |> put_view(Astarte.FlowWeb.ErrorView)
+    |> put_view(json: Astarte.FlowWeb.ErrorJSON)
     |> render(:"403")
   end
 end

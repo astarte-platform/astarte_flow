@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,9 +19,19 @@
 defmodule Astarte.FlowWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :astarte_flow
 
-  socket "/socket", Astarte.FlowWeb.UserSocket,
-    websocket: true,
-    longpoll: false
+  # The session will be stored in the cookie and signed,
+  # this means its contents can be read but not tampered with.
+  # Set :encryption_salt if you would also like to encrypt it.
+  @session_options [
+    store: :cookie,
+    key: "_astarte_flow_key",
+    signing_salt: "PNSxHV7l",
+    same_site: "Lax"
+  ]
+
+  # socket "/live", Phoenix.LiveView.Socket,
+  #   websocket: [connect_info: [session: @session_options]],
+  #   longpoll: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -31,7 +41,7 @@ defmodule Astarte.FlowWeb.Endpoint do
     at: "/",
     from: :astarte_flow,
     gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt)
+    only: Astarte.FlowWeb.static_paths()
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
@@ -53,14 +63,6 @@ defmodule Astarte.FlowWeb.Endpoint do
 
   plug Plug.MethodOverride
   plug Plug.Head
-
-  # The session will be stored in the cookie and signed,
-  # this means its contents can be read but not tampered with.
-  # Set :encryption_salt if you would also like to encrypt it.
-  plug Plug.Session,
-    store: :cookie,
-    key: "_astarte_flow_key",
-    signing_salt: "PNSxHV7l"
-
+  plug Plug.Session, @session_options
   plug Astarte.FlowWeb.Router
 end

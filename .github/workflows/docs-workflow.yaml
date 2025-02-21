@@ -30,10 +30,10 @@ jobs:
         repository: astarte-platform/docs
         ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
         path: docs
-    - uses: erlef/setup-beam@v1.7.0
+    - uses: erlef/setup-beam@v1.18
       with:
-        otp-version: "23.2"
-        elixir-version: "1.11.4"
+        otp-version: "26.2.5.8"
+        elixir-version: "1.18.2"
     - name: Install Dependencies
       working-directory: ./astarte_flow
       run: mix deps.get

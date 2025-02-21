@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,28 +16,25 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.FlowView do
-  use Astarte.FlowWeb, :view
-  alias Astarte.FlowWeb.FlowView
+defmodule Astarte.FlowWeb.FlowJSON do
+  alias Astarte.Flow.Flows.Flow
   alias Astarte.Flow.PipelineBuilder
 
-  def render("index.json", %{flows: flows}) do
-    %{data: render_many(flows, FlowView, "flow_name.json")}
+  @doc """
+  Renders a list of flows.
+  """
+  def index(%{flows: flows}) do
+    %{data: for(flow <- flows, do: flow_name(flow))}
   end
 
-  def render("show.json", %{flow: flow}) do
-    %{data: render_one(flow, FlowView, "flow.json")}
+  @doc """
+  Renders a single flow.
+  """
+  def show(%{flow: flow}) do
+    %{data: data(flow)}
   end
 
-  def render("flow.json", %{flow: flow}) do
-    %{name: flow.name, pipeline: flow.pipeline, config: flow.config}
-  end
-
-  def render("flow_name.json", %{flow: flow}) do
-    flow.name
-  end
-
-  def render("error.json", %{error: %PipelineBuilder.Error{blocks: blocks}}) do
+  def error(%{error: %PipelineBuilder.Error{blocks: blocks}}) do
     failures =
       Enum.map(blocks, fn
         {blockname, {:invalid_block_options, errors}} ->
@@ -52,6 +49,14 @@ defmodule Astarte.FlowWeb.FlowView do
           %{block: blockname, error: error, message: message}
       end)
 
-    %{errors: %{detail: "Failed pipeline instantiation", failures: failures}}
+    {:error, failures: failures}
+  end
+
+  defp flow_name(%Flow{} = flow) do
+    flow.name
+  end
+
+  defp data(%Flow{} = flow) do
+    %{name: flow.name, pipeline: flow.pipeline, config: flow.config}
   end
 end

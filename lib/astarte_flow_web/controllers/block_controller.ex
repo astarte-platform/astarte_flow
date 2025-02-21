@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@ defmodule Astarte.FlowWeb.BlockController do
 
   def index(conn, %{"realm" => realm}) do
     blocks = Blocks.list_blocks(realm)
-    render(conn, "index.json", blocks: blocks)
+    render(conn, :index, blocks: blocks)
   end
 
   def show(conn, %{"realm" => realm, "name" => name}) do
     with {:ok, block} <- Blocks.get_block(realm, name) do
-      render(conn, "show.json", block: block)
+      render(conn, :show, block: block)
     end
   end
 
@@ -38,8 +38,8 @@ defmodule Astarte.FlowWeb.BlockController do
     with {:ok, block} <- Blocks.create_block(realm, params) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", Routes.block_path(conn, :show, realm, block))
-      |> render("show.json", block: block)
+      |> put_resp_header("location", ~p"/v1/#{realm}/blocks/#{block}")
+      |> render(:show, block: block)
     end
   end
 

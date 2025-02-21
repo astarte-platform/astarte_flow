@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         [@block]
       end)
 
-      conn = get(conn, Routes.block_path(conn, :index, @realm))
+      conn = get(conn, ~p"/v1/#{@realm}/blocks")
       blocks = json_response(conn, 200)["data"]
 
       user_block = Enum.find(blocks, &(&1["name"] == @name))
@@ -95,7 +95,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         {:ok, @block}
       end)
 
-      conn = get(conn, Routes.block_path(conn, :show, @realm, @name))
+      conn = get(conn, ~p"/v1/#{@realm}/blocks/#{@name}")
 
       assert %{
                "name" => @name,
@@ -106,7 +106,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
     end
 
     test "renders default block", %{conn: conn} do
-      conn = get(conn, Routes.block_path(conn, :show, @realm, "to_json"))
+      conn = get(conn, ~p"/v1/#{@realm}/blocks/to_json")
 
       assert %{
                "name" => "to_json",
@@ -124,7 +124,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         {:error, :not_found}
       end)
 
-      conn = get(conn, Routes.block_path(conn, :show, @realm, "notexisting"))
+      conn = get(conn, ~p"/v1/#{@realm}/blocks/notexisting")
       assert json_response(conn, 404)["errors"]["detail"] == "Not Found"
     end
   end
@@ -140,7 +140,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         schema: @schema
       }
 
-      conn = post(conn, Routes.block_path(conn, :create, @realm), data: params)
+      conn = post(conn, ~p"/v1/#{@realm}/blocks", data: params)
 
       assert json_response(conn, 422)["errors"]["name"] != nil
     end
@@ -153,7 +153,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         schema: @schema
       }
 
-      conn = post(conn, Routes.block_path(conn, :create, @realm), data: params)
+      conn = post(conn, ~p"/v1/#{@realm}/blocks", data: params)
 
       assert json_response(conn, 422)["errors"]["source"] != nil
     end
@@ -166,7 +166,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         schema: %{required: 42}
       }
 
-      conn = post(conn, Routes.block_path(conn, :create, @realm), data: params)
+      conn = post(conn, ~p"/v1/#{@realm}/blocks", data: params)
 
       assert json_response(conn, 422)["errors"]["schema"] != nil
     end
@@ -196,7 +196,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         schema: @schema
       }
 
-      create_conn = post(conn, Routes.block_path(conn, :create, @realm), data: params)
+      create_conn = post(conn, ~p"/v1/#{@realm}/blocks", data: params)
 
       assert %{
                "name" => @name,
@@ -205,7 +205,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
                "schema" => @schema
              } == json_response(create_conn, 201)["data"]
 
-      show_conn = get(conn, Routes.block_path(conn, :show, @realm, @name))
+      show_conn = get(conn, ~p"/v1/#{@realm}/blocks/#{@name}")
 
       assert %{
                "name" => @name,
@@ -234,7 +234,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         schema: @schema
       }
 
-      create_conn = post(conn, Routes.block_path(conn, :create, @realm), data: params)
+      create_conn = post(conn, ~p"/v1/#{@realm}/blocks", data: params)
 
       assert json_response(create_conn, 409)["errors"]["detail"] == "Block already exists"
     end
@@ -247,7 +247,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         schema: @schema
       }
 
-      create_conn = post(conn, Routes.block_path(conn, :create, @realm), data: params)
+      create_conn = post(conn, ~p"/v1/#{@realm}/blocks", data: params)
 
       assert json_response(create_conn, 409)["errors"]["detail"] == "Block already exists"
     end
@@ -262,7 +262,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         {:error, :not_found}
       end)
 
-      conn = delete(conn, Routes.block_path(conn, :delete, @realm, "notexisting"))
+      conn = delete(conn, ~p"/v1/#{@realm}/blocks/notexisting")
       assert json_response(conn, 404)["errors"]["detail"] == "Not Found"
     end
 
@@ -284,10 +284,10 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
         {:error, :not_found}
       end)
 
-      delete_conn = delete(conn, Routes.block_path(conn, :delete, @realm, @name))
+      delete_conn = delete(conn, ~p"/v1/#{@realm}/blocks/#{@name}")
       assert response(delete_conn, 204)
 
-      show_conn = get(conn, Routes.block_path(conn, :show, @realm, @name))
+      show_conn = get(conn, ~p"/v1/#{@realm}/blocks/#{@name}")
 
       assert json_response(show_conn, 404)
     end

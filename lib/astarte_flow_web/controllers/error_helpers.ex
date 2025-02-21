@@ -1,7 +1,7 @@
 #
 # This file is part of Astarte.
 #
-# Copyright 2020 Ispirata Srl
+# Copyright 2025 SECO Mind Srl
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,22 +16,19 @@
 # limitations under the License.
 #
 
-defmodule Astarte.FlowWeb.ChangesetView do
-  use Astarte.FlowWeb, :view
+defmodule Astarte.FlowWeb.ErrorHelpers do
+  @moduledoc """
+  Conveniences for translating and building error messages.
+  """
 
   @doc """
-  Traverses and translates changeset errors.
-
-  See `Ecto.Changeset.traverse_errors/2` and
-  `Astarte.FlowWeb.ErrorHelpers.translate_error/1` for more details.
+  Translates an error message.
   """
-  def translate_errors(changeset) do
-    Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
-  end
-
-  def render("error.json", %{changeset: changeset}) do
-    # When encoded, the changeset returns its errors
-    # as a JSON object. So we just pass it forward.
-    %{errors: translate_errors(changeset)}
+  def translate_error({msg, opts}) do
+    # Because the error messages we show in our forms and APIs
+    # are defined inside Ecto, we need to translate them dynamically.
+    Enum.reduce(opts, msg, fn {key, value}, acc ->
+      String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
+    end)
   end
 end
