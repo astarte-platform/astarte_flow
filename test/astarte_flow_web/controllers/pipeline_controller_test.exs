@@ -32,7 +32,7 @@ defmodule Astarte.FlowWeb.PipelineControllerTest do
   @description "My super useful pipeline"
   @schema %{
     "$id" => "https://astarte-platform.org/specs/astarte_flow/to_json.json",
-    "$schema" => "http://json-schema.org/draft-04/schema#",
+    "$schema" => "http://json-schema.org/draft-07/schema#",
     "title" => "PipelineConfig",
     "type" => "object",
     "additionalProperties" => false,

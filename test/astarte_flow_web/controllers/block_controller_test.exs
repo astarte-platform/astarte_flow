@@ -36,7 +36,7 @@ defmodule Astarte.FlowWeb.BlockControllerTest do
   @block_type "producer_consumer"
   @schema %{
     "$id" => "https://example.com/blocks/interface_filter.json",
-    "$schema" => "http://json-schema.org/draft-04/schema#",
+    "$schema" => "http://json-schema.org/draft-07/schema#",
     "title" => "InterfaceFilterOptions",
     "type" => "object",
     "additionalProperties" => false,
