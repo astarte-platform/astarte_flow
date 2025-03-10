@@ -84,7 +84,8 @@ defmodule Astarte.Flow.Blocks.HttpSink do
 
   @impl true
   def handle_events(events, _from, %Config{client: client} = config) do
-    for %Message{data: data, type: :binary, subtype: subtype} <- events do
+    for %Message{data: data, type: type, subtype: subtype} <- events,
+        type == :binary or type == :string do
       opts =
         if String.valid?(subtype) do
           [headers: [{"content-type", subtype}]]
